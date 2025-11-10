@@ -89,13 +89,16 @@ export async function POST(req: NextRequest) {
 
     try {
       await sendVerificationEmail(user.email, verificationUrl);
-      console.log(`[Registration] Verification email sent to: ${user.email}`);
-    } catch (emailError) {
-      // Log error but don't fail registration if email fails
-      console.error('[Registration] Failed to send verification email:', emailError);
-      // Still log the token in development for manual verification
+      // In development, log the verification URL for testing
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[DEV] Verification URL: ${verificationUrl}`);
+        // TODO: Replace with proper logging service (e.g., Winston, Pino)
+        console.info(`[DEV] Verification URL: ${verificationUrl}`);
+      }
+    } catch (emailError) {
+      // Don't fail registration if email fails
+      // TODO: Replace with proper error tracking service (e.g., Sentry)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[DEV] Failed to send verification email:', emailError);
       }
     }
 
@@ -149,8 +152,11 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Log unexpected errors
-    console.error('[Registration Error]:', error);
+    // Log unexpected errors (development only)
+    // TODO: Replace with proper error tracking service (e.g., Sentry)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[DEV] Registration error:', error);
+    }
 
     // Return generic error response
     return NextResponse.json(

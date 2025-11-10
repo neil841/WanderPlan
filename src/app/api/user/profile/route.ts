@@ -111,7 +111,10 @@ export async function GET() {
       { status: 200 }
     );
   } catch (error) {
-    console.error('[Get Profile Error]:', error);
+    // TODO: Replace with proper error tracking service (e.g., Sentry)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[DEV] Get profile error:', error);
+    }
 
     return NextResponse.json(
       {
@@ -240,22 +243,20 @@ export async function PATCH(req: NextRequest) {
         const verificationUrl = `${baseUrl}/verify-email?token=${verificationToken}`;
 
         await sendVerificationEmail(newEmail, verificationUrl);
-        console.log(`[Profile Update] Verification email sent to: ${newEmail}`);
-      } catch (emailError) {
-        // Log error but don't fail the request
-        console.error('[Profile Update] Failed to send verification email:', emailError);
 
-        // In development, log the verification URL
+        // In development, log the verification URL for testing
         if (process.env.NODE_ENV === 'development') {
-          const verificationToken = await createVerificationToken(newEmail);
-          const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-          const verificationUrl = `${baseUrl}/verify-email?token=${verificationToken}`;
-          console.log(`[DEV] Verification URL: ${verificationUrl}`);
+          // TODO: Replace with proper logging service (e.g., Winston, Pino)
+          console.info(`[DEV] Verification URL: ${verificationUrl}`);
+        }
+      } catch (emailError) {
+        // Don't fail the request if email fails
+        // TODO: Replace with proper error tracking service (e.g., Sentry)
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[DEV] Failed to send verification email:', emailError);
         }
       }
     }
-
-    console.log(`[Profile Update] Profile updated for user: ${updatedUser.email}`);
 
     // 7. Return updated profile
     return NextResponse.json(
@@ -289,7 +290,10 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Handle unexpected errors
-    console.error('[Update Profile Error]:', error);
+    // TODO: Replace with proper error tracking service (e.g., Sentry)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[DEV] Update profile error:', error);
+    }
 
     return NextResponse.json(
       {
@@ -381,8 +385,6 @@ export async function POST(req: NextRequest) {
       data: { password: hashedPassword },
     });
 
-    console.log(`[Password Change] Password updated for user: ${user.email}`);
-
     // 7. Return success
     return NextResponse.json(
       {
@@ -411,7 +413,10 @@ export async function POST(req: NextRequest) {
     }
 
     // Handle unexpected errors
-    console.error('[Change Password Error]:', error);
+    // TODO: Replace with proper error tracking service (e.g., Sentry)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[DEV] Change password error:', error);
+    }
 
     return NextResponse.json(
       {

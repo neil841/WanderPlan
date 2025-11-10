@@ -85,7 +85,10 @@ export async function GET(req: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error('[Verify Email Error]:', error);
+    // TODO: Replace with proper error tracking service (e.g., Sentry)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[DEV] Verify email error:', error);
+    }
 
     return NextResponse.json(
       { error: 'Failed to verify email' },

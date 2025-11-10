@@ -50,7 +50,10 @@ export async function POST() {
       { status: 200 }
     );
   } catch (error) {
-    console.error('[Send Verification Email Error]:', error);
+    // TODO: Replace with proper error tracking service (e.g., Sentry)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[DEV] Send verification email error:', error);
+    }
 
     // Handle specific errors
     if (error instanceof Error) {

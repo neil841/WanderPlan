@@ -93,8 +93,6 @@ export async function POST(req: NextRequest) {
       data: { password: hashedPassword },
     });
 
-    console.log(`[Password Reset] Password updated for user: ${user.email}`);
-
     // 7. Return success response
     return NextResponse.json(
       {
@@ -123,7 +121,10 @@ export async function POST(req: NextRequest) {
     }
 
     // Handle unexpected errors
-    console.error('[Password Reset Confirm Error]:', error);
+    // TODO: Replace with proper error tracking service (e.g., Sentry)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[DEV] Password reset confirm error:', error);
+    }
 
     return NextResponse.json(
       {

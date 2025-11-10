@@ -63,14 +63,16 @@ export async function POST(req: NextRequest) {
     // 5. Send password reset email
     try {
       await sendPasswordResetEmail(user.email, resetUrl);
-      console.log(`[Password Reset] Reset email sent to: ${user.email}`);
-    } catch (emailError) {
-      // Log error but don't fail the request
-      console.error('[Password Reset] Failed to send reset email:', emailError);
-
-      // In development, log the reset URL
+      // In development, log the reset URL for testing
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[DEV] Password reset URL: ${resetUrl}`);
+        // TODO: Replace with proper logging service (e.g., Winston, Pino)
+        console.info(`[DEV] Password reset URL: ${resetUrl}`);
+      }
+    } catch (emailError) {
+      // Don't fail the request
+      // TODO: Replace with proper error tracking service (e.g., Sentry)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[DEV] Failed to send reset email:', emailError);
       }
 
       // Return error to user since email failed
@@ -116,7 +118,10 @@ export async function POST(req: NextRequest) {
     }
 
     // Handle unexpected errors
-    console.error('[Password Reset Request Error]:', error);
+    // TODO: Replace with proper error tracking service (e.g., Sentry)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[DEV] Password reset request error:', error);
+    }
 
     return NextResponse.json(
       {

@@ -46,14 +46,25 @@ export async function sendEmail({
     });
 
     if (error) {
-      console.error('[Email Error]:', error);
+      // TODO: Replace with proper error tracking service (e.g., Sentry)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('[DEV] Email error:', error);
+      }
       throw new Error(`Failed to send email: ${error.message}`);
     }
 
-    console.log('[Email Sent]:', { to, subject, id: data?.id });
+    // Log successful sends in development for debugging
+    if (process.env.NODE_ENV === 'development') {
+      // TODO: Replace with proper logging service (e.g., Winston, Pino)
+      console.info('[DEV] Email sent:', { to, subject, id: data?.id });
+    }
+
     return data;
   } catch (error) {
-    console.error('[Email Service Error]:', error);
+    // TODO: Replace with proper error tracking service (e.g., Sentry)
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[DEV] Email service error:', error);
+    }
     throw error;
   }
 }
