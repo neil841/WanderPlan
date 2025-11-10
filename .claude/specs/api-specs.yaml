@@ -1,0 +1,4725 @@
+openapi: 3.0.0
+info:
+  title: WanderPlan API
+  description: |
+    Comprehensive travel planning application API for WanderPlan.
+
+    ## Features
+    - User authentication and account management
+    - Trip planning with drag-and-drop itineraries
+    - Real-time collaboration with permissions
+    - Budget and expense tracking
+    - Professional CRM and invoicing tools
+    - Document management and PDF export
+    - Interactive maps and destination guides
+
+    ## Authentication
+    All protected endpoints require a valid JWT token in the Authorization header.
+
+    ## Rate Limiting
+    - Anonymous: 60 requests/minute
+    - Authenticated: 300 requests/minute
+    - Premium: 1000 requests/minute
+  version: 1.0.0
+  contact:
+    name: WanderPlan API Support
+    email: api@wanderplan.com
+
+servers:
+  - url: https://api.wanderplan.com/v1
+    description: Production server
+  - url: https://staging-api.wanderplan.com/v1
+    description: Staging server
+  - url: http://localhost:3000/api/v1
+    description: Local development server
+
+tags:
+  - name: Authentication
+    description: User authentication and session management
+  - name: Users
+    description: User profile and account management
+  - name: Trips
+    description: Trip CRUD operations and management
+  - name: Itinerary
+    description: Event and itinerary management
+  - name: Collaboration
+    description: Trip sharing and collaboration features
+  - name: Messaging
+    description: Real-time messaging and discussions
+  - name: Financial
+    description: Budget and expense tracking
+  - name: Documents
+    description: Document and file management
+  - name: Export
+    description: PDF export and calendar integration
+  - name: Discovery
+    description: Destination search and guides
+  - name: Maps
+    description: Map and route visualization
+  - name: Professional
+    description: CRM, invoicing, and business features
+  - name: Admin
+    description: Administrative operations
+
+paths:
+  # ==========================================
+  # AUTHENTICATION ENDPOINTS
+  # ==========================================
+
+  /auth/register:
+    post:
+      tags: [Authentication]
+      summary: Register a new user account
+      description: Creates a new user account and sends email verification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, firstName, lastName]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: sarah@example.com
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                  example: SecureP@ssw0rd
+                  description: Must contain uppercase, lowercase, number, and special character
+                firstName:
+                  type: string
+                  minLength: 1
+                  maxLength: 50
+                  example: Sarah
+                lastName:
+                  type: string
+                  minLength: 1
+                  maxLength: 50
+                  example: Johnson
+                timezone:
+                  type: string
+                  example: America/New_York
+                  description: IANA timezone identifier
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Account created. Please check your email to verify your account.
+                  data:
+                    type: object
+                    properties:
+                      userId:
+                        type: string
+                        format: uuid
+                        example: 550e8400-e29b-41d4-a716-446655440000
+                      email:
+                        type: string
+                        example: sarah@example.com
+                      emailVerified:
+                        type: boolean
+                        example: false
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                success: false
+                error:
+                  code: EMAIL_EXISTS
+                  message: An account with this email already exists
+
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: Login to existing account
+      description: Authenticates user and returns JWT tokens
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: sarah@example.com
+                password:
+                  type: string
+                  format: password
+                  example: SecureP@ssw0rd
+                rememberMe:
+                  type: boolean
+                  default: false
+                  description: Extends refresh token expiry to 30 days
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      accessToken:
+                        type: string
+                        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                        description: JWT access token (expires in 15 minutes)
+                      refreshToken:
+                        type: string
+                        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                        description: JWT refresh token (expires in 7-30 days)
+                      user:
+                        $ref: '#/components/schemas/User'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                success: false
+                error:
+                  code: INVALID_CREDENTIALS
+                  message: Invalid email or password
+        '403':
+          description: Email not verified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                success: false
+                error:
+                  code: EMAIL_NOT_VERIFIED
+                  message: Please verify your email before logging in
+
+  /auth/logout:
+    post:
+      tags: [Authentication]
+      summary: Logout from current session
+      description: Invalidates the current refresh token
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Logged out successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/refresh:
+    post:
+      tags: [Authentication]
+      summary: Refresh access token
+      description: Gets a new access token using refresh token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken:
+                  type: string
+                  example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      accessToken:
+                        type: string
+                        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        '401':
+          description: Invalid or expired refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/password-reset/request:
+    post:
+      tags: [Authentication]
+      summary: Request password reset
+      description: Sends password reset email with secure token (expires in 1 hour)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: sarah@example.com
+      responses:
+        '200':
+          description: Reset email sent (always returns success for security)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: If an account exists with this email, a password reset link has been sent
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/password-reset/verify:
+    post:
+      tags: [Authentication]
+      summary: Verify password reset token
+      description: Validates the password reset token before showing reset form
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: string
+                  example: a1b2c3d4e5f6g7h8i9j0
+      responses:
+        '200':
+          description: Token is valid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      email:
+                        type: string
+                        example: sarah@example.com
+        '400':
+          description: Invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/password-reset/confirm:
+    post:
+      tags: [Authentication]
+      summary: Reset password with token
+      description: Sets new password and invalidates old one
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, newPassword]
+              properties:
+                token:
+                  type: string
+                  example: a1b2c3d4e5f6g7h8i9j0
+                newPassword:
+                  type: string
+                  format: password
+                  minLength: 8
+                  example: NewSecureP@ssw0rd
+      responses:
+        '200':
+          description: Password reset successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Password reset successfully. You can now log in with your new password.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /auth/email-verification/send:
+    post:
+      tags: [Authentication]
+      summary: Send email verification
+      description: Sends or resends email verification link
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Verification email sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Verification email sent. Please check your inbox.
+        '400':
+          description: Email already verified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/email-verification/verify:
+    post:
+      tags: [Authentication]
+      summary: Verify email address
+      description: Confirms email verification with token from email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: string
+                  example: v1e2r3i4f5y6t7o8k9e0n
+      responses:
+        '200':
+          description: Email verified successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Email verified successfully
+        '400':
+          description: Invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ==========================================
+  # USER MANAGEMENT ENDPOINTS
+  # ==========================================
+
+  /users/me:
+    get:
+      tags: [Users]
+      summary: Get current user profile
+      description: Returns authenticated user's profile information
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User profile retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    patch:
+      tags: [Users]
+      summary: Update user profile
+      description: Updates user profile information
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                  example: Sarah
+                lastName:
+                  type: string
+                  example: Johnson
+                timezone:
+                  type: string
+                  example: America/New_York
+                bio:
+                  type: string
+                  maxLength: 500
+                  example: Travel enthusiast and adventure seeker
+                phone:
+                  type: string
+                  example: +1-555-123-4567
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /users/me/settings:
+    get:
+      tags: [Users]
+      summary: Get user settings
+      description: Returns user preferences and settings
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Settings retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/UserSettings'
+
+    patch:
+      tags: [Users]
+      summary: Update user settings
+      description: Updates user preferences and notification settings
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserSettings'
+      responses:
+        '200':
+          description: Settings updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/UserSettings'
+
+  /users/me/avatar:
+    post:
+      tags: [Users]
+      summary: Upload profile picture
+      description: Uploads or updates user profile picture
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Image file (max 5MB, JPG/PNG/WebP)
+      responses:
+        '200':
+          description: Avatar uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      avatarUrl:
+                        type: string
+                        format: uri
+                        example: https://cdn.wanderplan.com/avatars/550e8400.jpg
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '413':
+          description: File too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags: [Users]
+      summary: Remove profile picture
+      description: Deletes user profile picture
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Avatar removed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+
+  /users/me/password:
+    patch:
+      tags: [Users]
+      summary: Change password
+      description: Changes user password (requires current password)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [currentPassword, newPassword]
+              properties:
+                currentPassword:
+                  type: string
+                  format: password
+                  example: OldP@ssw0rd
+                newPassword:
+                  type: string
+                  format: password
+                  minLength: 8
+                  example: NewSecureP@ssw0rd
+      responses:
+        '200':
+          description: Password changed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Password changed successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Current password incorrect
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/me/email:
+    patch:
+      tags: [Users]
+      summary: Change email address
+      description: Changes user email (requires re-verification)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [newEmail, password]
+              properties:
+                newEmail:
+                  type: string
+                  format: email
+                  example: sarah.new@example.com
+                password:
+                  type: string
+                  format: password
+                  example: CurrentP@ssw0rd
+      responses:
+        '200':
+          description: Email change initiated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Verification email sent to new address. Please verify to complete the change.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Email already in use
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/me:
+    delete:
+      tags: [Users]
+      summary: Delete user account
+      description: Permanently deletes user account and all associated data
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password, confirmation]
+              properties:
+                password:
+                  type: string
+                  format: password
+                  example: CurrentP@ssw0rd
+                confirmation:
+                  type: string
+                  enum: [DELETE]
+                  example: DELETE
+                  description: Must be exactly "DELETE" to confirm
+      responses:
+        '200':
+          description: Account deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Account deleted successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Invalid password
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ==========================================
+  # TRIP MANAGEMENT ENDPOINTS
+  # ==========================================
+
+  /trips:
+    get:
+      tags: [Trips]
+      summary: List user's trips
+      description: Returns paginated list of trips with filtering
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/SortParam'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, archived, all]
+            default: active
+          description: Filter by trip status
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Search trip name or destination
+        - name: tags
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: true
+          description: Filter by tags
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Filter trips starting after this date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Filter trips ending before this date
+      responses:
+        '200':
+          description: Trips retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      trips:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Trip'
+                      pagination:
+                        $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags: [Trips]
+      summary: Create a new trip
+      description: Creates a new trip with basic information
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, startDate, endDate]
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                  example: Summer Europe Adventure
+                description:
+                  type: string
+                  maxLength: 2000
+                  example: Two-week backpacking trip through Western Europe
+                startDate:
+                  type: string
+                  format: date
+                  example: '2025-07-01'
+                endDate:
+                  type: string
+                  format: date
+                  example: '2025-07-15'
+                destinations:
+                  type: array
+                  items:
+                    type: string
+                  example: [Paris, Amsterdam, Berlin]
+                tags:
+                  type: array
+                  items:
+                    type: string
+                  example: [backpacking, budget, europe]
+                visibility:
+                  type: string
+                  enum: [private, shared, public]
+                  default: private
+      responses:
+        '201':
+          description: Trip created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Trip'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /trips/{tripId}:
+    get:
+      tags: [Trips]
+      summary: Get trip details
+      description: Returns detailed information about a specific trip
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+      responses:
+        '200':
+          description: Trip retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/TripDetailed'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [Trips]
+      summary: Update trip
+      description: Updates trip information (requires editor permission)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: Updated Trip Name
+                description:
+                  type: string
+                  example: Updated description
+                startDate:
+                  type: string
+                  format: date
+                endDate:
+                  type: string
+                  format: date
+                destinations:
+                  type: array
+                  items:
+                    type: string
+                tags:
+                  type: array
+                  items:
+                    type: string
+                visibility:
+                  type: string
+                  enum: [private, shared, public]
+      responses:
+        '200':
+          description: Trip updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Trip'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Trips]
+      summary: Delete trip
+      description: Permanently deletes a trip (requires admin permission)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+      responses:
+        '200':
+          description: Trip deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Trip deleted successfully
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /trips/{tripId}/duplicate:
+    post:
+      tags: [Trips]
+      summary: Duplicate trip
+      description: Creates a copy of an existing trip with optional date adjustment
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: Copy of Summer Europe Adventure
+                startDate:
+                  type: string
+                  format: date
+                  description: New start date (adjusts all events accordingly)
+                  example: '2026-07-01'
+                copyCollaborators:
+                  type: boolean
+                  default: false
+                  description: Whether to copy collaborators
+                copyBudget:
+                  type: boolean
+                  default: true
+                  description: Whether to copy budget settings
+      responses:
+        '201':
+          description: Trip duplicated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Trip'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /trips/{tripId}/archive:
+    post:
+      tags: [Trips]
+      summary: Archive trip
+      description: Archives a trip (requires admin permission)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+      responses:
+        '200':
+          description: Trip archived successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Trip'
+
+  /trips/{tripId}/unarchive:
+    post:
+      tags: [Trips]
+      summary: Unarchive trip
+      description: Restores an archived trip
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+      responses:
+        '200':
+          description: Trip unarchived successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Trip'
+
+  /trips/{tripId}/cover-image:
+    post:
+      tags: [Trips]
+      summary: Upload trip cover image
+      description: Uploads or updates trip cover image
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Image file (max 10MB, JPG/PNG/WebP)
+      responses:
+        '200':
+          description: Cover image uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      coverImageUrl:
+                        type: string
+                        format: uri
+                        example: https://cdn.wanderplan.com/trips/550e8400-cover.jpg
+
+    delete:
+      tags: [Trips]
+      summary: Remove trip cover image
+      description: Deletes trip cover image
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+      responses:
+        '200':
+          description: Cover image removed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+
+  /trips/bulk/delete:
+    post:
+      tags: [Trips]
+      summary: Bulk delete trips
+      description: Deletes multiple trips at once
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tripIds]
+              properties:
+                tripIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  example: [550e8400-e29b-41d4-a716-446655440000, 660e8400-e29b-41d4-a716-446655440001]
+      responses:
+        '200':
+          description: Trips deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      deletedCount:
+                        type: integer
+                        example: 2
+
+  /trips/bulk/archive:
+    post:
+      tags: [Trips]
+      summary: Bulk archive trips
+      description: Archives multiple trips at once
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tripIds]
+              properties:
+                tripIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+      responses:
+        '200':
+          description: Trips archived successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      archivedCount:
+                        type: integer
+                        example: 5
+
+  # ==========================================
+  # ITINERARY/EVENT ENDPOINTS
+  # ==========================================
+
+  /trips/{tripId}/events:
+    get:
+      tags: [Itinerary]
+      summary: List trip events
+      description: Returns all events for a trip
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [flight, hotel, activity, restaurant, transportation, destination]
+          description: Filter by event type
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Filter by specific date
+      responses:
+        '200':
+          description: Events retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      events:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Event'
+
+    post:
+      tags: [Itinerary]
+      summary: Create event
+      description: Adds a new event to the trip itinerary
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventCreate'
+      responses:
+        '201':
+          description: Event created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Event'
+
+  /trips/{tripId}/events/{eventId}:
+    get:
+      tags: [Itinerary]
+      summary: Get event details
+      description: Returns detailed information about a specific event
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+        - $ref: '#/components/parameters/EventIdParam'
+      responses:
+        '200':
+          description: Event retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Event'
+
+    patch:
+      tags: [Itinerary]
+      summary: Update event
+      description: Updates event information
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+        - $ref: '#/components/parameters/EventIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventUpdate'
+      responses:
+        '200':
+          description: Event updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Event'
+
+    delete:
+      tags: [Itinerary]
+      summary: Delete event
+      description: Removes an event from the trip
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+        - $ref: '#/components/parameters/EventIdParam'
+      responses:
+        '200':
+          description: Event deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+
+  /trips/{tripId}/events/reorder:
+    post:
+      tags: [Itinerary]
+      summary: Reorder events
+      description: Updates the order of events (for drag-and-drop)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [eventOrders]
+              properties:
+                eventOrders:
+                  type: array
+                  items:
+                    type: object
+                    required: [eventId, order]
+                    properties:
+                      eventId:
+                        type: string
+                        format: uuid
+                      order:
+                        type: integer
+                        minimum: 0
+                  example:
+                    - eventId: 550e8400-e29b-41d4-a716-446655440000
+                      order: 0
+                    - eventId: 660e8400-e29b-41d4-a716-446655440001
+                      order: 1
+      responses:
+        '200':
+          description: Events reordered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+
+  /trips/{tripId}/events/bulk/delete:
+    post:
+      tags: [Itinerary]
+      summary: Bulk delete events
+      description: Deletes multiple events at once
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [eventIds]
+              properties:
+                eventIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+      responses:
+        '200':
+          description: Events deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      deletedCount:
+                        type: integer
+
+  # ==========================================
+  # COLLABORATION ENDPOINTS
+  # ==========================================
+
+  /trips/{tripId}/collaborators:
+    get:
+      tags: [Collaboration]
+      summary: List trip collaborators
+      description: Returns all collaborators for a trip
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+      responses:
+        '200':
+          description: Collaborators retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      collaborators:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Collaborator'
+
+    post:
+      tags: [Collaboration]
+      summary: Invite collaborator
+      description: Invites a user to collaborate on the trip
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, role]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: friend@example.com
+                role:
+                  type: string
+                  enum: [viewer, editor, admin]
+                  example: editor
+                message:
+                  type: string
+                  maxLength: 500
+                  example: Join me on this amazing trip!
+      responses:
+        '201':
+          description: Invitation sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Collaborator'
+
+  /trips/{tripId}/collaborators/{userId}:
+    patch:
+      tags: [Collaboration]
+      summary: Update collaborator role
+      description: Changes a collaborator's permission level
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [role]
+              properties:
+                role:
+                  type: string
+                  enum: [viewer, editor, admin]
+      responses:
+        '200':
+          description: Collaborator role updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Collaborator'
+
+    delete:
+      tags: [Collaboration]
+      summary: Remove collaborator
+      description: Removes a user from trip collaboration
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Collaborator removed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+
+  /trips/{tripId}/guest-access:
+    post:
+      tags: [Collaboration]
+      summary: Create guest access token
+      description: Generates a shareable link for guest access
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                expiresIn:
+                  type: integer
+                  description: Expiration time in days (default 30, max 365)
+                  default: 30
+                  minimum: 1
+                  maximum: 365
+                permissions:
+                  type: string
+                  enum: [view_only, comment]
+                  default: view_only
+      responses:
+        '201':
+          description: Guest access token created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                        example: gst_a1b2c3d4e5f6g7h8i9j0
+                      shareUrl:
+                        type: string
+                        format: uri
+                        example: https://wanderplan.com/trips/share/gst_a1b2c3d4e5f6g7h8i9j0
+                      expiresAt:
+                        type: string
+                        format: date-time
+
+    delete:
+      tags: [Collaboration]
+      summary: Revoke guest access
+      description: Invalidates all guest access tokens for the trip
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+      responses:
+        '200':
+          description: Guest access revoked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+
+  /trips/{tripId}/activity-feed:
+    get:
+      tags: [Collaboration]
+      summary: Get trip activity feed
+      description: Returns chronological activity log for the trip
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: actionType
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [trip_updated, event_created, event_updated, event_deleted, collaborator_added, collaborator_removed, expense_added, message_posted]
+          style: form
+          explode: true
+        - name: userId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by specific user
+      responses:
+        '200':
+          description: Activity feed retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      activities:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Activity'
+                      pagination:
+                        $ref: '#/components/schemas/Pagination'
+
+  # ==========================================
+  # MESSAGING ENDPOINTS
+  # ==========================================
+
+  /trips/{tripId}/messages:
+    get:
+      tags: [Messaging]
+      summary: List trip messages
+      description: Returns paginated messages for the trip
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: before
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Get messages before this timestamp
+      responses:
+        '200':
+          description: Messages retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      messages:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Message'
+                      pagination:
+                        $ref: '#/components/schemas/Pagination'
+
+    post:
+      tags: [Messaging]
+      summary: Send message
+      description: Posts a new message to the trip discussion
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content:
+                  type: string
+                  minLength: 1
+                  maxLength: 2000
+                  example: What time should we meet at the airport?
+                replyTo:
+                  type: string
+                  format: uuid
+                  description: Message ID to reply to (creates a thread)
+      responses:
+        '201':
+          description: Message sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Message'
+
+  /trips/{tripId}/messages/{messageId}:
+    patch:
+      tags: [Messaging]
+      summary: Edit message
+      description: Updates message content (only by author, within 15 minutes)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+        - name: messageId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content:
+                  type: string
+                  minLength: 1
+                  maxLength: 2000
+      responses:
+        '200':
+          description: Message updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Message'
+
+    delete:
+      tags: [Messaging]
+      summary: Delete message
+      description: Deletes a message (only by author or admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+        - name: messageId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Message deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+
+  /trips/{tripId}/ideas:
+    get:
+      tags: [Messaging]
+      summary: List trip ideas
+      description: Returns all ideas/suggestions for the trip
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [open, accepted, rejected, all]
+            default: open
+      responses:
+        '200':
+          description: Ideas retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      ideas:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Idea'
+
+    post:
+      tags: [Messaging]
+      summary: Create idea
+      description: Submits a new idea for the trip
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, description]
+              properties:
+                title:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                  example: Visit the Louvre
+                description:
+                  type: string
+                  maxLength: 1000
+                  example: The Louvre Museum is a must-see in Paris
+      responses:
+        '201':
+          description: Idea created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Idea'
+
+  /trips/{tripId}/ideas/{ideaId}/vote:
+    post:
+      tags: [Messaging]
+      summary: Vote on idea
+      description: Upvote or downvote an idea
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+        - name: ideaId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [vote]
+              properties:
+                vote:
+                  type: string
+                  enum: [up, down, remove]
+                  example: up
+      responses:
+        '200':
+          description: Vote recorded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Idea'
+
+  /trips/{tripId}/polls:
+    get:
+      tags: [Messaging]
+      summary: List trip polls
+      description: Returns all polls for the trip
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [open, closed, all]
+            default: open
+      responses:
+        '200':
+          description: Polls retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      polls:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Poll'
+
+    post:
+      tags: [Messaging]
+      summary: Create poll
+      description: Creates a new poll for group decision-making
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [question, options]
+              properties:
+                question:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                  example: Which day should we visit the Eiffel Tower?
+                options:
+                  type: array
+                  minItems: 2
+                  maxItems: 10
+                  items:
+                    type: string
+                  example: [Monday, Tuesday, Wednesday]
+                allowMultipleVotes:
+                  type: boolean
+                  default: false
+                expiresAt:
+                  type: string
+                  format: date-time
+                  description: Optional poll expiration
+      responses:
+        '201':
+          description: Poll created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Poll'
+
+  /trips/{tripId}/polls/{pollId}/vote:
+    post:
+      tags: [Messaging]
+      summary: Vote in poll
+      description: Casts vote(s) in a poll
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+        - name: pollId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [optionIds]
+              properties:
+                optionIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  description: Array of selected option IDs
+      responses:
+        '200':
+          description: Vote recorded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Poll'
+
+  # ==========================================
+  # FINANCIAL ENDPOINTS
+  # ==========================================
+
+  /trips/{tripId}/budget:
+    get:
+      tags: [Financial]
+      summary: Get trip budget
+      description: Returns budget information and spending breakdown
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+      responses:
+        '200':
+          description: Budget retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Budget'
+
+    post:
+      tags: [Financial]
+      summary: Set trip budget
+      description: Creates or updates trip budget
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [totalBudget, currency]
+              properties:
+                totalBudget:
+                  type: number
+                  format: decimal
+                  minimum: 0
+                  example: 5000.00
+                currency:
+                  type: string
+                  pattern: '^[A-Z]{3}$'
+                  example: USD
+                  description: ISO 4217 currency code
+                categoryBudgets:
+                  type: object
+                  properties:
+                    accommodation:
+                      type: number
+                    transportation:
+                      type: number
+                    food:
+                      type: number
+                    activities:
+                      type: number
+                    other:
+                      type: number
+                  example:
+                    accommodation: 2000
+                    transportation: 1000
+                    food: 1000
+                    activities: 800
+                    other: 200
+      responses:
+        '200':
+          description: Budget updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Budget'
+
+  /trips/{tripId}/expenses:
+    get:
+      tags: [Financial]
+      summary: List trip expenses
+      description: Returns all expenses for the trip
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+        - name: category
+          in: query
+          schema:
+            type: string
+            enum: [accommodation, transportation, food, activities, other]
+        - name: paidBy
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by who paid
+      responses:
+        '200':
+          description: Expenses retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      expenses:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Expense'
+                      summary:
+                        type: object
+                        properties:
+                          totalSpent:
+                            type: number
+                          byCurrency:
+                            type: object
+                          byCategory:
+                            type: object
+
+    post:
+      tags: [Financial]
+      summary: Add expense
+      description: Records a new expense for the trip
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExpenseCreate'
+      responses:
+        '201':
+          description: Expense added successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Expense'
+
+  /trips/{tripId}/expenses/{expenseId}:
+    get:
+      tags: [Financial]
+      summary: Get expense details
+      description: Returns detailed information about an expense
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+        - name: expenseId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Expense retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Expense'
+
+    patch:
+      tags: [Financial]
+      summary: Update expense
+      description: Updates expense information
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+        - name: expenseId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExpenseUpdate'
+      responses:
+        '200':
+          description: Expense updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Expense'
+
+    delete:
+      tags: [Financial]
+      summary: Delete expense
+      description: Removes an expense
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+        - name: expenseId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Expense deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+
+  /trips/{tripId}/expenses/settlements:
+    get:
+      tags: [Financial]
+      summary: Get expense settlements
+      description: Calculates who owes whom for expense splitting
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+      responses:
+        '200':
+          description: Settlements calculated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      settlements:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            from:
+                              type: string
+                              format: uuid
+                              description: User ID who owes
+                            to:
+                              type: string
+                              format: uuid
+                              description: User ID to receive payment
+                            amount:
+                              type: number
+                              format: decimal
+                            currency:
+                              type: string
+
+  /trips/{tripId}/expenses/per-person:
+    get:
+      tags: [Financial]
+      summary: Get per-person cost breakdown
+      description: Calculates total cost per person
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+      responses:
+        '200':
+          description: Per-person costs calculated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      perPersonCosts:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            userId:
+                              type: string
+                              format: uuid
+                            userName:
+                              type: string
+                            totalPaid:
+                              type: number
+                            totalOwed:
+                              type: number
+                            balance:
+                              type: number
+                              description: Positive if owed money, negative if owes money
+
+  # ==========================================
+  # DOCUMENT MANAGEMENT ENDPOINTS
+  # ==========================================
+
+  /trips/{tripId}/documents:
+    get:
+      tags: [Documents]
+      summary: List trip documents
+      description: Returns all documents attached to the trip
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [passport, visa, booking, ticket, insurance, other]
+      responses:
+        '200':
+          description: Documents retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      documents:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Document'
+
+    post:
+      tags: [Documents]
+      summary: Upload document
+      description: Uploads a new document to the trip
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Document file (max 25MB, PDF/JPG/PNG/DOCX)
+                name:
+                  type: string
+                  description: Optional custom name
+                type:
+                  type: string
+                  enum: [passport, visa, booking, ticket, insurance, other]
+                eventId:
+                  type: string
+                  format: uuid
+                  description: Optional event association
+      responses:
+        '201':
+          description: Document uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Document'
+
+  /trips/{tripId}/documents/{documentId}:
+    get:
+      tags: [Documents]
+      summary: Download document
+      description: Returns document file
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Document file
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+    delete:
+      tags: [Documents]
+      summary: Delete document
+      description: Removes a document from the trip
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Document deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+
+  # ==========================================
+  # EXPORT ENDPOINTS
+  # ==========================================
+
+  /trips/{tripId}/export/pdf:
+    post:
+      tags: [Export]
+      summary: Export trip to PDF
+      description: Generates a mobile-friendly PDF of the trip itinerary
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                includeMap:
+                  type: boolean
+                  default: true
+                includeBudget:
+                  type: boolean
+                  default: true
+                includeDocuments:
+                  type: boolean
+                  default: false
+                template:
+                  type: string
+                  enum: [compact, detailed, minimal]
+                  default: detailed
+      responses:
+        '200':
+          description: PDF generated successfully
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '202':
+          description: PDF generation in progress (async)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      jobId:
+                        type: string
+                        example: job_550e8400
+                      status:
+                        type: string
+                        example: processing
+                      estimatedCompletionTime:
+                        type: integer
+                        description: Seconds until completion
+                        example: 30
+
+  /trips/{tripId}/export/calendar:
+    post:
+      tags: [Export]
+      summary: Export to calendar
+      description: Exports trip events to Google Calendar or Outlook
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [provider]
+              properties:
+                provider:
+                  type: string
+                  enum: [google, outlook, ical]
+                  example: google
+                calendarId:
+                  type: string
+                  description: Target calendar ID (for Google/Outlook)
+                includeReminders:
+                  type: boolean
+                  default: true
+      responses:
+        '200':
+          description: Calendar export successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      exportedEvents:
+                        type: integer
+                        example: 12
+                      calendarUrl:
+                        type: string
+                        format: uri
+                        description: Link to view calendar (for Google/Outlook)
+
+  # ==========================================
+  # DISCOVERY ENDPOINTS
+  # ==========================================
+
+  /search/destinations:
+    get:
+      tags: [Discovery]
+      summary: Search destinations
+      description: Search for destinations with autocomplete
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 2
+          example: Paris
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [city, country, landmark, all]
+            default: all
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      results:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/DestinationSearchResult'
+
+  /search/pois:
+    get:
+      tags: [Discovery]
+      summary: Search points of interest
+      description: Search for activities, restaurants, attractions
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          example: Eiffel Tower
+        - name: lat
+          in: query
+          schema:
+            type: number
+          description: Latitude for location-based search
+        - name: lon
+          in: query
+          schema:
+            type: number
+          description: Longitude for location-based search
+        - name: category
+          in: query
+          schema:
+            type: string
+            enum: [restaurant, attraction, hotel, activity, all]
+            default: all
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      results:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/POISearchResult'
+
+  /destinations/{destinationId}/guide:
+    get:
+      tags: [Discovery]
+      summary: Get destination guide
+      description: Returns comprehensive guide for a destination
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: destinationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Destination guide retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/DestinationGuide'
+
+  /weather:
+    get:
+      tags: [Discovery]
+      summary: Get weather forecast
+      description: Returns weather forecast for a location
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: lat
+          in: query
+          required: true
+          schema:
+            type: number
+        - name: lon
+          in: query
+          required: true
+          schema:
+            type: number
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Specific date for forecast
+      responses:
+        '200':
+          description: Weather forecast retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/WeatherForecast'
+
+  # ==========================================
+  # MAP ENDPOINTS
+  # ==========================================
+
+  /trips/{tripId}/route:
+    get:
+      tags: [Maps]
+      summary: Get trip route
+      description: Returns optimized route between trip events
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TripIdParam'
+        - name: mode
+          in: query
+          schema:
+            type: string
+            enum: [driving, walking, cycling, transit]
+            default: driving
+      responses:
+        '200':
+          description: Route calculated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/RouteData'
+
+  # ==========================================
+  # PROFESSIONAL/CRM ENDPOINTS
+  # ==========================================
+
+  /crm/clients:
+    get:
+      tags: [Professional]
+      summary: List CRM clients
+      description: Returns all clients (travel agent feature)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [lead, active, inactive, all]
+            default: all
+      responses:
+        '200':
+          description: Clients retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      clients:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/CRMClient'
+                      pagination:
+                        $ref: '#/components/schemas/Pagination'
+
+    post:
+      tags: [Professional]
+      summary: Create CRM client
+      description: Adds a new client to CRM
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CRMClientCreate'
+      responses:
+        '201':
+          description: Client created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/CRMClient'
+
+  /crm/clients/{clientId}:
+    get:
+      tags: [Professional]
+      summary: Get client details
+      description: Returns detailed client information
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Client retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/CRMClient'
+
+    patch:
+      tags: [Professional]
+      summary: Update client
+      description: Updates client information
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CRMClientUpdate'
+      responses:
+        '200':
+          description: Client updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/CRMClient'
+
+  /proposals:
+    get:
+      tags: [Professional]
+      summary: List proposals
+      description: Returns all proposals created by agent
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, sent, accepted, rejected, all]
+            default: all
+      responses:
+        '200':
+          description: Proposals retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      proposals:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Proposal'
+                      pagination:
+                        $ref: '#/components/schemas/Pagination'
+
+    post:
+      tags: [Professional]
+      summary: Create proposal
+      description: Creates a new proposal for client
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProposalCreate'
+      responses:
+        '201':
+          description: Proposal created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Proposal'
+
+  /proposals/{proposalId}/send:
+    post:
+      tags: [Professional]
+      summary: Send proposal
+      description: Sends proposal to client via email
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: proposalId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Proposal sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+
+  /invoices:
+    get:
+      tags: [Professional]
+      summary: List invoices
+      description: Returns all invoices
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, sent, paid, overdue, cancelled, all]
+            default: all
+      responses:
+        '200':
+          description: Invoices retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      invoices:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Invoice'
+                      pagination:
+                        $ref: '#/components/schemas/Pagination'
+
+    post:
+      tags: [Professional]
+      summary: Create invoice
+      description: Creates a new invoice
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvoiceCreate'
+      responses:
+        '201':
+          description: Invoice created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Invoice'
+
+  /invoices/{invoiceId}/send:
+    post:
+      tags: [Professional]
+      summary: Send invoice
+      description: Sends invoice to client via email
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: invoiceId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Invoice sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+
+  /payments/create-intent:
+    post:
+      tags: [Professional]
+      summary: Create payment intent
+      description: Creates Stripe payment intent for invoice
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [invoiceId]
+              properties:
+                invoiceId:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Payment intent created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      clientSecret:
+                        type: string
+                        example: pi_1234567890_secret_abcdefg
+                      paymentIntentId:
+                        type: string
+                        example: pi_1234567890
+
+  /landing-pages:
+    get:
+      tags: [Professional]
+      summary: List landing pages
+      description: Returns all custom landing pages
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Landing pages retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      pages:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/LandingPage'
+
+    post:
+      tags: [Professional]
+      summary: Create landing page
+      description: Creates a new landing page
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LandingPageCreate'
+      responses:
+        '201':
+          description: Landing page created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/LandingPage'
+
+  /leads:
+    get:
+      tags: [Professional]
+      summary: List leads
+      description: Returns all captured leads
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [new, contacted, converted, lost, all]
+            default: all
+      responses:
+        '200':
+          description: Leads retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      leads:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Lead'
+                      pagination:
+                        $ref: '#/components/schemas/Pagination'
+
+# ==========================================
+# COMPONENTS
+# ==========================================
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    TripIdParam:
+      name: tripId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Trip unique identifier
+
+    EventIdParam:
+      name: eventId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Event unique identifier
+
+    PageParam:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+      description: Page number for pagination
+
+    LimitParam:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+      description: Number of items per page
+
+    SortParam:
+      name: sort
+      in: query
+      schema:
+        type: string
+        enum: [name_asc, name_desc, date_asc, date_desc, created_asc, created_desc]
+        default: created_desc
+      description: Sort order
+
+  responses:
+    BadRequest:
+      description: Invalid request parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            error:
+              code: VALIDATION_ERROR
+              message: Invalid input
+              details:
+                - field: email
+                  message: Invalid email format
+
+    Unauthorized:
+      description: Missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            error:
+              code: UNAUTHORIZED
+              message: Authentication required
+
+    Forbidden:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            error:
+              code: FORBIDDEN
+              message: You don't have permission to perform this action
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            error:
+              code: NOT_FOUND
+              message: Resource not found
+
+  schemas:
+    Error:
+      type: object
+      required: [success, error]
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              example: VALIDATION_ERROR
+            message:
+              type: string
+              example: Invalid input
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                  message:
+                    type: string
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 20
+        total:
+          type: integer
+          example: 100
+        totalPages:
+          type: integer
+          example: 5
+        hasNext:
+          type: boolean
+          example: true
+        hasPrevious:
+          type: boolean
+          example: false
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        email:
+          type: string
+          format: email
+          example: sarah@example.com
+        firstName:
+          type: string
+          example: Sarah
+        lastName:
+          type: string
+          example: Johnson
+        fullName:
+          type: string
+          example: Sarah Johnson
+        avatarUrl:
+          type: string
+          format: uri
+          nullable: true
+          example: https://cdn.wanderplan.com/avatars/550e8400.jpg
+        emailVerified:
+          type: boolean
+          example: true
+        timezone:
+          type: string
+          example: America/New_York
+        bio:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    UserSettings:
+      type: object
+      properties:
+        notifications:
+          type: object
+          properties:
+            email:
+              type: object
+              properties:
+                tripInvites:
+                  type: boolean
+                  default: true
+                tripUpdates:
+                  type: boolean
+                  default: true
+                messages:
+                  type: boolean
+                  default: true
+                marketing:
+                  type: boolean
+                  default: false
+            push:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+                  default: false
+        privacy:
+          type: object
+          properties:
+            defaultTripVisibility:
+              type: string
+              enum: [private, shared, public]
+              default: private
+            showProfile:
+              type: boolean
+              default: true
+        preferences:
+          type: object
+          properties:
+            defaultCurrency:
+              type: string
+              default: USD
+            measurementUnit:
+              type: string
+              enum: [metric, imperial]
+              default: metric
+
+    Trip:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Summer Europe Adventure
+        description:
+          type: string
+          nullable: true
+        startDate:
+          type: string
+          format: date
+          example: '2025-07-01'
+        endDate:
+          type: string
+          format: date
+          example: '2025-07-15'
+        destinations:
+          type: array
+          items:
+            type: string
+          example: [Paris, Amsterdam, Berlin]
+        tags:
+          type: array
+          items:
+            type: string
+          example: [backpacking, budget, europe]
+        visibility:
+          type: string
+          enum: [private, shared, public]
+          example: private
+        coverImageUrl:
+          type: string
+          format: uri
+          nullable: true
+        isArchived:
+          type: boolean
+          example: false
+        ownerId:
+          type: string
+          format: uuid
+        ownerName:
+          type: string
+          example: Sarah Johnson
+        collaboratorCount:
+          type: integer
+          example: 3
+        eventCount:
+          type: integer
+          example: 15
+        userRole:
+          type: string
+          enum: [owner, admin, editor, viewer]
+          example: owner
+          description: Current user's role in the trip
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    TripDetailed:
+      allOf:
+        - $ref: '#/components/schemas/Trip'
+        - type: object
+          properties:
+            events:
+              type: array
+              items:
+                $ref: '#/components/schemas/Event'
+            collaborators:
+              type: array
+              items:
+                $ref: '#/components/schemas/Collaborator'
+            budget:
+              $ref: '#/components/schemas/Budget'
+              nullable: true
+
+    Event:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tripId:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [flight, hotel, activity, restaurant, transportation, destination]
+          example: activity
+        title:
+          type: string
+          example: Visit the Louvre Museum
+        description:
+          type: string
+          nullable: true
+        startDateTime:
+          type: string
+          format: date-time
+          example: '2025-07-03T10:00:00Z'
+        endDateTime:
+          type: string
+          format: date-time
+          nullable: true
+          example: '2025-07-03T14:00:00Z'
+        location:
+          type: object
+          nullable: true
+          properties:
+            name:
+              type: string
+              example: Louvre Museum
+            address:
+              type: string
+              example: Rue de Rivoli, 75001 Paris, France
+            lat:
+              type: number
+              format: float
+              example: 48.8606
+            lon:
+              type: number
+              format: float
+              example: 2.3376
+        order:
+          type: integer
+          description: Position in itinerary
+          example: 5
+        notes:
+          type: string
+          nullable: true
+        confirmationNumber:
+          type: string
+          nullable: true
+          example: ABC123XYZ
+        cost:
+          type: number
+          format: decimal
+          nullable: true
+          example: 45.00
+        currency:
+          type: string
+          nullable: true
+          example: EUR
+        attachments:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              name:
+                type: string
+              url:
+                type: string
+                format: uri
+        createdBy:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    EventCreate:
+      type: object
+      required: [type, title, startDateTime]
+      properties:
+        type:
+          type: string
+          enum: [flight, hotel, activity, restaurant, transportation, destination]
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 2000
+        startDateTime:
+          type: string
+          format: date-time
+        endDateTime:
+          type: string
+          format: date-time
+        location:
+          type: object
+          properties:
+            name:
+              type: string
+            address:
+              type: string
+            lat:
+              type: number
+            lon:
+              type: number
+        notes:
+          type: string
+        confirmationNumber:
+          type: string
+        cost:
+          type: number
+          format: decimal
+        currency:
+          type: string
+
+    EventUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        startDateTime:
+          type: string
+          format: date-time
+        endDateTime:
+          type: string
+          format: date-time
+        location:
+          type: object
+        notes:
+          type: string
+        confirmationNumber:
+          type: string
+        cost:
+          type: number
+        currency:
+          type: string
+
+    Collaborator:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        fullName:
+          type: string
+        avatarUrl:
+          type: string
+          format: uri
+          nullable: true
+        role:
+          type: string
+          enum: [viewer, editor, admin]
+          example: editor
+        status:
+          type: string
+          enum: [pending, accepted, declined]
+          example: accepted
+        invitedBy:
+          type: string
+          format: uuid
+        invitedAt:
+          type: string
+          format: date-time
+        joinedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    Activity:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tripId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        userName:
+          type: string
+        userAvatarUrl:
+          type: string
+          format: uri
+          nullable: true
+        actionType:
+          type: string
+          enum: [trip_updated, event_created, event_updated, event_deleted, collaborator_added, collaborator_removed, expense_added, message_posted]
+        actionData:
+          type: object
+          description: Context-specific data for the action
+        createdAt:
+          type: string
+          format: date-time
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tripId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        userName:
+          type: string
+        userAvatarUrl:
+          type: string
+          format: uri
+          nullable: true
+        content:
+          type: string
+        replyTo:
+          type: string
+          format: uuid
+          nullable: true
+        isEdited:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Idea:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tripId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        createdBy:
+          type: string
+          format: uuid
+        createdByName:
+          type: string
+        status:
+          type: string
+          enum: [open, accepted, rejected]
+          default: open
+        upvotes:
+          type: integer
+          example: 5
+        downvotes:
+          type: integer
+          example: 1
+        userVote:
+          type: string
+          enum: [up, down, none]
+          nullable: true
+          description: Current user's vote
+        createdAt:
+          type: string
+          format: date-time
+
+    Poll:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tripId:
+          type: string
+          format: uuid
+        question:
+          type: string
+        options:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              text:
+                type: string
+              voteCount:
+                type: integer
+        allowMultipleVotes:
+          type: boolean
+        totalVotes:
+          type: integer
+        userVotes:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: Option IDs user voted for
+        status:
+          type: string
+          enum: [open, closed]
+        createdBy:
+          type: string
+          format: uuid
+        createdByName:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    Budget:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tripId:
+          type: string
+          format: uuid
+        totalBudget:
+          type: number
+          format: decimal
+          example: 5000.00
+        currency:
+          type: string
+          example: USD
+        totalSpent:
+          type: number
+          format: decimal
+          example: 2450.75
+        remaining:
+          type: number
+          format: decimal
+          example: 2549.25
+        categoryBudgets:
+          type: object
+          properties:
+            accommodation:
+              $ref: '#/components/schemas/CategoryBudget'
+            transportation:
+              $ref: '#/components/schemas/CategoryBudget'
+            food:
+              $ref: '#/components/schemas/CategoryBudget'
+            activities:
+              $ref: '#/components/schemas/CategoryBudget'
+            other:
+              $ref: '#/components/schemas/CategoryBudget'
+
+    CategoryBudget:
+      type: object
+      properties:
+        budgeted:
+          type: number
+          format: decimal
+        spent:
+          type: number
+          format: decimal
+        remaining:
+          type: number
+          format: decimal
+
+    Expense:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tripId:
+          type: string
+          format: uuid
+        category:
+          type: string
+          enum: [accommodation, transportation, food, activities, other]
+        description:
+          type: string
+        amount:
+          type: number
+          format: decimal
+        currency:
+          type: string
+        date:
+          type: string
+          format: date
+        paidBy:
+          type: string
+          format: uuid
+        paidByName:
+          type: string
+        splitBetween:
+          type: array
+          items:
+            type: object
+            properties:
+              userId:
+                type: string
+                format: uuid
+              userName:
+                type: string
+              amount:
+                type: number
+                format: decimal
+        eventId:
+          type: string
+          format: uuid
+          nullable: true
+        receiptUrl:
+          type: string
+          format: uri
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    ExpenseCreate:
+      type: object
+      required: [category, description, amount, currency, date, paidBy]
+      properties:
+        category:
+          type: string
+          enum: [accommodation, transportation, food, activities, other]
+        description:
+          type: string
+          maxLength: 200
+        amount:
+          type: number
+          format: decimal
+          minimum: 0
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+        date:
+          type: string
+          format: date
+        paidBy:
+          type: string
+          format: uuid
+        splitBetween:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: User IDs to split expense between
+        eventId:
+          type: string
+          format: uuid
+
+    ExpenseUpdate:
+      type: object
+      properties:
+        category:
+          type: string
+        description:
+          type: string
+        amount:
+          type: number
+        currency:
+          type: string
+        date:
+          type: string
+          format: date
+        splitBetween:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    Document:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tripId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          type: string
+          enum: [passport, visa, booking, ticket, insurance, other]
+        fileUrl:
+          type: string
+          format: uri
+        fileSize:
+          type: integer
+          description: File size in bytes
+        mimeType:
+          type: string
+          example: application/pdf
+        eventId:
+          type: string
+          format: uuid
+          nullable: true
+        uploadedBy:
+          type: string
+          format: uuid
+        uploadedByName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    DestinationSearchResult:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          example: Paris
+        type:
+          type: string
+          enum: [city, country, landmark]
+          example: city
+        country:
+          type: string
+          example: France
+        region:
+          type: string
+          example: Île-de-France
+        coordinates:
+          type: object
+          properties:
+            lat:
+              type: number
+            lon:
+              type: number
+        imageUrl:
+          type: string
+          format: uri
+          nullable: true
+
+    POISearchResult:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+          enum: [restaurant, attraction, hotel, activity]
+        address:
+          type: string
+        coordinates:
+          type: object
+          properties:
+            lat:
+              type: number
+            lon:
+              type: number
+        rating:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 5
+          nullable: true
+        priceLevel:
+          type: integer
+          minimum: 1
+          maximum: 4
+          nullable: true
+        openNow:
+          type: boolean
+          nullable: true
+        imageUrl:
+          type: string
+          format: uri
+          nullable: true
+        distance:
+          type: number
+          description: Distance in meters (if location-based search)
+          nullable: true
+
+    DestinationGuide:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        bestTimeToVisit:
+          type: string
+        currency:
+          type: string
+        language:
+          type: string
+        timezone:
+          type: string
+        topAttractions:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              description:
+                type: string
+              imageUrl:
+                type: string
+                format: uri
+        tips:
+          type: array
+          items:
+            type: string
+        images:
+          type: array
+          items:
+            type: string
+            format: uri
+
+    WeatherForecast:
+      type: object
+      properties:
+        location:
+          type: object
+          properties:
+            lat:
+              type: number
+            lon:
+              type: number
+            name:
+              type: string
+        current:
+          type: object
+          properties:
+            temperature:
+              type: number
+              description: Temperature in Celsius
+            feelsLike:
+              type: number
+            condition:
+              type: string
+              example: Partly Cloudy
+            humidity:
+              type: integer
+            windSpeed:
+              type: number
+            icon:
+              type: string
+        forecast:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              tempHigh:
+                type: number
+              tempLow:
+                type: number
+              condition:
+                type: string
+              icon:
+                type: string
+              precipitation:
+                type: integer
+                description: Precipitation probability (0-100)
+
+    RouteData:
+      type: object
+      properties:
+        distance:
+          type: number
+          description: Total distance in meters
+        duration:
+          type: number
+          description: Total duration in seconds
+        geometry:
+          type: object
+          properties:
+            type:
+              type: string
+              example: LineString
+            coordinates:
+              type: array
+              items:
+                type: array
+                items:
+                  type: number
+              description: Array of [lon, lat] coordinates
+        legs:
+          type: array
+          items:
+            type: object
+            properties:
+              distance:
+                type: number
+              duration:
+                type: number
+              startLocation:
+                type: object
+              endLocation:
+                type: object
+
+    CRMClient:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [lead, active, inactive]
+        source:
+          type: string
+          example: Website Contact Form
+        tags:
+          type: array
+          items:
+            type: string
+        notes:
+          type: string
+          nullable: true
+        tripCount:
+          type: integer
+        totalRevenue:
+          type: number
+          format: decimal
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CRMClientCreate:
+      type: object
+      required: [firstName, lastName, email]
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        source:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        notes:
+          type: string
+
+    CRMClientUpdate:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+        status:
+          type: string
+          enum: [lead, active, inactive]
+        tags:
+          type: array
+          items:
+            type: string
+        notes:
+          type: string
+
+    Proposal:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        clientId:
+          type: string
+          format: uuid
+        tripId:
+          type: string
+          format: uuid
+          nullable: true
+        title:
+          type: string
+        description:
+          type: string
+        totalPrice:
+          type: number
+          format: decimal
+        currency:
+          type: string
+        status:
+          type: string
+          enum: [draft, sent, accepted, rejected]
+        validUntil:
+          type: string
+          format: date
+          nullable: true
+        sentAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    ProposalCreate:
+      type: object
+      required: [clientId, title, totalPrice, currency]
+      properties:
+        clientId:
+          type: string
+          format: uuid
+        tripId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        totalPrice:
+          type: number
+          format: decimal
+        currency:
+          type: string
+        validUntil:
+          type: string
+          format: date
+
+    Invoice:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        invoiceNumber:
+          type: string
+          example: INV-2025-001
+        clientId:
+          type: string
+          format: uuid
+        tripId:
+          type: string
+          format: uuid
+          nullable: true
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              description:
+                type: string
+              quantity:
+                type: number
+              unitPrice:
+                type: number
+              total:
+                type: number
+        subtotal:
+          type: number
+          format: decimal
+        tax:
+          type: number
+          format: decimal
+        total:
+          type: number
+          format: decimal
+        currency:
+          type: string
+        status:
+          type: string
+          enum: [draft, sent, paid, overdue, cancelled]
+        dueDate:
+          type: string
+          format: date
+        paidAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    InvoiceCreate:
+      type: object
+      required: [clientId, items, currency, dueDate]
+      properties:
+        clientId:
+          type: string
+          format: uuid
+        tripId:
+          type: string
+          format: uuid
+        items:
+          type: array
+          items:
+            type: object
+            required: [description, quantity, unitPrice]
+            properties:
+              description:
+                type: string
+              quantity:
+                type: number
+              unitPrice:
+                type: number
+        currency:
+          type: string
+        taxRate:
+          type: number
+          format: decimal
+          description: Tax rate as percentage (e.g., 10 for 10%)
+        dueDate:
+          type: string
+          format: date
+
+    LandingPage:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        slug:
+          type: string
+          example: luxury-europe-tours
+        title:
+          type: string
+        description:
+          type: string
+        content:
+          type: object
+          description: JSON content for page builder
+        isPublished:
+          type: boolean
+        publishedUrl:
+          type: string
+          format: uri
+          nullable: true
+        leadCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    LandingPageCreate:
+      type: object
+      required: [slug, title]
+      properties:
+        slug:
+          type: string
+          pattern: '^[a-z0-9-]+$'
+        title:
+          type: string
+        description:
+          type: string
+        content:
+          type: object
+
+    Lead:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+          nullable: true
+        message:
+          type: string
+          nullable: true
+        source:
+          type: string
+          example: landing-page-luxury-europe
+        status:
+          type: string
+          enum: [new, contacted, converted, lost]
+          default: new
+        convertedToClientId:
+          type: string
+          format: uuid
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+security:
+  - bearerAuth: []

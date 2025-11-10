@@ -1,0 +1,780 @@
+// This is your Prisma schema file for WanderPlan
+// Complete database design for 85 endpoints covering 38 features
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// ENUMS
+// ==========================================
+
+enum EventType {
+  FLIGHT
+  HOTEL
+  ACTIVITY
+  RESTAURANT
+  TRANSPORTATION
+  DESTINATION
+}
+
+enum ExpenseCategory {
+  ACCOMMODATION
+  TRANSPORTATION
+  FOOD
+  ACTIVITIES
+  SHOPPING
+  OTHER
+}
+
+enum CollaboratorRole {
+  VIEWER
+  EDITOR
+  ADMIN
+}
+
+enum CollaboratorStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum ProposalStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  REJECTED
+}
+
+enum IdeaStatus {
+  OPEN
+  ACCEPTED
+  REJECTED
+}
+
+enum PollStatus {
+  OPEN
+  CLOSED
+}
+
+enum ActivityActionType {
+  TRIP_UPDATED
+  EVENT_CREATED
+  EVENT_UPDATED
+  EVENT_DELETED
+  COLLABORATOR_ADDED
+  COLLABORATOR_REMOVED
+  EXPENSE_ADDED
+  MESSAGE_POSTED
+}
+
+enum TripVisibility {
+  PRIVATE
+  SHARED
+  PUBLIC
+}
+
+enum DocumentType {
+  PASSPORT
+  VISA
+  BOOKING
+  TICKET
+  INSURANCE
+  OTHER
+}
+
+enum ClientStatus {
+  LEAD
+  ACTIVE
+  INACTIVE
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  CONVERTED
+  LOST
+}
+
+// ==========================================
+// NEXTAUTH MODELS (Authentication)
+// ==========================================
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  emailVerified DateTime? @map("email_verified")
+  password      String? // Hashed password for email/password auth
+  firstName     String    @map("first_name")
+  lastName      String    @map("last_name")
+  avatarUrl     String?   @map("avatar_url") @db.Text
+  bio           String?   @db.Text
+  phone         String?
+  timezone      String    @default("America/New_York")
+
+  // User settings stored as JSON
+  settings      Json      @default("{\"notifications\":{\"email\":{\"tripInvites\":true,\"tripUpdates\":true,\"messages\":true,\"marketing\":false},\"push\":{\"enabled\":false}},\"privacy\":{\"defaultTripVisibility\":\"PRIVATE\",\"showProfile\":true},\"preferences\":{\"defaultCurrency\":\"USD\",\"measurementUnit\":\"metric\"}}")
+
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  accounts              Account[]
+  sessions              Session[]
+  tripsCreated          Trip[]                 @relation("TripCreator")
+  tripCollaborations    TripCollaborator[]
+  events                Event[]
+  messages              Message[]
+  ideas                 Idea[]
+  ideaVotes             IdeaVote[]
+  pollVotes             PollVote[]
+  expensesPaid          Expense[]              @relation("ExpensePaidBy")
+  expenseSplits         ExpenseSplit[]
+  documentsUploaded     Document[]
+  activities            Activity[]
+  crmClients            CrmClient[]
+  proposals             Proposal[]
+  invoices              Invoice[]
+  landingPages          LandingPage[]
+  leads                 Lead[]
+  collaboratorInvites   TripCollaborator[]     @relation("CollaboratorInvitedBy")
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(uuid())
+  userId            String  @map("user_id")
+  type              String  // oauth, email, etc.
+  provider          String  // google, github, credentials, etc.
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model VerificationToken {
+  id         String   @id @default(uuid())
+  identifier String   // Email or user ID
+  token      String   @unique
+  expires    DateTime
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@unique([identifier, token])
+  @@index([token])
+  @@map("verification_tokens")
+}
+
+model PasswordResetToken {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  token      String   @unique
+  expires    DateTime
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([token])
+  @@index([userId])
+  @@map("password_reset_tokens")
+}
+
+// ==========================================
+// TRIP MODELS
+// ==========================================
+
+model Trip {
+  id              String         @id @default(uuid())
+  name            String
+  description     String?        @db.Text
+  startDate       DateTime?      @map("start_date") @db.Date
+  endDate         DateTime?      @map("end_date") @db.Date
+  destinations    String[]       // Array of destination names
+  visibility      TripVisibility @default(PRIVATE)
+  coverImageUrl   String?        @map("cover_image_url") @db.Text
+  isArchived      Boolean        @default(false) @map("is_archived")
+
+  createdBy       String         @map("created_by")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  // Relations
+  creator         User                @relation("TripCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+  collaborators   TripCollaborator[]
+  events          Event[]
+  messages        Message[]
+  ideas           Idea[]
+  polls           Poll[]
+  budget          Budget?
+  expenses        Expense[]
+  documents       Document[]
+  activities      Activity[]
+  tags            Tag[]
+  proposals       Proposal[]
+  invoices        Invoice[]
+
+  @@index([createdBy])
+  @@index([createdBy, isArchived])
+  @@index([visibility])
+  @@index([startDate])
+  @@map("trips")
+}
+
+model TripCollaborator {
+  id        String              @id @default(uuid())
+  tripId    String              @map("trip_id")
+  userId    String              @map("user_id")
+  role      CollaboratorRole    @default(VIEWER)
+  status    CollaboratorStatus  @default(PENDING)
+
+  invitedBy String              @map("invited_by")
+  invitedAt DateTime            @default(now()) @map("invited_at")
+  joinedAt  DateTime?           @map("joined_at")
+
+  createdAt DateTime            @default(now()) @map("created_at")
+  updatedAt DateTime            @updatedAt @map("updated_at")
+
+  // Relations
+  trip      Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  inviter   User @relation("CollaboratorInvitedBy", fields: [invitedBy], references: [id])
+
+  @@unique([tripId, userId])
+  @@index([tripId])
+  @@index([userId])
+  @@index([status])
+  @@map("trip_collaborators")
+}
+
+// ==========================================
+// ITINERARY MODELS
+// ==========================================
+
+model Event {
+  id                  String    @id @default(uuid())
+  tripId              String    @map("trip_id")
+  type                EventType
+  title               String
+  description         String?   @db.Text
+  startDateTime       DateTime  @map("start_date_time")
+  endDateTime         DateTime? @map("end_date_time")
+
+  // Location data stored as JSON for flexibility
+  location            Json?     // {name, address, lat, lon}
+
+  order               Int       // For drag-and-drop ordering
+  notes               String?   @db.Text
+  confirmationNumber  String?   @map("confirmation_number")
+  cost                Decimal?  @db.Decimal(10, 2)
+  currency            String?   @db.Char(3)
+
+  createdBy           String    @map("created_by")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  trip                Trip       @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  creator             User       @relation(fields: [createdBy], references: [id])
+  documents           Document[]
+  expenses            Expense[]
+
+  @@index([tripId])
+  @@index([tripId, order])
+  @@index([type])
+  @@index([startDateTime])
+  @@map("events")
+}
+
+// ==========================================
+// COLLABORATION MODELS
+// ==========================================
+
+model Message {
+  id              String   @id @default(uuid())
+  tripId          String   @map("trip_id")
+  userId          String   @map("user_id")
+  content         String   @db.Text
+  replyTo         String?  @map("reply_to") // ID of parent message
+  isEdited        Boolean  @default(false) @map("is_edited")
+
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  trip            Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tripId])
+  @@index([tripId, createdAt])
+  @@index([userId])
+  @@map("messages")
+}
+
+model Idea {
+  id          String     @id @default(uuid())
+  tripId      String     @map("trip_id")
+  title       String
+  description String     @db.Text
+  status      IdeaStatus @default(OPEN)
+
+  createdBy   String     @map("created_by")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  // Relations
+  trip        Trip       @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  creator     User       @relation(fields: [createdBy], references: [id])
+  votes       IdeaVote[]
+
+  @@index([tripId])
+  @@index([status])
+  @@map("ideas")
+}
+
+model IdeaVote {
+  id        String   @id @default(uuid())
+  ideaId    String   @map("idea_id")
+  userId    String   @map("user_id")
+  vote      Int      // 1 for upvote, -1 for downvote
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  idea      Idea     @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([ideaId, userId])
+  @@index([ideaId])
+  @@map("idea_votes")
+}
+
+model Poll {
+  id                  String     @id @default(uuid())
+  tripId              String     @map("trip_id")
+  question            String
+  allowMultipleVotes  Boolean    @default(false) @map("allow_multiple_votes")
+  status              PollStatus @default(OPEN)
+  expiresAt           DateTime?  @map("expires_at")
+
+  createdBy           String     @map("created_by")
+  createdAt           DateTime   @default(now()) @map("created_at")
+  updatedAt           DateTime   @updatedAt @map("updated_at")
+
+  // Relations
+  trip                Trip         @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  options             PollOption[]
+  votes               PollVote[]
+
+  @@index([tripId])
+  @@index([status])
+  @@map("polls")
+}
+
+model PollOption {
+  id        String     @id @default(uuid())
+  pollId    String     @map("poll_id")
+  text      String
+  order     Int        @default(0)
+
+  createdAt DateTime   @default(now()) @map("created_at")
+
+  // Relations
+  poll      Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes     PollVote[]
+
+  @@index([pollId])
+  @@map("poll_options")
+}
+
+model PollVote {
+  id        String   @id @default(uuid())
+  pollId    String   @map("poll_id")
+  optionId  String   @map("option_id")
+  userId    String   @map("user_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  poll      Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  option    PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([pollId, optionId, userId])
+  @@index([pollId])
+  @@index([userId])
+  @@map("poll_votes")
+}
+
+model Activity {
+  id          String             @id @default(uuid())
+  tripId      String             @map("trip_id")
+  userId      String             @map("user_id")
+  actionType  ActivityActionType @map("action_type")
+  actionData  Json               @default("{}") @map("action_data") // Context-specific data
+
+  createdAt   DateTime           @default(now()) @map("created_at")
+
+  // Relations
+  trip        Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tripId])
+  @@index([tripId, createdAt])
+  @@index([userId])
+  @@map("activities")
+}
+
+// ==========================================
+// FINANCIAL MODELS
+// ==========================================
+
+model Budget {
+  id              String   @id @default(uuid())
+  tripId          String   @unique @map("trip_id")
+  totalBudget     Decimal  @map("total_budget") @db.Decimal(10, 2)
+  currency        String   @db.Char(3)
+
+  // Category budgets stored as JSON
+  categoryBudgets Json     @default("{}") @map("category_budgets")
+  // Structure: { accommodation: {budgeted: 1000, spent: 500, remaining: 500}, ... }
+
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  trip            Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@map("budgets")
+}
+
+model Expense {
+  id          String          @id @default(uuid())
+  tripId      String          @map("trip_id")
+  eventId     String?         @map("event_id")
+  category    ExpenseCategory
+  description String
+  amount      Decimal         @db.Decimal(10, 2)
+  currency    String          @db.Char(3)
+  date        DateTime        @db.Date
+
+  paidBy      String          @map("paid_by")
+  receiptUrl  String?         @map("receipt_url") @db.Text
+
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+
+  // Relations
+  trip        Trip            @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  event       Event?          @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  payer       User            @relation("ExpensePaidBy", fields: [paidBy], references: [id])
+  splits      ExpenseSplit[]
+
+  @@index([tripId])
+  @@index([eventId])
+  @@index([paidBy])
+  @@index([date])
+  @@map("expenses")
+}
+
+model ExpenseSplit {
+  id         String   @id @default(uuid())
+  expenseId  String   @map("expense_id")
+  userId     String   @map("user_id")
+  amount     Decimal  @db.Decimal(10, 2)
+
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  // Relations
+  expense    Expense  @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([expenseId, userId])
+  @@index([expenseId])
+  @@index([userId])
+  @@map("expense_splits")
+}
+
+// ==========================================
+// DOCUMENT MODELS
+// ==========================================
+
+model Document {
+  id              String       @id @default(uuid())
+  tripId          String       @map("trip_id")
+  eventId         String?      @map("event_id")
+  name            String
+  type            DocumentType
+  fileUrl         String       @map("file_url") @db.Text
+  fileSize        Int          @map("file_size") // in bytes
+  mimeType        String       @map("mime_type")
+
+  uploadedBy      String       @map("uploaded_by")
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+
+  // Relations
+  trip            Trip   @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  event           Event? @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  uploader        User   @relation(fields: [uploadedBy], references: [id])
+
+  @@index([tripId])
+  @@index([eventId])
+  @@index([uploadedBy])
+  @@map("documents")
+}
+
+// ==========================================
+// PROFESSIONAL/CRM MODELS
+// ==========================================
+
+model CrmClient {
+  id           String       @id @default(uuid())
+  userId       String       @map("user_id") // The agent/travel planner who owns this client
+  firstName    String       @map("first_name")
+  lastName     String       @map("last_name")
+  email        String
+  phone        String?
+  status       ClientStatus @default(LEAD)
+  source       String?      // How they found you
+  tags         String[]
+  notes        String?      @db.Text
+
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+
+  // Relations
+  agent        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  proposals    Proposal[]
+  invoices     Invoice[]
+  convertedLeads Lead[]     @relation("LeadConvertedToClient")
+
+  @@index([userId])
+  @@index([email])
+  @@index([status])
+  @@map("crm_clients")
+}
+
+model Proposal {
+  id          String         @id @default(uuid())
+  userId      String         @map("user_id") // Agent who created it
+  clientId    String         @map("client_id")
+  tripId      String?        @map("trip_id")
+  title       String
+  description String?        @db.Text
+  totalPrice  Decimal        @map("total_price") @db.Decimal(10, 2)
+  currency    String         @db.Char(3)
+  status      ProposalStatus @default(DRAFT)
+  validUntil  DateTime?      @map("valid_until") @db.Date
+  sentAt      DateTime?      @map("sent_at")
+
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  // Relations
+  agent       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  client      CrmClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  trip        Trip?     @relation(fields: [tripId], references: [id], onDelete: SetNull)
+  lineItems   ProposalLineItem[]
+
+  @@index([userId])
+  @@index([clientId])
+  @@index([tripId])
+  @@index([status])
+  @@map("proposals")
+}
+
+model ProposalLineItem {
+  id          String   @id @default(uuid())
+  proposalId  String   @map("proposal_id")
+  description String
+  quantity    Decimal  @db.Decimal(10, 2)
+  unitPrice   Decimal  @map("unit_price") @db.Decimal(10, 2)
+  total       Decimal  @db.Decimal(10, 2)
+  order       Int      @default(0)
+
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  proposal    Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+
+  @@index([proposalId])
+  @@map("proposal_line_items")
+}
+
+model Invoice {
+  id            String        @id @default(uuid())
+  userId        String        @map("user_id") // Agent who created it
+  clientId      String        @map("client_id")
+  tripId        String?       @map("trip_id")
+  invoiceNumber String        @unique @map("invoice_number")
+
+  subtotal      Decimal       @db.Decimal(10, 2)
+  tax           Decimal       @default(0) @db.Decimal(10, 2)
+  total         Decimal       @db.Decimal(10, 2)
+  currency      String        @db.Char(3)
+
+  status        InvoiceStatus @default(DRAFT)
+  dueDate       DateTime      @map("due_date") @db.Date
+  paidAt        DateTime?     @map("paid_at")
+
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  agent         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  client        CrmClient     @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  trip          Trip?         @relation(fields: [tripId], references: [id], onDelete: SetNull)
+  lineItems     InvoiceLineItem[]
+  payments      Payment[]
+
+  @@index([userId])
+  @@index([clientId])
+  @@index([tripId])
+  @@index([status])
+  @@index([invoiceNumber])
+  @@map("invoices")
+}
+
+model InvoiceLineItem {
+  id          String   @id @default(uuid())
+  invoiceId   String   @map("invoice_id")
+  description String
+  quantity    Decimal  @db.Decimal(10, 2)
+  unitPrice   Decimal  @map("unit_price") @db.Decimal(10, 2)
+  total       Decimal  @db.Decimal(10, 2)
+  order       Int      @default(0)
+
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@map("invoice_line_items")
+}
+
+model Payment {
+  id                String   @id @default(uuid())
+  invoiceId         String   @map("invoice_id")
+  amount            Decimal  @db.Decimal(10, 2)
+  currency          String   @db.Char(3)
+  stripePaymentId   String?  @unique @map("stripe_payment_id") // Stripe payment intent ID
+  paymentMethod     String?  @map("payment_method") // card, bank_transfer, etc.
+  status            String   // succeeded, pending, failed
+
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  invoice           Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@index([stripePaymentId])
+  @@map("payments")
+}
+
+// ==========================================
+// MARKETING MODELS
+// ==========================================
+
+model LandingPage {
+  id            String   @id @default(uuid())
+  userId        String   @map("user_id") // Agent who created it
+  slug          String   @unique
+  title         String
+  description   String?  @db.Text
+  content       Json     @default("{}") // Page builder JSON
+  isPublished   Boolean  @default(false) @map("is_published")
+
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  agent         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leads         Lead[]
+
+  @@index([userId])
+  @@index([slug])
+  @@map("landing_pages")
+}
+
+model Lead {
+  id                   String     @id @default(uuid())
+  landingPageId        String?    @map("landing_page_id")
+  firstName            String     @map("first_name")
+  lastName             String     @map("last_name")
+  email                String
+  phone                String?
+  message              String?    @db.Text
+  source               String     // Where lead came from
+  status               LeadStatus @default(NEW)
+  convertedToClientId  String?    @unique @map("converted_to_client_id")
+
+  createdAt            DateTime   @default(now()) @map("created_at")
+  updatedAt            DateTime   @updatedAt @map("updated_at")
+
+  // Relations
+  landingPage          LandingPage? @relation(fields: [landingPageId], references: [id], onDelete: SetNull)
+  convertedClient      CrmClient?   @relation("LeadConvertedToClient", fields: [convertedToClientId], references: [id], onDelete: SetNull)
+  assignedTo           User?        @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
+  assignedToId         String?      @map("assigned_to_id")
+
+  @@index([landingPageId])
+  @@index([status])
+  @@index([email])
+  @@index([assignedToId])
+  @@map("leads")
+}
+
+// ==========================================
+// UTILITY MODELS
+// ==========================================
+
+model Tag {
+  id        String   @id @default(uuid())
+  tripId    String   @map("trip_id")
+  name      String
+  color     String?  // Hex color code
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@unique([tripId, name])
+  @@index([tripId])
+  @@map("tags")
+}

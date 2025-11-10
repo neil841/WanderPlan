@@ -1,0 +1,64 @@
+{
+  "automationLevel": "semi-auto",
+  "maxRetries": 3,
+  "requireApprovalFor": [
+    "phaseTransitions",
+    "productionDeployment",
+    "schemaChanges",
+    "featureAdditions"
+  ],
+  "autoFixSeverity": ["minor"],
+  "agentSettings": {
+    "staff-engineer": {
+      "preferredFramework": "Next.js",
+      "router": "App Router",
+      "styling": "Tailwind CSS",
+      "componentLibrary": "shadcn/ui",
+      "testFramework": "Jest",
+      "e2eFramework": "Playwright",
+      "stateManagement": "React Context + Hooks",
+      "formLibrary": "react-hook-form",
+      "validation": "zod"
+    },
+    "premium-ux-designer": {
+      "designSystem": "custom",
+      "animationLibrary": "Framer Motion",
+      "accessibilityLevel": "WCAG-AA",
+      "mobileFirst": true,
+      "darkMode": true
+    },
+    "senior-code-reviewer": {
+      "strictness": "moderate",
+      "focusAreas": ["security", "performance", "maintainability", "accessibility"],
+      "autoFixMinor": true
+    },
+    "qa-testing-agent": {
+      "minCoverage": 80,
+      "coverageTargets": "critical-paths",
+      "e2eRequired": true
+    },
+    "performance-monitoring-agent": {
+      "lighthouseThreshold": 80,
+      "corewWebVitals": {
+        "lcp": 2.5,
+        "fid": 100,
+        "cls": 0.1
+      }
+    },
+    "accessibility-compliance-agent": {
+      "standard": "WCAG-2.1-AA",
+      "autoFix": true
+    }
+  },
+  "chromeDevTools": {
+    "autoValidate": true,
+    "screenshotOnChange": true,
+    "performanceThreshold": 80,
+    "accessibilityChecks": true
+  },
+  "optimization": {
+    "enableCaching": true,
+    "selectiveExecution": true,
+    "parallelValidation": true
+  }
+}

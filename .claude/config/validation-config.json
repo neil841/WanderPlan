@@ -1,0 +1,74 @@
+{
+  "validationInterval": 5,
+  "enabled": true,
+  "lastValidationTaskCount": 0,
+  "validationAgents": [
+    "senior-code-reviewer",
+    "qa-testing-agent",
+    "performance-monitoring-agent",
+    "security-agent",
+    "accessibility-compliance-agent"
+  ],
+  "uiValidationEnabled": true,
+  "chromeDevToolsValidation": {
+    "enabled": true,
+    "validateAfterEveryUITask": true,
+    "viewports": [
+      { "name": "Desktop", "width": 1920, "height": 1080 },
+      { "name": "Tablet", "width": 768, "height": 1024 },
+      { "name": "Mobile", "width": 375, "height": 667 }
+    ],
+    "checks": [
+      "snapshot",
+      "screenshot",
+      "consoleErrors",
+      "responsiveDesign",
+      "interactiveElements",
+      "accessibility",
+      "performance"
+    ],
+    "devServerUrl": "http://localhost:3000",
+    "maxRetries": 3,
+    "retryDelayMs": 2000
+  },
+  "uiValidationTasks": [
+    "registration-ui",
+    "login-ui",
+    "dashboard-layout",
+    "trip-list-ui",
+    "trip-details-ui",
+    "itinerary-builder-ui",
+    "profile",
+    "settings",
+    "form",
+    "component",
+    "layout",
+    "page"
+  ],
+  "securityChecks": {
+    "sqlInjection": true,
+    "xss": true,
+    "authBypass": true,
+    "dependencyAudit": true,
+    "credentialExposure": true,
+    "inputValidation": true
+  },
+  "performanceThresholds": {
+    "lighthouseScore": 80,
+    "bundleSizeKB": 500,
+    "apiResponseTimeMs": 200,
+    "lcp": 2500,
+    "fid": 100,
+    "cls": 0.1
+  },
+  "testCoverageThreshold": {
+    "critical": 80,
+    "overall": 60
+  },
+  "validationReports": {
+    "directory": ".claude/reports/validation",
+    "format": "markdown",
+    "includeTimestamps": true,
+    "severityLevels": ["BLOCKER", "CRITICAL", "MAJOR", "MINOR", "INFO"]
+  }
+}
