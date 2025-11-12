@@ -1,7 +1,7 @@
 {
   "validationInterval": 5,
   "enabled": true,
-  "lastValidationTaskCount": 0,
+  "lastValidationTaskCount": 26,
   "validationAgents": [
     "senior-code-reviewer",
     "qa-testing-agent",
