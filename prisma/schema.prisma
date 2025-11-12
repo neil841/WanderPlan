@@ -151,6 +151,7 @@ model User {
   landingPages          LandingPage[]
   leads                 Lead[]
   collaboratorInvites   TripCollaborator[]     @relation("CollaboratorInvitedBy")
+  tripShareTokens       TripShareToken[]
 
   @@map("users")
 }
@@ -246,6 +247,7 @@ model Trip {
   tags            Tag[]
   proposals       Proposal[]
   invoices        Invoice[]
+  shareTokens     TripShareToken[]
 
   @@index([createdBy])
   @@index([createdBy, isArchived])
@@ -778,4 +780,30 @@ model Tag {
   @@unique([tripId, name])
   @@index([tripId])
   @@map("tags")
+}
+
+// ==========================================
+// TRIP SHARING MODEL
+// ==========================================
+
+model TripShareToken {
+  id          String    @id @default(uuid())
+  tripId      String    @map("trip_id")
+  token       String    @unique @default(uuid())
+  expiresAt   DateTime  @map("expires_at")
+  permissions String    @default("view_only") // view_only, comment
+  isActive    Boolean   @default(true) @map("is_active")
+
+  createdBy   String    @map("created_by")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  revokedAt   DateTime? @map("revoked_at")
+
+  // Relations
+  trip        Trip      @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  creator     User      @relation(fields: [createdBy], references: [id])
+
+  @@index([tripId])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("trip_share_tokens")
 }
