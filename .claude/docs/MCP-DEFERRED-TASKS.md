@@ -51,6 +51,7 @@
 | Task ID | Description | Files Modified | Validation Status |
 |---------|-------------|----------------|-------------------|
 | task-3-3-itinerary-day-view | Itinerary Builder UI with drag-and-drop | `src/app/(dashboard)/trips/[tripId]/itinerary/page.tsx`, `src/components/itinerary/ItineraryBuilder.tsx`, `src/components/itinerary/DayColumn.tsx`, `src/components/itinerary/EventCard.tsx`, `src/components/itinerary/DraggableEvent.tsx`, `src/components/itinerary/UnscheduledEvents.tsx`, `src/components/itinerary/EmptyDay.tsx`, `src/hooks/useItineraryData.ts`, `src/hooks/useEventReorder.ts` | ⏸️ Deferred |
+| task-3-4-event-forms | Event Creation Forms for all 6 event types | `src/components/events/CreateEventDialog.tsx`, `src/components/events/FlightForm.tsx`, `src/components/events/HotelForm.tsx`, `src/components/events/ActivityForm.tsx`, `src/components/events/RestaurantForm.tsx`, `src/components/events/TransportationForm.tsx`, `src/components/events/DestinationForm.tsx`, `src/components/events/LocationAutocomplete.tsx`, `src/components/events/CostInput.tsx`, `src/hooks/useCreateEvent.ts`, `src/hooks/useLocationSearch.ts` | ⏸️ Deferred |
 
 **Chrome DevTools Validation Needed**:
 - Test drag-and-drop on 3 viewports (Desktop 1920x1080, Tablet 768x1024, Mobile 375x667)
@@ -62,6 +63,17 @@
 - Screen reader compatibility testing
 - Console error checks
 - Core Web Vitals measurement
+- **task-3-4-event-forms specific**:
+  - Test all 6 event type forms on 3 viewports
+  - Test location autocomplete with Nominatim API
+  - Test form validation for each event type
+  - Test cost input with currency selector
+  - Test date/time pickers
+  - Verify tab transitions and animations
+  - Test keyboard navigation through tabs and form fields
+  - Screen reader testing for form accessibility
+  - Test form submission (success/error states)
+  - Performance testing with location search debouncing
 
 ---
 
