@@ -270,6 +270,19 @@ export const tripIdParamSchema = z.object({
 });
 
 /**
+ * Event reordering schema
+ * Validates array of event IDs in new order
+ */
+export const reorderEventsSchema = z.object({
+  eventIds: z
+    .array(z.string().uuid('Invalid event ID format'))
+    .min(1, 'Event IDs array cannot be empty')
+    .refine((ids) => new Set(ids).size === ids.length, {
+      message: 'Event IDs must be unique (no duplicates allowed)',
+    }),
+});
+
+/**
  * Type exports for use in API routes
  */
 export type CreateEventInput = z.infer<typeof createEventSchema>;
@@ -279,3 +292,4 @@ export type EventIdParam = z.infer<typeof eventIdParamSchema>;
 export type TripIdParam = z.infer<typeof tripIdParamSchema>;
 export type EventLocation = z.infer<typeof eventLocationSchema>;
 export type EventCost = z.infer<typeof eventCostSchema>;
+export type ReorderEventsInput = z.infer<typeof reorderEventsSchema>;
