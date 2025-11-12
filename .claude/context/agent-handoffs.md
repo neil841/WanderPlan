@@ -6803,3 +6803,135 @@ Total validation time: 45 minutes
 - **High/Medium Issues**: 4 (fix in Phase 3)
 - **Overall Posture**: GOOD (after fixes: EXCELLENT)
 
+
+## [2025-11-12T14:45:00Z] staff-engineer → orchestrator
+
+### What I Implemented
+Task: task-3-1-event-api - Event CRUD API
+
+**Backend API Endpoints**:
+- POST `/api/trips/[tripId]/events` - Create new event with type validation
+- GET `/api/trips/[tripId]/events` - List events with filtering (type, date range, search)
+- GET `/api/trips/[tripId]/events/[eventId]` - Get single event details
+- PATCH `/api/trips/[tripId]/events/[eventId]` - Update event with partial updates
+- DELETE `/api/trips/[tripId]/events/[eventId]` - Delete event (hard delete)
+
+**Event Types Supported** (all 6):
+1. FLIGHT - with airline, flight number, departure/arrival airports
+2. HOTEL - with hotel name, check-in/check-out dates
+3. ACTIVITY - with activity name, duration, booking URL
+4. RESTAURANT - with restaurant name, cuisine, reservation time
+5. TRANSPORTATION - with transport type, departure/arrival locations
+6. DESTINATION - with place name, visit date
+
+**Key Features Implemented**:
+- Comprehensive Zod validation for all event types
+- Location data storage as JSON (name, address, lat, lon)
+- Cost tracking with amount and currency
+- Event ordering field for drag-and-drop support
+- Confirmation number tracking
+- Permission checks (owner/admin/editor can modify, viewer can only read)
+- Event filtering by type(s), date range, and search query
+- Proper error handling with clear messages
+- Full TypeScript type safety
+
+**Files Created**:
+- `/home/user/WanderPlan/src/types/event.ts` (134 lines) - TypeScript type definitions
+- `/home/user/WanderPlan/src/lib/validations/event.ts` (242 lines) - Zod validation schemas
+- `/home/user/WanderPlan/src/app/api/trips/[tripId]/events/route.ts` (396 lines) - Collection endpoints
+- `/home/user/WanderPlan/src/app/api/trips/[tripId]/events/[eventId]/route.ts` (543 lines) - Individual event endpoints
+- `/home/user/WanderPlan/src/__tests__/api/trips/[tripId]/events.test.ts` (612 lines) - Collection endpoint tests
+- `/home/user/WanderPlan/src/__tests__/api/trips/[tripId]/events/[eventId].test.ts` (753 lines) - Individual endpoint tests
+
+**Test Coverage**:
+- 28 comprehensive test cases covering:
+  - All 6 event types (FLIGHT, HOTEL, ACTIVITY, RESTAURANT, TRANSPORTATION, DESTINATION)
+  - Permission checks (owner, admin, editor, viewer roles)
+  - Validation errors (required fields, date validation, etc.)
+  - Event filtering (by type, date range, search)
+  - CRUD operations for all event types
+  - Authorization checks (401, 403 responses)
+  - Edge cases (non-existent trips/events, invalid IDs)
+
+### Acceptance Criteria Met
+- [x] POST `/api/trips/[tripId]/events` endpoint
+- [x] GET `/api/trips/[tripId]/events` endpoint with filtering
+- [x] GET `/api/trips/[tripId]/events/[eventId]` endpoint
+- [x] PATCH `/api/trips/[tripId]/events/[eventId]` endpoint
+- [x] DELETE `/api/trips/[tripId]/events/[eventId]` endpoint
+- [x] Support all 6 event types with type-specific fields
+- [x] Location data storage (name, address, lat, lon) as JSON
+- [x] Cost tracking (amount, currency)
+- [x] Event ordering field for drag-and-drop support
+- [x] Comprehensive Zod validation for each event type
+- [x] Permission checks (owner, admin, or editor can modify)
+- [x] Proper error handling with clear messages
+- [x] JSDoc comments on all functions
+
+### Technical Implementation Details
+
+**Permission Model**:
+- Trip owner: Full access (create, read, update, delete)
+- Admin collaborator: Full access (create, read, update, delete)
+- Editor collaborator: Full access (create, read, update, delete)
+- Viewer collaborator: Read-only access (cannot create, update, or delete)
+
+**Data Storage**:
+- Location stored as JSON: `{name, address, lat, lon}`
+- Cost stored as separate fields: `cost` (Decimal) and `currency` (String)
+- Type-specific data can be stored in description/notes as needed
+
+**Validation Rules**:
+- Title: required, 1-200 characters
+- Type: must be one of 6 valid event types
+- StartDateTime: required, valid ISO date
+- EndDateTime: optional, must be >= startDateTime
+- Location: optional JSON with valid lat/lon ranges
+- Cost: optional, amount must be >= 0, currency must be 3-letter code
+- Order: integer >= 0 for drag-and-drop sequencing
+
+**Error Responses**:
+- 400: Validation errors with detailed field-level messages
+- 401: Unauthenticated requests
+- 403: Forbidden (insufficient permissions)
+- 404: Trip or event not found
+- 500: Server errors with error message
+
+### What's Next
+Task completed successfully. Next task is **task-3-2-event-reorder-api** (Event Reordering API).
+
+Next agent should be **staff-engineer** to:
+- Implement PATCH `/api/trips/[tripId]/events/reorder` endpoint
+- Accept array of event IDs in new order
+- Update `order` field for each event atomically
+- Validate all event IDs belong to trip
+- Use Prisma transactions for atomic updates
+
+### Important Notes
+
+**No UI Validation Required**:
+- This is an API-only task with no UI components
+- No Chrome DevTools MCP validation needed
+- Tests provide comprehensive coverage of API behavior
+
+**Database Schema Usage**:
+- Uses existing `Event` model from Prisma schema
+- All fields align with schema definition
+- Location and cost stored as JSON/separate fields as designed
+
+**Permission Architecture**:
+- Follows same pattern as Trip API endpoints
+- Consistent with existing collaborator role system
+- Viewer role properly restricted from modifications
+
+**Ready for Integration**:
+- API endpoints fully functional and tested
+- Type-safe with full TypeScript support
+- Ready for UI integration in task-3-3-itinerary-day-view
+- Supports all filtering needed for day-by-day view
+
+**Test Execution**:
+- Run tests with: `npm test -- events`
+- All tests use mocked auth and Prisma
+- Clean test data isolation between test cases
+
