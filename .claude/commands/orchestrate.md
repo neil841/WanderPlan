@@ -133,6 +133,43 @@ if (allTasksComplete && phaseFullyValidated(currentPhase)) {
 }
 ```
 
+### Step 6.5: Check if UI Task Requires shadcn Component Analysis
+
+```javascript
+// Get current task details
+const currentTask = findNextPendingTask();
+const taskIsUI = taskRequiresUI(currentTask);
+
+if (taskIsUI && !taskHasShadcnAnalysis(currentTask)) {
+  console.log(`
+╔════════════════════════════════════════════════════════╗
+║     shadcn COMPONENT ANALYSIS REQUIRED                ║
+║     Task: ${currentTask}                                   ║
+╚════════════════════════════════════════════════════════╝
+
+🎨 UI Task Detected - Running shadcn workflow...
+
+Step 1: shadcn Requirements Analyzer
+  - Analyzing UI requirements
+  - Identifying required components
+  - Creating component hierarchy
+
+Step 2: shadcn Component Researcher (if needed)
+  - Researching component APIs
+  - Gathering usage examples
+
+Step 3: Component Installation
+  - Installing required components
+  - Verifying component availability
+
+Then: Staff Engineer / Premium UX Designer can proceed
+  `);
+
+  // Run shadcn analysis workflow
+  return runShadcnWorkflow(currentTask);
+}
+```
+
 ### Step 7: Determine Next Agent
 
 Use this decision tree:
@@ -175,7 +212,21 @@ if (currentPhase && currentPhase.startsWith("phase-") && currentPhase !== "phase
 
   // Check if current task needs implementation
   if (taskStatus(currentTask) === "pending") {
-    return spawnAgent("staff-engineer");
+    // Check if UI task needs shadcn analysis first
+    if (taskRequiresUI(currentTask) && !taskHasShadcnAnalysis(currentTask)) {
+      console.log(`🎨 UI task detected: ${currentTask}`);
+      console.log(`Running shadcn analysis before implementation...`);
+
+      // Run shadcn workflow
+      return runShadcnAnalysisWorkflow(currentTask);
+    }
+
+    // Determine if staff engineer or UX designer
+    if (taskRequiresUI(currentTask)) {
+      return spawnAgent("premium-ux-designer");
+    } else {
+      return spawnAgent("staff-engineer");
+    }
   }
 
   // Check if implementation needs testing
@@ -1635,3 +1686,374 @@ The enhanced orchestrator now provides:
 **User Intervention**: Only for critical issues
 
 The agentic system is now **production-grade and fault-tolerant**. 🚀
+
+---
+
+## shadcn Component Workflow Integration
+
+### Automatic shadcn Analysis for UI Tasks
+
+The orchestrator now automatically detects UI tasks and runs the shadcn component analysis workflow BEFORE implementation begins.
+
+### shadcn Workflow Function
+
+```javascript
+/**
+ * Runs the complete shadcn analysis and preparation workflow
+ * Called automatically when UI task is detected
+ */
+async function runShadcnAnalysisWorkflow(taskId) {
+  console.log(`
+╔════════════════════════════════════════════════════════╗
+║     AUTOMATIC shadcn COMPONENT WORKFLOW               ║
+║     Task: ${taskId}                                       ║
+╚════════════════════════════════════════════════════════╝
+
+This workflow will:
+1. Analyze UI requirements for the task
+2. Identify required shadcn components
+3. Research component APIs (if needed)
+4. Install missing components
+5. Create component requirements document
+
+⏱️  Estimated time: 5-10 minutes
+  `);
+
+  const startTime = Date.now();
+
+  // Step 1: Run shadcn Requirements Analyzer
+  console.log(`
+📋 Step 1/3: Analyzing UI Requirements
+Running: shadcn-requirements-analyzer
+  `);
+
+  const analysisResult = await spawnAgent("shadcn-requirements-analyzer", {
+    task: taskId,
+    mode: "task-analysis",
+    referenceDoc: ".claude/specs/shadcn-component-requirements.md"
+  });
+
+  if (analysisResult.status !== "success") {
+    console.log(`❌ shadcn analysis failed: ${analysisResult.error}`);
+    return createBlocker({
+      type: "SHADCN_ANALYSIS_FAILED",
+      description: `Failed to analyze shadcn requirements for ${taskId}`,
+      taskId
+    });
+  }
+
+  // Step 2: Check if components need research
+  const missingComponentDocs = analysisResult.componentsNeedingResearch || [];
+
+  if (missingComponentDocs.length > 0) {
+    console.log(`
+🔍 Step 2/3: Researching Components
+Components needing research: ${missingComponentDocs.length}
+Running: shadcn-component-researcher
+
+Components:
+${missingComponentDocs.map(c => `  - ${c}`).join('\n')}
+    `);
+
+    for (const component of missingComponentDocs) {
+      await spawnAgent("shadcn-component-researcher", {
+        component,
+        mode: "research",
+        outputPath: `design-docs/${taskId}/components/${component}.md`
+      });
+    }
+  } else {
+    console.log(`✅ Step 2/3: Component Research - SKIPPED (all components documented)`);
+  }
+
+  // Step 3: Install Missing Components
+  const requiredComponents = analysisResult.requiredComponents || [];
+  const installedComponents = getInstalledShadcnComponents();
+  const missingComponents = requiredComponents.filter(
+    c => !installedComponents.includes(c)
+  );
+
+  if (missingComponents.length > 0) {
+    console.log(`
+📦 Step 3/3: Installing Components
+Missing components: ${missingComponents.length}
+
+Installing: ${missingComponents.join(', ')}
+
+Running: npx shadcn@latest add ${missingComponents.join(' ')}
+    `);
+
+    const installResult = await installShadcnComponents(missingComponents);
+
+    if (!installResult.success) {
+      console.log(`❌ Component installation failed`);
+      return createBlocker({
+        type: "COMPONENT_INSTALLATION_FAILED",
+        description: `Failed to install components: ${missingComponents.join(', ')}`,
+        error: installResult.error,
+        taskId
+      });
+    }
+
+    console.log(`✅ Installed ${missingComponents.length} components successfully`);
+  } else {
+    console.log(`✅ Step 3/3: Component Installation - SKIPPED (all components already installed)`);
+  }
+
+  // Complete workflow
+  const totalTime = Math.round((Date.now() - startTime) / 1000);
+
+  console.log(`
+✅ shadcn WORKFLOW COMPLETE
+
+Task: ${taskId}
+Time: ${totalTime} seconds
+
+Summary:
+  - Components Analyzed: ${requiredComponents.length}
+  - Components Researched: ${missingComponentDocs.length}
+  - Components Installed: ${missingComponents.length}
+  - Ready for Implementation: YES
+
+📄 Requirements: design-docs/${taskId}/requirements.md
+
+Next: ${taskRequiresUI(taskId) ? 'Premium UX Designer' : 'Staff Engineer'} will implement
+  `);
+
+  // Mark shadcn analysis as complete for this task
+  markTaskShadcnAnalysisComplete(taskId);
+
+  // Return to orchestrator - ready for implementation
+  return {
+    status: "success",
+    nextAgent: taskRequiresUI(taskId) ? "premium-ux-designer" : "staff-engineer",
+    componentsReady: true,
+    requiredComponents,
+    installedComponents: missingComponents
+  };
+}
+
+/**
+ * Checks if task has already been analyzed for shadcn components
+ */
+function taskHasShadcnAnalysis(taskId) {
+  // Check if requirements doc exists
+  const requirementsPath = `design-docs/${taskId}/requirements.md`;
+  return fileExists(requirementsPath);
+}
+
+/**
+ * Determines if task requires UI implementation
+ */
+function taskRequiresUI(taskId) {
+  const uiKeywords = [
+    'ui', 'page', 'component', 'form', 'dialog', 'modal',
+    'layout', 'navigation', 'list', 'card', 'button',
+    'registration', 'login', 'dashboard', 'itinerary',
+    'calendar', 'map', 'profile', 'settings'
+  ];
+
+  const taskLower = taskId.toLowerCase();
+  return uiKeywords.some(keyword => taskLower.includes(keyword));
+}
+
+/**
+ * Gets list of installed shadcn components
+ */
+function getInstalledShadcnComponents() {
+  const uiDir = 'src/components/ui/';
+  if (!dirExists(uiDir)) {
+    return [];
+  }
+
+  const files = listFiles(uiDir);
+  return files
+    .filter(f => f.endsWith('.tsx'))
+    .map(f => f.replace('.tsx', ''));
+}
+
+/**
+ * Installs shadcn components
+ */
+async function installShadcnComponents(components) {
+  try {
+    const command = `npx shadcn@latest add ${components.join(' ')}`;
+    const result = await execCommand(command, { timeout: 60000 });
+
+    return {
+      success: result.exitCode === 0,
+      output: result.stdout,
+      error: result.stderr
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
+/**
+ * Marks task as having completed shadcn analysis
+ */
+function markTaskShadcnAnalysisComplete(taskId) {
+  const state = readProjectState();
+
+  if (!state.shadcnAnalysis) {
+    state.shadcnAnalysis = {};
+  }
+
+  state.shadcnAnalysis[taskId] = {
+    analyzed: true,
+    timestamp: new Date().toISOString()
+  };
+
+  writeProjectState(state);
+}
+```
+
+### UI Task Detection Logic
+
+The orchestrator identifies UI tasks by checking for these keywords in the task ID:
+
+- `ui`, `page`, `component`, `form`, `dialog`, `modal`
+- `layout`, `navigation`, `list`, `card`, `button`
+- `registration`, `login`, `dashboard`, `itinerary`
+- `calendar`, `map`, `profile`, `settings`
+
+**Examples**:
+- `task-2-2-trip-list-ui` → **UI task** (contains "ui" and "list")
+- `task-2-4-trip-create-ui` → **UI task** (contains "ui" and "create")
+- `task-2-1-trip-list-api` → **NOT UI task** (API task)
+- `task-3-3-itinerary-day-view` → **UI task** (contains "itinerary" and "view")
+
+### Automatic Workflow Sequence
+
+When orchestrator detects a UI task:
+
+```
+1. Detect UI Task
+   └─> Check if task contains UI keywords
+   └─> Check if shadcn analysis already done
+
+2. Run shadcn Requirements Analyzer
+   └─> Analyze task requirements
+   └─> Map to shadcn components
+   └─> Create requirements document
+
+3. Run shadcn Component Researcher (if needed)
+   └─> Research components not yet documented
+   └─> Gather usage examples
+   └─> Document API reference
+
+4. Install Missing Components
+   └─> Compare required vs installed
+   └─> Run `npx shadcn@latest add [components]`
+   └─> Verify installation
+
+5. Mark Analysis Complete
+   └─> Update project state
+   └─> Create requirements doc
+
+6. Proceed to Implementation
+   └─> Spawn Premium UX Designer (for UI)
+   └─> Spawn Staff Engineer (for logic)
+```
+
+### Integration with Existing Workflow
+
+The shadcn workflow integrates seamlessly:
+
+**Before (Old Workflow)**:
+```
+User: /orchestrate
+Orchestrator: → Spawn Premium UX Designer
+UX Designer: "Error: Component 'pagination' not found"
+```
+
+**After (New Workflow)**:
+```
+User: /orchestrate
+Orchestrator: → Detect UI task (task-2-2-trip-list-ui)
+Orchestrator: → Run shadcn analysis workflow
+  └─> shadcn Requirements Analyzer
+  └─> Install missing components (pagination, toggle-group, etc.)
+  └─> Create requirements doc
+Orchestrator: → Spawn Premium UX Designer
+UX Designer: ✅ Implements using installed components
+```
+
+### Benefits
+
+1. ✅ **Automatic** - No manual component analysis needed
+2. ✅ **Proactive** - Components installed before implementation
+3. ✅ **Documented** - Requirements doc created for every UI task
+4. ✅ **Fault-Tolerant** - Blocks if components can't be installed
+5. ✅ **Efficient** - Skips analysis if already done
+6. ✅ **Seamless** - Integrates with existing orchestrator flow
+
+### Example Output
+
+```
+User runs: /orchestrate
+
+═══════════════════════════════════════════════════════════
+ORCHESTRATOR DECISION
+═══════════════════════════════════════════════════════════
+
+Reading state...
+✓ Current phase: phase-2-trip-management
+✓ Current task: task-2-2-trip-list-ui
+✓ Task type: UI task detected
+
+╔════════════════════════════════════════════════════════╗
+║     AUTOMATIC shadcn COMPONENT WORKFLOW               ║
+║     Task: task-2-2-trip-list-ui                       ║
+╚════════════════════════════════════════════════════════╝
+
+📋 Step 1/3: Analyzing UI Requirements
+Running: shadcn-requirements-analyzer
+
+✅ Analysis Complete
+  - Components Required: 10
+  - Components: card, badge, skeleton, input, select, button, pagination, toggle-group, avatar, empty
+
+🔍 Step 2/3: Researching Components
+Components needing research: 0
+✅ All components documented - SKIPPED
+
+📦 Step 3/3: Installing Components
+Missing components: 2 (pagination, toggle-group)
+
+Installing: pagination toggle-group
+
+✔ Created 2 files
+✅ Installed 2 components successfully
+
+✅ shadcn WORKFLOW COMPLETE
+
+Task: task-2-2-trip-list-ui
+Time: 18 seconds
+
+Summary:
+  - Components Analyzed: 10
+  - Components Researched: 0
+  - Components Installed: 2
+  - Ready for Implementation: YES
+
+📄 Requirements: design-docs/task-2-2-trip-list-ui/requirements.md
+
+Next: Premium UX Designer will implement
+
+═══════════════════════════════════════════════════════════
+
+🤖 Running: Premium UX Designer
+📋 Task: task-2-2-trip-list-ui
+⏱️  Started: 2025-11-10 14:30:00
+
+Agent is working...
+```
+
+---
+
+**The orchestrator now automatically handles shadcn component workflow for all UI tasks!** 🎨🚀

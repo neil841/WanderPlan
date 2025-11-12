@@ -226,6 +226,7 @@ model Trip {
   visibility      TripVisibility @default(PRIVATE)
   coverImageUrl   String?        @map("cover_image_url") @db.Text
   isArchived      Boolean        @default(false) @map("is_archived")
+  deletedAt       DateTime?      @map("deleted_at")
 
   createdBy       String         @map("created_by")
   createdAt       DateTime       @default(now()) @map("created_at")
