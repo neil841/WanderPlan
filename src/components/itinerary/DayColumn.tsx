@@ -27,10 +27,12 @@ import { cn } from '@/lib/utils';
 interface DayColumnProps {
   date: string;
   events: EventResponse[];
+  tripId: string;
   onAddEvent?: () => void;
+  canEdit?: boolean;
 }
 
-export function DayColumn({ date, events, onAddEvent }: DayColumnProps) {
+export function DayColumn({ date, events, tripId, onAddEvent, canEdit = true }: DayColumnProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: `day-${date}`,
     data: {
@@ -94,7 +96,7 @@ export function DayColumn({ date, events, onAddEvent }: DayColumnProps) {
           <SortableContext items={eventIds} strategy={verticalListSortingStrategy}>
             <div className="space-y-3" role="list" aria-label="Events">
               {events.map((event) => (
-                <DraggableEvent key={event.id} event={event} />
+                <DraggableEvent key={event.id} event={event} tripId={tripId} canEdit={canEdit} />
               ))}
             </div>
           </SortableContext>

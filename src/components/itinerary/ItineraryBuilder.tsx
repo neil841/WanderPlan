@@ -144,7 +144,7 @@ export function ItineraryBuilder({ tripId }: ItineraryBuilderProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <UnscheduledEvents events={unscheduledEvents} />
+            <UnscheduledEvents events={unscheduledEvents} tripId={tripId} />
           </motion.div>
         )}
 
@@ -176,7 +176,7 @@ export function ItineraryBuilder({ tripId }: ItineraryBuilderProps) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
               >
-                <DayColumn date={date} events={eventsByDay[date] || []} />
+                <DayColumn date={date} events={eventsByDay[date] || []} tripId={tripId} />
               </motion.div>
             ))}
           </motion.div>
@@ -199,7 +199,7 @@ export function ItineraryBuilder({ tripId }: ItineraryBuilderProps) {
       <DragOverlay>
         {activeEvent ? (
           <div className="rotate-3 scale-105">
-            <EventCard event={activeEvent} isDragging={true} />
+            <EventCard event={activeEvent} tripId={tripId} isDragging={true} canEdit={false} />
           </div>
         ) : null}
       </DragOverlay>

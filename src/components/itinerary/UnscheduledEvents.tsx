@@ -23,9 +23,11 @@ import { cn } from '@/lib/utils';
 
 interface UnscheduledEventsProps {
   events: EventResponse[];
+  tripId: string;
+  canEdit?: boolean;
 }
 
-export function UnscheduledEvents({ events }: UnscheduledEventsProps) {
+export function UnscheduledEvents({ events, tripId, canEdit = true }: UnscheduledEventsProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: 'unscheduled',
     data: {
@@ -87,7 +89,7 @@ export function UnscheduledEvents({ events }: UnscheduledEventsProps) {
           <SortableContext items={eventIds} strategy={verticalListSortingStrategy}>
             <div className="space-y-3" role="list" aria-label="Unscheduled events">
               {events.map((event) => (
-                <DraggableEvent key={event.id} event={event} />
+                <DraggableEvent key={event.id} event={event} tripId={tripId} canEdit={canEdit} />
               ))}
             </div>
           </SortableContext>

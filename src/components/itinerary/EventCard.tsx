@@ -3,17 +3,20 @@
  *
  * Displays an individual event card with type icon, title, time, location, and cost.
  * Shows different icons based on event type.
+ * Includes edit/delete buttons for users with edit permissions.
  *
  * @component
  * @example
- * <EventCard event={event} />
+ * <EventCard event={event} tripId={tripId} canEdit={true} />
  */
 
 'use client';
 
+import { useState } from 'react';
 import { EventResponse } from '@/types/event';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Plane,
   Hotel,
@@ -23,13 +26,19 @@ import {
   MapPin,
   Clock,
   DollarSign,
+  Pencil,
+  Trash2,
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { EditEventDialog } from '@/components/events/EditEventDialog';
+import { DeleteEventDialog } from '@/components/events/DeleteEventDialog';
 
 interface EventCardProps {
   event: EventResponse;
+  tripId: string;
   isDragging?: boolean;
+  canEdit?: boolean; // Permission to edit/delete events
 }
 
 /**
@@ -95,7 +104,10 @@ function formatTimeRange(start: Date | string | null | undefined, end: Date | st
   return `${startTime} - ${endTime}`;
 }
 
-export function EventCard({ event, isDragging = false }: EventCardProps) {
+export function EventCard({ event, tripId, isDragging = false, canEdit = true }: EventCardProps) {
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
   const timeRange = formatTimeRange(event.startDateTime, event.endDateTime);
   const location = event.location
     ? typeof event.location === 'string'
@@ -104,18 +116,19 @@ export function EventCard({ event, isDragging = false }: EventCardProps) {
     : null;
 
   return (
-    <Card
-      className={cn(
-        'group relative cursor-grab active:cursor-grabbing',
-        'border transition-all duration-200',
-        'hover:shadow-md hover:border-gray-300',
-        'focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2',
-        isDragging && 'opacity-50 shadow-lg rotate-2',
-        getEventColor(event.type)
-      )}
-      role="listitem"
-      aria-label={`${event.type} event: ${event.title}`}
-    >
+    <>
+      <Card
+        className={cn(
+          'group relative cursor-grab active:cursor-grabbing',
+          'border transition-all duration-200',
+          'hover:shadow-md hover:border-gray-300',
+          'focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2',
+          isDragging && 'opacity-50 shadow-lg rotate-2',
+          getEventColor(event.type)
+        )}
+        role="listitem"
+        aria-label={`${event.type} event: ${event.title}`}
+      >
       <div className="flex items-start gap-3 p-4">
         {/* Event type icon */}
         <div
@@ -178,11 +191,65 @@ export function EventCard({ event, isDragging = false }: EventCardProps) {
         )}
       </div>
 
+      {/* Edit/Delete action buttons (shown on hover or always on mobile) */}
+      {canEdit && (
+        <div
+          className={cn(
+            'absolute top-2 right-2 flex gap-1',
+            'opacity-0 md:group-hover:opacity-100 transition-opacity',
+            'md:opacity-0', // Hidden on desktop until hover
+            'opacity-100' // Always visible on mobile
+          )}
+        >
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8 bg-white/90 hover:bg-white shadow-sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              setEditDialogOpen(true);
+            }}
+            aria-label={`Edit ${event.title}`}
+          >
+            <Pencil className="h-4 w-4 text-gray-700" />
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8 bg-white/90 hover:bg-white hover:text-red-600 shadow-sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              setDeleteDialogOpen(true);
+            }}
+            aria-label={`Delete ${event.title}`}
+          >
+            <Trash2 className="h-4 w-4 text-gray-700" />
+          </Button>
+        </div>
+      )}
+
       {/* Drag handle indicator (visible on hover) */}
       <div
         className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-gray-300 to-gray-400 opacity-0 group-hover:opacity-100 transition-opacity rounded-l"
         aria-hidden="true"
       />
     </Card>
+
+    {/* Edit Event Dialog */}
+    <EditEventDialog
+      tripId={tripId}
+      eventId={event.id}
+      open={editDialogOpen}
+      onOpenChange={setEditDialogOpen}
+    />
+
+    {/* Delete Event Dialog */}
+    <DeleteEventDialog
+      tripId={tripId}
+      event={event}
+      open={deleteDialogOpen}
+      onOpenChange={setDeleteDialogOpen}
+    />
+  </>
   );
 }

@@ -52,6 +52,7 @@
 |---------|-------------|----------------|-------------------|
 | task-3-3-itinerary-day-view | Itinerary Builder UI with drag-and-drop | `src/app/(dashboard)/trips/[tripId]/itinerary/page.tsx`, `src/components/itinerary/ItineraryBuilder.tsx`, `src/components/itinerary/DayColumn.tsx`, `src/components/itinerary/EventCard.tsx`, `src/components/itinerary/DraggableEvent.tsx`, `src/components/itinerary/UnscheduledEvents.tsx`, `src/components/itinerary/EmptyDay.tsx`, `src/hooks/useItineraryData.ts`, `src/hooks/useEventReorder.ts` | ⏸️ Deferred |
 | task-3-4-event-forms | Event Creation Forms for all 6 event types | `src/components/events/CreateEventDialog.tsx`, `src/components/events/FlightForm.tsx`, `src/components/events/HotelForm.tsx`, `src/components/events/ActivityForm.tsx`, `src/components/events/RestaurantForm.tsx`, `src/components/events/TransportationForm.tsx`, `src/components/events/DestinationForm.tsx`, `src/components/events/LocationAutocomplete.tsx`, `src/components/events/CostInput.tsx`, `src/hooks/useCreateEvent.ts`, `src/hooks/useLocationSearch.ts` | ⏸️ Deferred |
+| task-3-5-event-edit-delete | Event Edit & Delete functionality | `src/components/events/CreateEventDialog.tsx` (modified for edit mode), `src/components/events/EditEventDialog.tsx`, `src/components/events/DeleteEventDialog.tsx`, `src/components/itinerary/EventCard.tsx` (added edit/delete buttons), `src/hooks/useUpdateEvent.ts`, `src/hooks/useDeleteEvent.ts` | ⏸️ Deferred |
 
 **Chrome DevTools Validation Needed**:
 - Test drag-and-drop on 3 viewports (Desktop 1920x1080, Tablet 768x1024, Mobile 375x667)
@@ -74,6 +75,17 @@
   - Screen reader testing for form accessibility
   - Test form submission (success/error states)
   - Performance testing with location search debouncing
+- **task-3-5-event-edit-delete specific**:
+  - Test edit dialog on 3 viewports (Desktop 1920x1080, Tablet 768x1024, Mobile 375x667)
+  - Test delete confirmation dialog with keyboard navigation
+  - Test edit/delete buttons visibility (hover on desktop, always on mobile)
+  - Test optimistic updates (immediate UI feedback)
+  - Test error rollback (when API call fails)
+  - Test edit form pre-filling for all 6 event types
+  - Test permission checks (canEdit prop)
+  - Verify toast notifications (success/error states)
+  - Test button click event propagation (stopPropagation)
+  - Accessibility testing for dialogs and buttons
 
 ---
 

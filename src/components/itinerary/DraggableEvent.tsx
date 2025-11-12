@@ -18,9 +18,11 @@ import { EventCard } from './EventCard';
 
 interface DraggableEventProps {
   event: EventResponse;
+  tripId: string;
+  canEdit?: boolean;
 }
 
-export function DraggableEvent({ event }: DraggableEventProps) {
+export function DraggableEvent({ event, tripId, canEdit = true }: DraggableEventProps) {
   const {
     attributes,
     listeners,
@@ -58,7 +60,7 @@ export function DraggableEvent({ event }: DraggableEventProps) {
         }
       }}
     >
-      <EventCard event={event} isDragging={isDragging} />
+      <EventCard event={event} tripId={tripId} isDragging={isDragging} canEdit={canEdit} />
     </div>
   );
 }

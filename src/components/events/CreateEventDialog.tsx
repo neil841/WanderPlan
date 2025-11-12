@@ -29,6 +29,7 @@ import { RestaurantForm } from './RestaurantForm';
 import { TransportationForm } from './TransportationForm';
 import { DestinationForm } from './DestinationForm';
 import { useCreateEvent } from '@/hooks/useCreateEvent';
+import { useUpdateEvent } from '@/hooks/useUpdateEvent';
 import { cn } from '@/lib/utils';
 
 // Event types enum (matching Prisma schema)
@@ -47,6 +48,8 @@ interface CreateEventDialogProps {
   onOpenChange: (open: boolean) => void;
   defaultDate?: string; // For pre-filling date from day view
   defaultType?: EventType;
+  mode?: 'create' | 'edit'; // NEW - Edit mode support
+  eventData?: any; // NEW - Event data for edit mode
 }
 
 // Icon mapping for event types
@@ -85,12 +88,23 @@ export function CreateEventDialog({
   onOpenChange,
   defaultDate,
   defaultType = EventType.ACTIVITY,
+  mode = 'create',
+  eventData,
 }: CreateEventDialogProps) {
-  const [selectedType, setSelectedType] = useState<EventType>(defaultType);
-  const [formData, setFormData] = useState<any>(getInitialFormData(selectedType, defaultDate));
+  const isEditMode = mode === 'edit';
+  const [selectedType, setSelectedType] = useState<EventType>(
+    isEditMode && eventData ? eventData.type : defaultType
+  );
+  const [formData, setFormData] = useState<any>(
+    isEditMode && eventData
+      ? transformEventToFormData(eventData)
+      : getInitialFormData(selectedType, defaultDate)
+  );
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const { mutate: createEvent, isPending } = useCreateEvent();
+  const { mutate: createEvent, isPending: isCreating } = useCreateEvent();
+  const { mutate: updateEvent, isPending: isUpdating } = useUpdateEvent();
+  const isPending = isCreating || isUpdating;
 
   // Reset form when type changes
   const handleTypeChange = (type: string) => {
@@ -251,27 +265,44 @@ export function CreateEventDialog({
       return;
     }
 
-    const eventData = transformFormData();
+    const submissionData = transformFormData();
 
-    createEvent(
-      { tripId, data: eventData as any },
-      {
-        onSuccess: () => {
-          onOpenChange(false);
-          setFormData(getInitialFormData(selectedType, defaultDate));
-          setErrors({});
-        },
-      }
-    );
+    if (isEditMode && eventData) {
+      // Update existing event
+      updateEvent(
+        { tripId, eventId: eventData.id, data: submissionData as any },
+        {
+          onSuccess: () => {
+            onOpenChange(false);
+            setFormData(getInitialFormData(selectedType, defaultDate));
+            setErrors({});
+          },
+        }
+      );
+    } else {
+      // Create new event
+      createEvent(
+        { tripId, data: submissionData as any },
+        {
+          onSuccess: () => {
+            onOpenChange(false);
+            setFormData(getInitialFormData(selectedType, defaultDate));
+            setErrors({});
+          },
+        }
+      );
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create Event</DialogTitle>
+          <DialogTitle>{isEditMode ? 'Edit Event' : 'Create Event'}</DialogTitle>
           <DialogDescription>
-            Add a new event to your trip itinerary. Select the event type and fill in the details.
+            {isEditMode
+              ? 'Update the event details below.'
+              : 'Add a new event to your trip itinerary. Select the event type and fill in the details.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -335,12 +366,98 @@ export function CreateEventDialog({
           </Button>
           <Button onClick={handleSubmit} disabled={isPending}>
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isPending ? 'Creating...' : 'Create Event'}
+            {isEditMode
+              ? isPending
+                ? 'Saving...'
+                : 'Save Changes'
+              : isPending
+              ? 'Creating...'
+              : 'Create Event'}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
+}
+
+// Helper function to transform event data to form data for editing
+function transformEventToFormData(event: any) {
+  const baseData = {
+    title: event.title || '',
+    notes: event.notes || '',
+    confirmationNumber: event.confirmationNumber || '',
+    cost: event.cost?.amount || null,
+  };
+
+  let description: any = {};
+  try {
+    description = event.description ? JSON.parse(event.description) : {};
+  } catch {
+    description = {};
+  }
+
+  switch (event.type) {
+    case 'FLIGHT':
+      return {
+        ...baseData,
+        airline: description.airline || '',
+        flightNumber: description.flightNumber || '',
+        departureAirport: description.departureAirport || event.location,
+        arrivalAirport: description.arrivalAirport || null,
+        departureTime: event.startDateTime ? new Date(event.startDateTime).toISOString().slice(0, 16) : '',
+        arrivalTime: event.endDateTime ? new Date(event.endDateTime).toISOString().slice(0, 16) : '',
+      };
+
+    case 'HOTEL':
+      return {
+        ...baseData,
+        hotelName: description.hotelName || '',
+        location: event.location,
+        checkIn: event.startDateTime ? new Date(event.startDateTime).toISOString().slice(0, 16) : '',
+        checkOut: event.endDateTime ? new Date(event.endDateTime).toISOString().slice(0, 16) : '',
+      };
+
+    case 'ACTIVITY':
+      return {
+        ...baseData,
+        activityName: description.activityName || '',
+        location: event.location,
+        startTime: event.startDateTime ? new Date(event.startDateTime).toISOString().slice(0, 16) : '',
+        duration: description.duration || undefined,
+        durationUnit: 'hours' as const,
+        bookingUrl: description.bookingUrl || '',
+      };
+
+    case 'RESTAURANT':
+      return {
+        ...baseData,
+        restaurantName: description.restaurantName || '',
+        location: event.location,
+        reservationTime: event.startDateTime ? new Date(event.startDateTime).toISOString().slice(0, 16) : '',
+        cuisineType: description.cuisine || '',
+      };
+
+    case 'TRANSPORTATION':
+      return {
+        ...baseData,
+        transportType: description.transportType || undefined,
+        departureLocation: description.departureLocation || event.location,
+        arrivalLocation: description.arrivalLocation || null,
+        departureTime: event.startDateTime ? new Date(event.startDateTime).toISOString().slice(0, 16) : '',
+        arrivalTime: event.endDateTime ? new Date(event.endDateTime).toISOString().slice(0, 16) : '',
+      };
+
+    case 'DESTINATION':
+      return {
+        ...baseData,
+        placeName: description.placeName || '',
+        location: event.location,
+        visitDate: event.startDateTime ? new Date(event.startDateTime).toISOString().slice(0, 16) : '',
+      };
+
+    default:
+      return baseData;
+  }
 }
 
 // Helper function to initialize form data based on event type
