@@ -54,6 +54,7 @@
 | task-3-4-event-forms | Event Creation Forms for all 6 event types | `src/components/events/CreateEventDialog.tsx`, `src/components/events/FlightForm.tsx`, `src/components/events/HotelForm.tsx`, `src/components/events/ActivityForm.tsx`, `src/components/events/RestaurantForm.tsx`, `src/components/events/TransportationForm.tsx`, `src/components/events/DestinationForm.tsx`, `src/components/events/LocationAutocomplete.tsx`, `src/components/events/CostInput.tsx`, `src/hooks/useCreateEvent.ts`, `src/hooks/useLocationSearch.ts` | ⏸️ Deferred |
 | task-3-5-event-edit-delete | Event Edit & Delete functionality | `src/components/events/CreateEventDialog.tsx` (modified for edit mode), `src/components/events/EditEventDialog.tsx`, `src/components/events/DeleteEventDialog.tsx`, `src/components/itinerary/EventCard.tsx` (added edit/delete buttons), `src/hooks/useUpdateEvent.ts`, `src/hooks/useDeleteEvent.ts` | ⏸️ Deferred |
 | task-3-6-calendar-view | Calendar View Integration with FullCalendar | `src/app/(dashboard)/trips/[tripId]/calendar/page.tsx`, `src/components/calendar/TripCalendar.tsx`, `src/hooks/useCalendarEvents.ts` | ⏸️ Deferred |
+| task-3-7-map-markers | Map View with Event Markers using Leaflet | `src/app/(dashboard)/trips/[tripId]/map/page.tsx`, `src/components/map/TripMap.tsx`, `src/components/map/EventPopup.tsx`, `src/lib/map/icons.ts`, `src/styles/globals.css` (Leaflet styles) | ⏸️ Deferred |
 
 **Chrome DevTools Validation Needed**:
 - Test drag-and-drop on 3 viewports (Desktop 1920x1080, Tablet 768x1024, Mobile 375x667)
@@ -103,6 +104,27 @@
   - Screen reader testing for calendar controls
   - Console error checks
   - Performance trace (calendar rendering)
+- **task-3-7-map-markers specific**:
+  - Test map rendering on 3 viewports (Desktop 1920x1080, Tablet 768x1024, Mobile 375x667)
+  - Test custom marker icons display correctly for all 6 event types
+  - Test marker clustering with 100+ events (performance)
+  - Verify cluster expansion/collapse on zoom
+  - Test marker click to open event popup
+  - Test popup content rendering (title, date, location, cost)
+  - Test "View Details" button in popup
+  - Test auto-fit bounds to show all markers
+  - Test map controls (zoom +/-, pan with drag)
+  - Test scroll wheel zoom
+  - Test touch gestures on mobile (pinch zoom, pan)
+  - Verify OpenStreetMap tiles load correctly
+  - Test with no events (empty state)
+  - Test with events without location data
+  - Test map legend visibility and accuracy
+  - Test event count badge
+  - Console error checks
+  - Performance testing with 50+ markers
+  - Memory leak testing (add/remove markers repeatedly)
+  - Responsive layout (legend and badges stack on mobile)
 
 ---
 
