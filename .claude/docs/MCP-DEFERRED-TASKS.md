@@ -57,6 +57,7 @@
 | task-3-7-map-markers | Map View with Event Markers using Leaflet | `src/app/(dashboard)/trips/[tripId]/map/page.tsx`, `src/components/map/TripMap.tsx`, `src/components/map/EventPopup.tsx`, `src/lib/map/icons.ts`, `src/styles/globals.css` (Leaflet styles) | ⏸️ Deferred |
 | task-3-8-map-routes | Route Visualization with OSRM | `src/app/api/trips/[tripId]/route/route.ts`, `src/lib/map/osrm.ts`, `src/components/map/RouteLayer.tsx`, `src/components/map/TripMap.tsx` (modified) | ⏸️ Deferred |
 | task-3-9-poi-search | POI Search Integration (OSM + Foursquare) | `src/app/api/search/poi/route.ts`, `src/lib/search/overpass.ts`, `src/lib/search/foursquare.ts`, `src/components/search/POISearch.tsx`, `src/components/search/POIResult.tsx`, `src/app/(dashboard)/trips/[tripId]/map/page.tsx` (modified) | ⏸️ Deferred |
+| task-3-10-destination-guides | Destination Guides with Wikipedia API | `src/app/api/destinations/[slug]/route.ts`, `src/lib/destinations/wikipedia.ts`, `src/app/(public)/destinations/[slug]/page.tsx`, `src/components/destinations/DestinationGuide.tsx` | ⏸️ Deferred |
 
 **Chrome DevTools Validation Needed**:
 - Test drag-and-drop on 3 viewports (Desktop 1920x1080, Tablet 768x1024, Mobile 375x667)
@@ -167,6 +168,27 @@
   - Console error checks
   - Test API endpoint directly (GET /api/search/poi)
   - Performance testing with 50+ results
+- **task-3-10-destination-guides specific**:
+  - Test destination guide page on 3 viewports (Desktop 1920x1080, Tablet 768x1024, Mobile 375x667)
+  - Test Wikipedia API integration (fetch destination data)
+  - Test image rendering (Wikipedia thumbnail)
+  - Test overview section display
+  - Test "Best Time to Visit" section
+  - Test "Budget Tips" list rendering
+  - Test "Add to Trip" button (redirects to trips)
+  - Test "View on Wikipedia" button (opens in new tab)
+  - Test with valid destination slug (e.g., "paris", "tokyo")
+  - Test with invalid destination (404 error handling)
+  - Test loading state
+  - Test error state (destination not found)
+  - Test navigation (back button)
+  - Test responsive image hero section
+  - Test coordinates display (if available)
+  - Test Wikipedia attribution footer
+  - Verify 24-hour cache headers
+  - Console error checks
+  - Test API endpoint directly (GET /api/destinations/[slug])
+  - Performance testing (Wikipedia API latency)
 
 ---
 
