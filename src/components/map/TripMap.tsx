@@ -23,6 +23,7 @@ import { useRouter } from 'next/navigation';
 import { Event } from '@/types/event';
 import { createEventIcon, defaultIcon } from '@/lib/map/icons';
 import { EventPopup } from './EventPopup';
+import { RouteLayer } from './RouteLayer';
 
 interface TripMapProps {
   tripId: string;
@@ -169,6 +170,11 @@ export function TripMap({ tripId, events, isLoading }: TripMapProps) {
             </Marker>
           );
         })}
+
+        {/* Route visualization (only show if 2+ events) */}
+        {eventsWithLocation.length >= 2 && (
+          <RouteLayer tripId={tripId} profile="car" visible={false} />
+        )}
       </MapContainer>
 
       {/* Event count badge */}
