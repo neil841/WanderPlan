@@ -58,6 +58,7 @@
 | task-3-8-map-routes | Route Visualization with OSRM | `src/app/api/trips/[tripId]/route/route.ts`, `src/lib/map/osrm.ts`, `src/components/map/RouteLayer.tsx`, `src/components/map/TripMap.tsx` (modified) | ⏸️ Deferred |
 | task-3-9-poi-search | POI Search Integration (OSM + Foursquare) | `src/app/api/search/poi/route.ts`, `src/lib/search/overpass.ts`, `src/lib/search/foursquare.ts`, `src/components/search/POISearch.tsx`, `src/components/search/POIResult.tsx`, `src/app/(dashboard)/trips/[tripId]/map/page.tsx` (modified) | ⏸️ Deferred |
 | task-3-10-destination-guides | Destination Guides with Wikipedia API | `src/app/api/destinations/[slug]/route.ts`, `src/lib/destinations/wikipedia.ts`, `src/app/(public)/destinations/[slug]/page.tsx`, `src/components/destinations/DestinationGuide.tsx` | ⏸️ Deferred |
+| task-3-11-weather | Weather Forecast Integration with OpenWeatherMap | `src/app/api/trips/[tripId]/weather/route.ts`, `src/lib/weather/openweather.ts`, `src/components/trips/WeatherWidget.tsx`, `src/components/trips/TripOverview.tsx` (modified) | ⏸️ Deferred |
 
 **Chrome DevTools Validation Needed**:
 - Test drag-and-drop on 3 viewports (Desktop 1920x1080, Tablet 768x1024, Mobile 375x667)
@@ -189,6 +190,23 @@
   - Console error checks
   - Test API endpoint directly (GET /api/destinations/[slug])
   - Performance testing (Wikipedia API latency)
+- **task-3-11-weather specific**:
+  - Test weather widget on 3 viewports (Desktop 1920x1080, Tablet 768x1024, Mobile 375x667)
+  - Test OpenWeatherMap API integration
+  - Test with valid trip (has events with location data)
+  - Test with trip without location data (empty state)
+  - Test loading state (spinner display)
+  - Test error state (API key not configured)
+  - Test weather data display (date, temp min/max, conditions, description)
+  - Test weather icons (rain, snow, cloud, sun)
+  - Test additional weather details (precipitation, wind speed)
+  - Test responsive layout (stacks properly on mobile)
+  - Verify 1-hour cache headers
+  - Test API endpoint directly (GET /api/trips/[tripId]/weather)
+  - Test with trip dates in past/future
+  - Test with trip duration >7 days (forecast limit)
+  - Console error checks
+  - Performance testing (API response time)
 
 ---
 

@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { TripDetails } from '@/hooks/useTrip';
 import { CollaboratorList } from './CollaboratorList';
+import { WeatherWidget } from './WeatherWidget';
 import { format, differenceInDays } from 'date-fns';
 
 interface TripOverviewProps {
@@ -187,6 +188,11 @@ export function TripOverview({ trip }: TripOverviewProps) {
             </Card>
           ))}
         </div>
+      </motion.div>
+
+      {/* Weather Forecast */}
+      <motion.div variants={itemVariants}>
+        <WeatherWidget tripId={trip.id} />
       </motion.div>
 
       {/* Budget Summary */}
