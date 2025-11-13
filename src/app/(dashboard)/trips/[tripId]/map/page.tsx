@@ -11,11 +11,15 @@
 
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Metadata } from 'next';
 import dynamic from 'next/dynamic';
-import { useQuery } from '@tanstack/react-query';
-import { MapPin, Loader2 } from 'lucide-react';
-import { Event } from '@/types/event';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { MapPin, Loader2, Search } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+import { Event, EventType } from '@/types/event';
+import { POIResult } from '@/lib/search/overpass';
 
 // Dynamic import to avoid SSR issues with Leaflet
 const TripMap = dynamic(
@@ -31,6 +35,11 @@ const TripMap = dynamic(
       </div>
     ),
   }
+);
+
+const POISearch = dynamic(
+  () => import('@/components/search/POISearch').then((mod) => ({ default: mod.POISearch })),
+  { ssr: false }
 );
 
 interface MapPageProps {
@@ -52,8 +61,29 @@ async function fetchEvents(tripId: string): Promise<Event[]> {
   return response.json();
 }
 
+/**
+ * Map POI category to event type
+ */
+function categoryToEventType(category: string): EventType {
+  const mapping: Record<string, EventType> = {
+    restaurant: 'RESTAURANT',
+    cafe: 'RESTAURANT',
+    hotel: 'HOTEL',
+    attraction: 'ACTIVITY',
+    museum: 'ACTIVITY',
+    park: 'ACTIVITY',
+    bar: 'RESTAURANT',
+    shopping: 'ACTIVITY',
+  };
+
+  return mapping[category] || 'DESTINATION';
+}
+
 export default function MapPage({ params }: MapPageProps) {
   const { tripId } = params;
+  const queryClient = useQueryClient();
+  const [showPOISearch, setShowPOISearch] = useState(false);
+  const [mapCenter, setMapCenter] = useState({ lat: 20, lon: 0 }); // Default world view
 
   // Fetch events
   const {
@@ -75,6 +105,54 @@ export default function MapPage({ params }: MapPageProps) {
       !isNaN(event.location.lon)
   );
 
+  // Update map center based on events
+  useEffect(() => {
+    if (eventsWithLocation.length > 0) {
+      const avgLat = eventsWithLocation.reduce((sum, e) => sum + e.location!.lat, 0) / eventsWithLocation.length;
+      const avgLon = eventsWithLocation.reduce((sum, e) => sum + e.location!.lon, 0) / eventsWithLocation.length;
+      setMapCenter({ lat: avgLat, lon: avgLon });
+    }
+  }, [eventsWithLocation.length]);
+
+  // Mutation to create event from POI
+  const createEventFromPOI = useMutation({
+    mutationFn: async (poi: POIResult) => {
+      const eventData = {
+        type: categoryToEventType(poi.category),
+        title: poi.name,
+        location: {
+          name: poi.name,
+          address: poi.address || poi.name,
+          lat: poi.location.lat,
+          lon: poi.location.lon,
+        },
+        notes: poi.source === 'foursquare' && poi.rating
+          ? `Rating: ${poi.rating}/5${poi.priceLevel ? `, Price: ${'$'.repeat(poi.priceLevel)}` : ''}`
+          : undefined,
+      };
+
+      const response = await fetch(`/api/trips/${tripId}/events`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(eventData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create event');
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['events', tripId] });
+      toast.success('POI added to itinerary');
+      setShowPOISearch(false);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to add POI');
+    },
+  });
+
   if (error) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-7xl">
@@ -95,9 +173,18 @@ export default function MapPage({ params }: MapPageProps) {
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       {/* Page header */}
       <div className="mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <MapPin className="h-8 w-8 text-blue-600" />
-          <h1 className="text-3xl font-bold text-gray-900">Trip Map</h1>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
+            <MapPin className="h-8 w-8 text-blue-600" />
+            <h1 className="text-3xl font-bold text-gray-900">Trip Map</h1>
+          </div>
+          <Button
+            onClick={() => setShowPOISearch(!showPOISearch)}
+            variant={showPOISearch ? 'default' : 'outline'}
+          >
+            <Search className="h-4 w-4 mr-2" />
+            {showPOISearch ? 'Hide' : 'Search'} POIs
+          </Button>
         </div>
         <p className="text-gray-600">
           View all your trip events on an interactive map. Click markers to see event details.
@@ -130,8 +217,18 @@ export default function MapPage({ params }: MapPageProps) {
 
       {/* Map container */}
       <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
-        <div className="h-[calc(100vh-20rem)] min-h-[500px]">
+        <div className="h-[calc(100vh-20rem)] min-h-[500px] relative">
           <TripMap tripId={tripId} events={events} isLoading={isLoading} />
+
+          {/* POI Search Panel */}
+          {showPOISearch && (
+            <POISearch
+              tripId={tripId}
+              center={mapCenter}
+              onSelectPOI={(poi) => createEventFromPOI.mutate(poi)}
+              onClose={() => setShowPOISearch(false)}
+            />
+          )}
         </div>
       </div>
 

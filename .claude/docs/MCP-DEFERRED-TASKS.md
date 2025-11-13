@@ -56,6 +56,7 @@
 | task-3-6-calendar-view | Calendar View Integration with FullCalendar | `src/app/(dashboard)/trips/[tripId]/calendar/page.tsx`, `src/components/calendar/TripCalendar.tsx`, `src/hooks/useCalendarEvents.ts` | ⏸️ Deferred |
 | task-3-7-map-markers | Map View with Event Markers using Leaflet | `src/app/(dashboard)/trips/[tripId]/map/page.tsx`, `src/components/map/TripMap.tsx`, `src/components/map/EventPopup.tsx`, `src/lib/map/icons.ts`, `src/styles/globals.css` (Leaflet styles) | ⏸️ Deferred |
 | task-3-8-map-routes | Route Visualization with OSRM | `src/app/api/trips/[tripId]/route/route.ts`, `src/lib/map/osrm.ts`, `src/components/map/RouteLayer.tsx`, `src/components/map/TripMap.tsx` (modified) | ⏸️ Deferred |
+| task-3-9-poi-search | POI Search Integration (OSM + Foursquare) | `src/app/api/search/poi/route.ts`, `src/lib/search/overpass.ts`, `src/lib/search/foursquare.ts`, `src/components/search/POISearch.tsx`, `src/components/search/POIResult.tsx`, `src/app/(dashboard)/trips/[tripId]/map/page.tsx` (modified) | ⏸️ Deferred |
 
 **Chrome DevTools Validation Needed**:
 - Test drag-and-drop on 3 viewports (Desktop 1920x1080, Tablet 768x1024, Mobile 375x667)
@@ -145,6 +146,27 @@
   - Console error checks
   - Performance testing with complex routes
   - Test API endpoint directly (GET /api/trips/[id]/route)
+- **task-3-9-poi-search specific**:
+  - Test POI search panel on 3 viewports (Desktop 1920x1080, Tablet 768x1024, Mobile 375x667)
+  - Test search button toggle (show/hide panel)
+  - Test text search input and submission
+  - Test category filter buttons (8 categories)
+  - Test radius slider (1-10km)
+  - Verify OSM Overpass API integration
+  - Test Foursquare fallback (when Overpass fails)
+  - Test POI result rendering (name, category, address, rating, price)
+  - Test "Add to Itinerary" button
+  - Test POI to event conversion (correct event type mapping)
+  - Test event creation from POI (location, notes populated)
+  - Test with no results (empty state)
+  - Test with API errors (error handling)
+  - Test search result scrolling (many results)
+  - Test responsive layout (panel width on mobile)
+  - Verify source badge (OSM vs Foursquare)
+  - Test category emoji icons
+  - Console error checks
+  - Test API endpoint directly (GET /api/search/poi)
+  - Performance testing with 50+ results
 
 ---
 
