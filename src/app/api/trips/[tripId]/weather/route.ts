@@ -56,7 +56,7 @@ export async function GET(
       where: {
         id: tripId,
         OR: [
-          { ownerId: session.user.id },
+          { createdBy: session.user.id },
           {
             collaborators: {
               some: {
