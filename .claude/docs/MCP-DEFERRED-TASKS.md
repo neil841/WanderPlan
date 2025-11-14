@@ -424,6 +424,7 @@ When re-validating with MCP:
 |---------|-------------|----------------|-------------------|
 | task-4-2-collaborator-ui | Collaborator Management UI | src/app/(dashboard)/trips/[tripId]/collaborators/page.tsx<br>src/components/collaborators/CollaboratorManagement.tsx<br>src/components/collaborators/InviteDialog.tsx<br>src/components/collaborators/CollaboratorCard.tsx<br>src/hooks/useCollaborators.ts | ⏸️ Deferred |
 | task-4-5-messaging-ui | Real-time Messaging Interface | src/app/(dashboard)/trips/[tripId]/messages/page.tsx<br>src/components/messages/MessageList.tsx<br>src/components/messages/MessageBubble.tsx<br>src/components/messages/MessageInput.tsx<br>src/components/messages/TypingIndicator.tsx<br>src/hooks/useMessages.ts | ⏸️ Deferred |
+| task-4-7-ideas-ui | Ideas/Suggestions UI with Voting | src/app/(dashboard)/trips/[tripId]/ideas/page.tsx<br>src/components/ideas/IdeaList.tsx<br>src/components/ideas/IdeaCard.tsx<br>src/components/ideas/CreateIdeaDialog.tsx<br>src/hooks/useIdeas.ts | ⏸️ Deferred |
 
 #### Phase 4 Chrome DevTools Validation Checklist
 
@@ -463,6 +464,31 @@ When re-validating with MCP:
 - Test auto-scroll to bottom on new messages
 - Test load more button (pagination)
 - Accessibility audit (keyboard navigation, screen reader support)
+
+**task-4-7-ideas-ui specific**:
+- Test ideas UI on 3 viewports (Desktop 1920x1080, Tablet 768x1024, Mobile 375x667)
+- Test create idea dialog (title/description validation)
+- Test idea card display (avatar, timestamp, status badge)
+- Test upvote button (toggle on/off, count update)
+- Test downvote button (toggle on/off, count update)
+- Test net vote count display
+- Test status badges (Pending/Accepted/Rejected colors)
+- Test status filter tabs (All/Pending/Accepted/Rejected)
+- Test sort dropdown (Most Recent/Most Votes)
+- Test stats cards (Total/Accepted/Pending counts)
+- Test edit idea (author/owner/admin only)
+- Test delete idea (author/owner/admin only)
+- Test accept idea (owner/admin only)
+- Test reject idea (owner/admin only)
+- Test actions dropdown menu
+- Test permission-based UI (show/hide actions based on role)
+- Test empty state (no ideas yet)
+- Test loading state (spinner)
+- Test real-time vote updates
+- Test responsive design (cards stack on mobile)
+- Console error checks
+- Performance testing with 100+ ideas
+- Accessibility audit (keyboard navigation, ARIA labels)
 
 ---
 
