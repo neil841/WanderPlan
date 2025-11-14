@@ -140,3 +140,49 @@ export interface SocketError {
   error: string;
   details?: any;
 }
+
+/**
+ * Socket Event Names
+ *
+ * All event names used in the Socket.io real-time communication
+ */
+export enum SocketEvent {
+  // Connection events
+  CONNECTION = 'connection',
+  DISCONNECT = 'disconnect',
+  ERROR = 'error',
+
+  // Trip room events
+  JOIN_TRIP = 'join:trip',
+  LEAVE_TRIP = 'leave:trip',
+
+  // Message events
+  MESSAGE_SENT = 'message:sent',
+  MESSAGE_UPDATED = 'message:updated',
+  MESSAGE_DELETED = 'message:deleted',
+
+  // Activity events
+  ACTIVITY_CREATED = 'activity:created',
+
+  // Event (itinerary) events
+  EVENT_CREATED = 'event:created',
+  EVENT_UPDATED = 'event:updated',
+  EVENT_DELETED = 'event:deleted',
+  EVENT_REORDERED = 'event:reordered',
+
+  // Collaborator events
+  COLLABORATOR_JOINED = 'collaborator:joined',
+  COLLABORATOR_LEFT = 'collaborator:left',
+  COLLABORATOR_ROLE_CHANGED = 'collaborator:role_changed',
+
+  // Trip events
+  TRIP_UPDATED = 'trip:updated',
+
+  // Typing indicators
+  TYPING_START = 'typing:start',
+  TYPING_STOP = 'typing:stop',
+
+  // Presence events
+  USER_ONLINE = 'user:online',
+  USER_OFFLINE = 'user:offline',
+}
