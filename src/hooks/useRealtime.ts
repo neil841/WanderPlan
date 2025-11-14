@@ -39,22 +39,24 @@ export function useSocketConnection() {
 
   useEffect(() => {
     if (status === 'authenticated' && session?.user) {
-      connectSocket();
+      // Async socket connection
+      connectSocket().then(() => {
+        const socket = getSocket();
 
-      const socket = getSocket();
+        const handleConnect = () => setConnected(true);
+        const handleDisconnect = () => setConnected(false);
 
-      const handleConnect = () => setConnected(true);
-      const handleDisconnect = () => setConnected(false);
+        socket?.on('connect', handleConnect);
+        socket?.on('disconnect', handleDisconnect);
 
-      socket?.on('connect', handleConnect);
-      socket?.on('disconnect', handleDisconnect);
-
-      // Set initial state
-      setConnected(isSocketConnected());
+        // Set initial state
+        setConnected(isSocketConnected());
+      });
 
       return () => {
-        socket?.off('connect', handleConnect);
-        socket?.off('disconnect', handleDisconnect);
+        const socket = getSocket();
+        socket?.off('connect');
+        socket?.off('disconnect');
       };
     }
 
@@ -78,9 +80,10 @@ export function useTripRoom(tripId: string | null) {
       return undefined;
     }
 
-    // Join room
-    joinTripRoom(tripId);
-    setInRoom(true);
+    // Join room (async)
+    joinTripRoom(tripId).then(() => {
+      setInRoom(true);
+    });
 
     // Leave room on cleanup
     return () => {
@@ -112,11 +115,18 @@ export function useSocketEvent<T = any>(
   }, [callback]);
 
   useEffect(() => {
-    const unsubscribe = onSocketEvent<T>(event, (data) => {
+    let unsubscribe: (() => void) | undefined;
+
+    // Subscribe to event (async)
+    onSocketEvent<T>(event, (data) => {
       callbackRef.current(data);
+    }).then((unsub) => {
+      unsubscribe = unsub;
     });
 
-    return unsubscribe;
+    return () => {
+      unsubscribe?.();
+    };
   }, [event]);
 }
 

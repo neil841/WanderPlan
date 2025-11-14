@@ -1,29 +1,48 @@
 /**
- * Socket.io Client
+ * Socket.io Client (Code-Split)
  *
- * Client-side Socket.io connection management.
+ * Client-side Socket.io connection management with dynamic imports
+ * for optimal bundle size. Socket.io client library (~200KB) is only
+ * loaded when real-time features are actually used.
  *
  * Features:
  * - Singleton socket instance
  * - Automatic reconnection
  * - Connection state management
  * - Event subscription helpers
+ * - Code-split socket.io-client library
  *
  * @module
  */
 
-import { io, Socket } from 'socket.io-client';
+import type { Socket } from 'socket.io-client';
 import { SocketEvent } from './server';
 
 let socket: Socket | null = null;
+let socketIOPromise: Promise<typeof import('socket.io-client')> | null = null;
 
 /**
- * Initialize Socket.io client
+ * Lazy load socket.io-client library
+ * This reduces initial bundle size by ~200KB
  */
-export function initSocketClient(): Socket {
+async function loadSocketIO(): Promise<typeof import('socket.io-client')> {
+  if (!socketIOPromise) {
+    socketIOPromise = import('socket.io-client');
+  }
+  return socketIOPromise;
+}
+
+/**
+ * Initialize Socket.io client (async)
+ * Dynamically imports socket.io-client library on first use
+ */
+export async function initSocketClient(): Promise<Socket> {
   if (socket) {
     return socket;
   }
+
+  // Dynamically load socket.io-client library
+  const { io } = await loadSocketIO();
 
   const url = process.env.NEXT_PUBLIC_SOCKET_URL || '';
 
@@ -65,11 +84,11 @@ export function getSocket(): Socket | null {
 }
 
 /**
- * Connect to Socket.io server
+ * Connect to Socket.io server (async)
  */
-export function connectSocket(): void {
+export async function connectSocket(): Promise<void> {
   if (!socket) {
-    initSocketClient();
+    await initSocketClient();
   }
 
   if (socket && !socket.connected) {
@@ -87,11 +106,11 @@ export function disconnectSocket(): void {
 }
 
 /**
- * Join a trip room
+ * Join a trip room (async)
  */
-export function joinTripRoom(tripId: string): void {
+export async function joinTripRoom(tripId: string): Promise<void> {
   if (!socket?.connected) {
-    connectSocket();
+    await connectSocket();
   }
 
   socket?.emit(SocketEvent.JOIN_TRIP, tripId);
@@ -105,14 +124,14 @@ export function leaveTripRoom(tripId: string): void {
 }
 
 /**
- * Subscribe to an event
+ * Subscribe to an event (async)
  */
-export function onSocketEvent<T = any>(
+export async function onSocketEvent<T = any>(
   event: SocketEvent | string,
   callback: (data: T) => void
-): () => void {
+): Promise<() => void> {
   if (!socket) {
-    initSocketClient();
+    await initSocketClient();
   }
 
   socket?.on(event, callback);
