@@ -19,10 +19,39 @@
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { getToken } from 'next-auth/jwt';
 
-export function middleware(request: NextRequest) {
-  // TODO: Re-enable authentication after fixing bcrypt Edge runtime compatibility
-  // For now, allow all requests to pass through
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Check if user is authenticated
+  const token = await getToken({
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET,
+  });
+
+  // If accessing protected route without authentication
+  if (!token) {
+    // Build login URL with redirect
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('callbackUrl', request.url);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // Check email verification for non-API routes
+  if (!pathname.startsWith('/api')) {
+    // Allow profile and settings pages for unverified users
+    const allowedPaths = ['/profile', '/settings', '/dashboard'];
+    const isAllowedPath = allowedPaths.some((path) => pathname.startsWith(path));
+
+    if (!token.emailVerified && !isAllowedPath) {
+      // Redirect unverified users to profile page with warning
+      const profileUrl = new URL('/profile', request.url);
+      return NextResponse.redirect(profileUrl);
+    }
+  }
+
+  // User is authenticated, allow access
   return NextResponse.next();
 }
 

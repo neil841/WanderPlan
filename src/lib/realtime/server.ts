@@ -71,6 +71,42 @@ export enum SocketEvent {
 }
 
 /**
+ * Connection rate limiter
+ * Limits connections per IP address to prevent DoS attacks
+ */
+const connectionAttempts = new Map<string, { count: number; resetAt: number }>();
+const MAX_CONNECTIONS_PER_MINUTE = 10;
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const attempt = connectionAttempts.get(ip);
+
+  if (!attempt || now > attempt.resetAt) {
+    // First attempt or window expired
+    connectionAttempts.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW });
+    return true;
+  }
+
+  if (attempt.count >= MAX_CONNECTIONS_PER_MINUTE) {
+    return false; // Rate limit exceeded
+  }
+
+  attempt.count++;
+  return true;
+}
+
+// Clean up old entries every 5 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, attempt] of connectionAttempts.entries()) {
+    if (now > attempt.resetAt) {
+      connectionAttempts.delete(ip);
+    }
+  }
+}, 5 * 60 * 1000);
+
+/**
  * Initialize Socket.io server
  */
 export function initSocketServer(httpServer: HTTPServer): SocketIOServer {
@@ -80,28 +116,63 @@ export function initSocketServer(httpServer: HTTPServer): SocketIOServer {
       credentials: true,
     },
     path: '/api/socketio',
+    // Connection limits
+    maxHttpBufferSize: 1e6, // 1 MB max message size
+    pingTimeout: 20000, // 20 seconds
+    pingInterval: 25000, // 25 seconds
+  });
+
+  // Rate limiting middleware
+  io.use(async (socket: AuthenticatedSocket, next) => {
+    const ip = socket.handshake.address || 'unknown';
+
+    if (!checkRateLimit(ip)) {
+      console.warn(`Rate limit exceeded for IP: ${ip}`);
+      return next(new Error('Too many connection attempts. Please try again later.'));
+    }
+
+    next();
   });
 
   // Authentication middleware
   io.use(async (socket: AuthenticatedSocket, next) => {
     try {
+      // Validate NEXTAUTH_SECRET exists
+      if (!process.env.NEXTAUTH_SECRET) {
+        console.error('CRITICAL: NEXTAUTH_SECRET environment variable is not set');
+        return next(new Error('Server configuration error'));
+      }
+
       const token = await getToken({
         req: socket.request as any,
         secret: process.env.NEXTAUTH_SECRET,
       });
 
-      if (!token || !token.sub) {
-        return next(new Error('Unauthorized'));
+      // Strict authentication check
+      if (!token || !token.sub || !token.email) {
+        console.warn('Socket connection rejected: Invalid or missing token');
+        return next(new Error('Unauthorized: Invalid authentication token'));
+      }
+
+      // Verify user exists in database (prevents deleted user connections)
+      const user = await prisma.user.findUnique({
+        where: { id: token.sub },
+        select: { id: true, email: true },
+      });
+
+      if (!user) {
+        console.warn(`Socket connection rejected: User ${token.sub} not found in database`);
+        return next(new Error('Unauthorized: User not found'));
       }
 
       // Attach user info to socket
       socket.userId = token.sub;
-      socket.userEmail = token.email || undefined;
+      socket.userEmail = token.email;
 
       next();
     } catch (error) {
       console.error('Socket authentication error:', error);
-      next(new Error('Authentication failed'));
+      return next(new Error('Authentication failed: ' + (error instanceof Error ? error.message : 'Unknown error')));
     }
   });
 
