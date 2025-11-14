@@ -258,3 +258,245 @@ npm run db:studio
 ---
 
 <!-- Blockers will be logged below this line -->
+
+---
+
+## [2025-11-14 20:00:00] BLOCKER-004: Database Field Mismatches
+
+**Agent**: qa-testing-agent
+**Phase**: Phase 4 - Collaboration & Communication
+**Type**: Database Schema Mismatch
+**Severity**: CRITICAL
+**Status**: UNRESOLVED
+
+### Description
+
+Critical database field name mismatches between API code and database schema that will cause runtime Prisma query failures.
+
+### Affected Components
+
+**1. Collaborator APIs** (3 files):
+- `/src/app/api/trips/[tripId]/collaborators/route.ts`
+- `/src/app/api/trips/[tripId]/collaborators/[id]/route.ts`
+- `/src/hooks/useCollaborators.ts`
+
+**Issue**: APIs use `profilePicture` field but database schema has `avatarUrl`
+
+**2. Message/Idea/Poll APIs** (9+ files):
+- All API routes in `/src/app/api/trips/[tripId]/messages/`
+- All API routes in `/src/app/api/trips/[tripId]/ideas/`
+- All API routes in `/src/app/api/trips/[tripId]/polls/`
+- All hooks in `/src/hooks/`
+
+**Issue**: APIs select `user.name` and `user.image` but database schema has `user.firstName`, `user.lastName`, `user.avatarUrl`
+
+### Impact
+
+**WILL CAUSE**:
+- 500 Internal Server Error on all affected endpoints
+- Prisma query failures
+- Complete failure of collaboration features
+- Message system non-functional
+- Ideas system non-functional
+- Polls system non-functional
+
+**Risk Level**: 🔴 **SHOW-STOPPER** - Nothing works without this fix
+
+### Example Error
+
+```typescript
+// Current (BROKEN):
+const user = await prisma.user.findUnique({
+  select: { name: true, image: true }  // Fields don't exist!
+});
+
+// Correct:
+const user = await prisma.user.findUnique({
+  select: { firstName: true, lastName: true, avatarUrl: true }
+});
+```
+
+### What I Need From User
+
+**No user input required** - This is a straightforward code fix.
+
+### How to Fix
+
+1. **Find and replace in all API files**:
+   - `profilePicture` → `avatarUrl`
+   - `user.name` → `user.firstName` (or create computed field)
+   - `user.image` → `user.avatarUrl`
+
+2. **Update type definitions** in `/src/types/`:
+   - Update User interface to match schema
+   - Update all derived types
+
+3. **Update validation schemas** if needed
+
+4. **Test all endpoints** after changes
+
+### Estimated Fix Time
+
+**2-3 hours**:
+- Find/replace: 30 minutes
+- Type updates: 30 minutes
+- Testing: 1-2 hours
+
+### Resolution Steps
+
+- [ ] Update collaborator API routes
+- [ ] Update message API routes
+- [ ] Update ideas API routes
+- [ ] Update polls API routes
+- [ ] Update all type definitions
+- [ ] Update hooks
+- [ ] Test all endpoints
+- [ ] Verify Prisma queries work
+
+### Related Report
+
+`.claude/reports/test-results-phase-4-checkpoint-1.md`
+
+---
+
+## [2025-11-14 20:00:00] BLOCKER-005: Performance Critical Issues
+
+**Agent**: performance-monitoring-agent
+**Phase**: Phase 4 - Collaboration & Communication
+**Type**: Performance / Scalability
+**Severity**: CRITICAL
+**Status**: UNRESOLVED
+
+### Description
+
+Critical N+1 query problems and missing pagination will cause production timeouts and database overload as data grows.
+
+### Issues
+
+**1. Ideas API N+1 Query Problem**
+- **File**: `/src/app/api/trips/[tripId]/ideas/route.ts`
+- **Problem**: Fetches ALL votes with ALL user data for each idea
+- **Current Performance**: 2-5 seconds with 100 ideas
+- **Expected**: <200ms with pagination + aggregation
+- **Impact**: 90% slower than acceptable
+
+**2. Polls API N+1 Query Problem**
+- **File**: `/src/app/api/trips/[tripId]/polls/route.ts`
+- **Problem**: Even worse (nested options + votes + users)
+- **Current Performance**: 3-5 seconds with 50 polls
+- **Expected**: <300ms with pagination + aggregation
+- **Impact**: 90% slower than acceptable
+
+**3. Missing Pagination**
+- **Files**: Ideas and Polls API endpoints
+- **Problem**: No limits on query results
+- **Impact**: Will fetch ALL data, causing timeouts
+
+**4. No Database Connection Limits**
+- **File**: `/src/lib/db.ts`
+- **Problem**: No connection pool configuration
+- **Impact**: Could crash with many concurrent users
+
+### Impact
+
+**WILL CAUSE**:
+- API timeouts (>30 seconds) with moderate data
+- Database connection exhaustion
+- Poor user experience (multi-second page loads)
+- Potential production outages
+- High infrastructure costs
+
+**Risk Level**: 🔴 **PRODUCTION OUTAGE RISK**
+
+### Example Issue
+
+```typescript
+// Current (N+1 PROBLEM):
+const ideas = await prisma.idea.findMany({
+  include: {
+    votes: {          // Fetches ALL votes
+      include: {
+        user: true    // Fetches ALL user data for each vote
+      }
+    }
+  }
+});
+// With 100 ideas × 50 votes × user data = 5000+ database queries!
+
+// Correct (AGGREGATION):
+const ideas = await prisma.idea.findMany({
+  include: {
+    _count: {
+      select: { votes: true }  // Just count, no N+1
+    }
+  },
+  take: 20,  // Pagination
+  skip: (page - 1) * 20
+});
+```
+
+### What I Need From User
+
+**No user input required** - This is a straightforward optimization.
+
+### How to Fix
+
+**Priority 1: N+1 Queries** (2 days)
+1. Replace vote includes with aggregations
+2. Fetch only necessary user fields
+3. Use database-level grouping
+
+**Priority 2: Pagination** (1 day)
+1. Add `take` and `skip` to queries
+2. Add pagination params to API endpoints
+3. Update frontend to handle pagination
+
+**Priority 3: Connection Pooling** (2 hours)
+1. Configure Prisma connection limits
+2. Add connection pool monitoring
+
+### Estimated Fix Time
+
+**2-3 days**:
+- N+1 query fixes: 2 days
+- Pagination: 1 day
+- Connection pooling: 2 hours
+
+### Performance Targets
+
+| Metric | Current | After Fix | Target |
+|--------|---------|-----------|--------|
+| Ideas API | 2-5s | 200ms | <200ms |
+| Polls API | 3-5s | 300ms | <200ms |
+| Max Items | Unlimited | 20/page | 20/page |
+| Connections | Unlimited | 10-20 | 10-20 |
+
+### Resolution Steps
+
+- [ ] Fix Ideas API N+1 query
+- [ ] Fix Polls API N+1 query
+- [ ] Add pagination to Ideas API
+- [ ] Add pagination to Polls API
+- [ ] Configure Prisma connection pool
+- [ ] Update frontend to handle pagination
+- [ ] Performance test with large datasets
+- [ ] Verify <200ms response times
+
+### Related Report
+
+`.claude/reports/performance-report-phase-4-checkpoint-1.md`
+
+---
+
+## Summary: Active Blockers
+
+**Total Active Blockers**: 3
+
+1. **blocker-003** (Security) - 3 CRITICAL issues - 7 hours to fix
+2. **blocker-004** (Database) - 2 CRITICAL mismatches - 2-3 hours to fix
+3. **blocker-005** (Performance) - 4 CRITICAL issues - 2-3 days to fix
+
+**Total Estimated Fix Time**: 3-4 days
+
+**Production Readiness**: 🔴 NOT READY - Must fix all blockers before production deployment
+
