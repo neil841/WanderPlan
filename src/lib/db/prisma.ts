@@ -11,14 +11,29 @@
 import { PrismaClient } from "@prisma/client";
 
 /**
- * Prisma Client configuration with logging
+ * Prisma Client configuration with logging and connection pooling
+ *
+ * Connection pooling is configured via DATABASE_URL with connection_limit parameter.
+ * Example: postgresql://user:password@host:port/database?connection_limit=10&pool_timeout=20
  */
 const prismaClientSingleton = () => {
+  // Build database URL with connection pooling parameters
+  const databaseUrl = process.env.DATABASE_URL || "";
+  const poolingUrl = databaseUrl.includes("?")
+    ? `${databaseUrl}&connection_limit=20&pool_timeout=20`
+    : `${databaseUrl}?connection_limit=20&pool_timeout=20`;
+
   return new PrismaClient({
     log:
       process.env.NODE_ENV === "development"
         ? ["query", "error", "warn"]
         : ["error"],
+    // Override DATABASE_URL with pooling parameters
+    datasources: {
+      db: {
+        url: poolingUrl,
+      },
+    },
   });
 };
 
