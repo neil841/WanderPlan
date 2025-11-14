@@ -107,6 +107,12 @@ setInterval(() => {
 }, 5 * 60 * 1000);
 
 /**
+ * Connection tracking for per-user limits
+ */
+const userConnections = new Map<string, number>();
+const MAX_CONNECTIONS_PER_USER = 5; // Max 5 concurrent connections per user
+
+/**
  * Initialize Socket.io server
  */
 export function initSocketServer(httpServer: HTTPServer): SocketIOServer {
@@ -116,10 +122,18 @@ export function initSocketServer(httpServer: HTTPServer): SocketIOServer {
       credentials: true,
     },
     path: '/api/socketio',
-    // Connection limits
+    // Connection limits and performance tuning
     maxHttpBufferSize: 1e6, // 1 MB max message size
-    pingTimeout: 20000, // 20 seconds
-    pingInterval: 25000, // 25 seconds
+    pingTimeout: 20000, // 20 seconds - disconnect if no pong received
+    pingInterval: 25000, // 25 seconds - send ping to check connection
+    connectTimeout: 45000, // 45 seconds - max time to establish connection
+    transports: ['websocket', 'polling'], // Prefer WebSocket, fallback to polling
+    // Resource limits
+    maxConnections: 1000, // Max 1000 concurrent connections to server
+    allowUpgrades: true, // Allow transport upgrades (polling -> websocket)
+    perMessageDeflate: {
+      threshold: 1024, // Only compress messages > 1KB
+    },
   });
 
   // Rate limiting middleware
@@ -178,7 +192,21 @@ export function initSocketServer(httpServer: HTTPServer): SocketIOServer {
 
   // Connection handler
   io.on(SocketEvent.CONNECTION, (socket: AuthenticatedSocket) => {
-    console.log(`User connected: ${socket.userId} (${socket.id})`);
+    const userId = socket.userId!;
+
+    // Track user connections
+    const currentConnections = userConnections.get(userId) || 0;
+    if (currentConnections >= MAX_CONNECTIONS_PER_USER) {
+      console.warn(`User ${userId} exceeded max connections (${MAX_CONNECTIONS_PER_USER})`);
+      socket.emit(SocketEvent.ERROR, {
+        error: 'Maximum concurrent connections exceeded',
+      });
+      socket.disconnect(true);
+      return;
+    }
+    userConnections.set(userId, currentConnections + 1);
+
+    console.log(`User connected: ${userId} (${socket.id}) - ${currentConnections + 1}/${MAX_CONNECTIONS_PER_USER} connections`);
 
     // Join trip room
     socket.on(SocketEvent.JOIN_TRIP, async (tripId: string) => {
@@ -243,7 +271,16 @@ export function initSocketServer(httpServer: HTTPServer): SocketIOServer {
 
     // Disconnect handler
     socket.on(SocketEvent.DISCONNECT, () => {
-      console.log(`User disconnected: ${socket.userId} (${socket.id})`);
+      // Decrement user connection count
+      const currentConnections = userConnections.get(userId) || 1;
+      const newCount = currentConnections - 1;
+      if (newCount <= 0) {
+        userConnections.delete(userId);
+      } else {
+        userConnections.set(userId, newCount);
+      }
+
+      console.log(`User disconnected: ${userId} (${socket.id}) - ${newCount}/${MAX_CONNECTIONS_PER_USER} connections remaining`);
     });
   });
 
