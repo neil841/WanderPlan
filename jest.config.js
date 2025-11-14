@@ -36,7 +36,7 @@ const customJestConfig = {
   ],
   testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/.next/'],
   transformIgnorePatterns: [
-    '/node_modules/(?!(next-auth|@auth)/)',
+    '/node_modules/(?!(next-auth|@auth|@prisma)/)',
     '^.+\\.module\\.(css|sass|scss)$',
   ],
 };
