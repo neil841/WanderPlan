@@ -123,7 +123,7 @@ export default function MessagesPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Messages</h1>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground" aria-live="polite" aria-atomic="true">
               {inRoom ? 'Connected' : 'Connecting...'}
             </p>
           </div>

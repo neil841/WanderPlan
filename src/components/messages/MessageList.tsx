@@ -97,7 +97,12 @@ export function MessageList({
       )}
 
       {/* Messages (reversed for bottom-up) */}
-      <div className="flex flex-col gap-4 p-4">
+      <div
+        className="flex flex-col gap-4 p-4"
+        role="log"
+        aria-live="polite"
+        aria-label="Chat messages"
+      >
         {messages
           .slice()
           .reverse()
@@ -115,7 +120,9 @@ export function MessageList({
 
       {/* Typing Indicator */}
       {typingUserNames.length > 0 && (
-        <TypingIndicator userNames={typingUserNames} />
+        <div aria-live="polite" aria-atomic="true">
+          <TypingIndicator userNames={typingUserNames} />
+        </div>
       )}
 
       {/* Auto-scroll anchor */}
