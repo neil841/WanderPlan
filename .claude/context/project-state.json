@@ -86,7 +86,8 @@
       "status": "in-progress",
       "startedAt": "2025-11-13T17:00:00Z",
       "tasks": {
-        "task-4-1-collaborator-api": "completed"
+        "task-4-1-collaborator-api": "completed",
+        "task-4-2-collaborator-ui": "completed"
       }
     }
   },
