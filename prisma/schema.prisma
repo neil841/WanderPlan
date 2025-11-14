@@ -451,13 +451,33 @@ model Activity {
   createdAt   DateTime           @default(now()) @map("created_at")
 
   // Relations
-  trip        Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trip          Trip           @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notifications Notification[]
 
   @@index([tripId])
   @@index([tripId, createdAt])
   @@index([userId])
   @@map("activities")
+}
+
+model Notification {
+  id         String   @id @default(uuid())
+  activityId String   @map("activity_id")
+  userId     String   @map("user_id") // User receiving the notification
+  isRead     Boolean  @default(false) @map("is_read")
+  readAt     DateTime? @map("read_at")
+
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  // Relations
+  activity   Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@unique([activityId, userId])
+  @@index([userId])
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
+  @@map("notifications")
 }
 
 // ==========================================

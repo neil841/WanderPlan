@@ -15,6 +15,7 @@ import {
 import type { MessagesResponse } from '@/types/message';
 import { broadcastToTrip } from '@/lib/realtime/server';
 import { SocketEvent } from '@/types/realtime';
+import { createNotificationsForActivity } from '@/lib/notifications';
 
 /**
  * POST /api/trips/[tripId]/messages
@@ -110,7 +111,7 @@ export async function POST(
     });
 
     // Log activity
-    await prisma.activity.create({
+    const activity = await prisma.activity.create({
       data: {
         tripId,
         userId: session.user.id,
@@ -122,6 +123,14 @@ export async function POST(
         },
       },
     });
+
+    // Create notifications for trip collaborators
+    await createNotificationsForActivity(
+      activity.id,
+      tripId,
+      session.user.id,
+      'MESSAGE_POSTED'
+    );
 
     // Broadcast to trip room via Socket.io
     broadcastToTrip(tripId, SocketEvent.MESSAGE_SENT, {
