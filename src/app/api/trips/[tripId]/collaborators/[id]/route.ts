@@ -144,7 +144,7 @@ export async function PATCH(
             email: true,
             firstName: true,
             lastName: true,
-            profilePicture: true,
+            avatarUrl: true,
           },
         },
         inviter: {

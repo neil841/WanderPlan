@@ -66,9 +66,10 @@ export async function GET(
         creator: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true,
-            image: true,
+            avatarUrl: true,
           },
         },
         options: {
@@ -81,9 +82,10 @@ export async function GET(
                 user: {
                   select: {
                     id: true,
-                    name: true,
+                    firstName: true,
+                    lastName: true,
                     email: true,
-                    image: true,
+                    avatarUrl: true,
                   },
                 },
               },
@@ -221,9 +223,10 @@ export async function PATCH(
         creator: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true,
-            image: true,
+            avatarUrl: true,
           },
         },
         options: {

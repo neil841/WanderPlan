@@ -122,9 +122,10 @@ export async function PATCH(
         creator: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true,
-            image: true,
+            avatarUrl: true,
           },
         },
         votes: true,

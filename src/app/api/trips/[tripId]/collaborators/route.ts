@@ -168,7 +168,7 @@ export async function POST(
                 email: true,
                 firstName: true,
                 lastName: true,
-                profilePicture: true,
+                avatarUrl: true,
               },
             },
             inviter: {
@@ -215,7 +215,7 @@ export async function POST(
             email: true,
             firstName: true,
             lastName: true,
-            profilePicture: true,
+            avatarUrl: true,
           },
         },
         inviter: {
@@ -337,7 +337,7 @@ export async function GET(
             email: true,
             firstName: true,
             lastName: true,
-            profilePicture: true,
+            avatarUrl: true,
           },
         },
         inviter: {
@@ -364,7 +364,7 @@ export async function GET(
         email: true,
         firstName: true,
         lastName: true,
-        profilePicture: true,
+        avatarUrl: true,
       },
     });
 

@@ -100,9 +100,10 @@ export async function POST(
         user: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true,
-            image: true,
+            avatarUrl: true,
           },
         },
       },
@@ -225,9 +226,10 @@ export async function GET(
         user: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true,
-            image: true,
+            avatarUrl: true,
           },
         },
       },

@@ -80,9 +80,10 @@ export async function POST(
         creator: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true,
-            image: true,
+            avatarUrl: true,
           },
         },
         votes: true,
@@ -189,9 +190,10 @@ export async function GET(
         creator: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true,
-            image: true,
+            avatarUrl: true,
           },
         },
         votes: {
@@ -199,7 +201,8 @@ export async function GET(
             user: {
               select: {
                 id: true,
-                name: true,
+                firstName: true,
+                lastName: true,
                 email: true,
               },
             },

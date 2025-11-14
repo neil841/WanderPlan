@@ -25,7 +25,7 @@ export interface Collaborator {
     email: string;
     firstName: string;
     lastName: string;
-    profilePicture: string | null;
+    avatarUrl: string | null;
   };
   inviter: {
     id: string;
