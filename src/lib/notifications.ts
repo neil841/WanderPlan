@@ -6,6 +6,7 @@
 
 import { prisma } from './db';
 import { ActivityActionType } from '@prisma/client';
+import { sendEmailNotification } from './notifications/email';
 
 /**
  * Create notifications for an activity
@@ -73,6 +74,42 @@ export async function createNotificationsForActivity(
         data: notifications,
         skipDuplicates: true, // Avoid duplicate notifications
       });
+
+      // 5. Send email notifications (async, don't block)
+      // Fetch the created notifications with full activity data
+      const createdNotifications = await prisma.notification.findMany({
+        where: {
+          activityId,
+          userId: { in: filteredUserIds },
+        },
+        include: {
+          activity: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  avatarUrl: true,
+                },
+              },
+              trip: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      // Send email notifications asynchronously (don't await to avoid blocking)
+      for (const notification of createdNotifications) {
+        sendEmailNotification(notification.userId, notification as any).catch((error) => {
+          console.error('Failed to send email notification:', error);
+        });
+      }
     }
 
     return notifications.length;
