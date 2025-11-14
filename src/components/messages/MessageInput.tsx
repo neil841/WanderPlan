@@ -133,12 +133,14 @@ export function MessageInput({
           disabled={disabled}
           className="min-h-[44px] max-h-[200px] resize-none"
           rows={1}
+          aria-label="Message content"
         />
         <Button
           onClick={handleSend}
           disabled={disabled || !content.trim()}
           size="icon"
           className="shrink-0 h-11 w-11"
+          aria-label="Send message"
         >
           <Send className="h-5 w-5" />
         </Button>

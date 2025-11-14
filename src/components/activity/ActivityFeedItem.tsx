@@ -35,23 +35,23 @@ function getActivityIcon(actionType: ActivityActionType) {
 
   switch (actionType) {
     case ActivityActionType.MESSAGE_POSTED:
-      return <MessageSquare className={cn(iconClass, 'text-blue-600')} />;
+      return <MessageSquare className={cn(iconClass, 'text-blue-600')} aria-hidden="true" />;
     case ActivityActionType.EVENT_CREATED:
-      return <CalendarPlus className={cn(iconClass, 'text-green-600')} />;
+      return <CalendarPlus className={cn(iconClass, 'text-green-600')} aria-hidden="true" />;
     case ActivityActionType.EVENT_UPDATED:
-      return <CalendarCog className={cn(iconClass, 'text-yellow-600')} />;
+      return <CalendarCog className={cn(iconClass, 'text-yellow-600')} aria-hidden="true" />;
     case ActivityActionType.EVENT_DELETED:
-      return <CalendarX className={cn(iconClass, 'text-red-600')} />;
+      return <CalendarX className={cn(iconClass, 'text-red-600')} aria-hidden="true" />;
     case ActivityActionType.COLLABORATOR_ADDED:
-      return <UserPlus className={cn(iconClass, 'text-green-600')} />;
+      return <UserPlus className={cn(iconClass, 'text-green-600')} aria-hidden="true" />;
     case ActivityActionType.COLLABORATOR_REMOVED:
-      return <UserMinus className={cn(iconClass, 'text-red-600')} />;
+      return <UserMinus className={cn(iconClass, 'text-red-600')} aria-hidden="true" />;
     case ActivityActionType.EXPENSE_ADDED:
-      return <DollarSign className={cn(iconClass, 'text-emerald-600')} />;
+      return <DollarSign className={cn(iconClass, 'text-emerald-600')} aria-hidden="true" />;
     case ActivityActionType.TRIP_UPDATED:
-      return <MapPin className={cn(iconClass, 'text-purple-600')} />;
+      return <MapPin className={cn(iconClass, 'text-purple-600')} aria-hidden="true" />;
     default:
-      return <MessageSquare className={cn(iconClass, 'text-gray-600')} />;
+      return <MessageSquare className={cn(iconClass, 'text-gray-600')} aria-hidden="true" />;
   }
 }
 
