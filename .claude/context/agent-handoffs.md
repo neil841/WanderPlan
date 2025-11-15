@@ -8984,3 +8984,57 @@ Started Phase 5 (Financial & Professional Features) with 15 tasks total. This ph
 **Duration**: 15 minutes
 
 **Progress**: Phase 5 Task 1 of 15 completed (6.7%)
+
+---
+
+## [2025-11-15 07:15:00] staff-engineer → (next task)
+
+### Task 5.2: Budget UI - COMPLETED ✅
+
+**What I Did**:
+- Implemented complete Budget UI with three main components and a dedicated page
+- Created BudgetOverview component showing total budget, spent, remaining with visual indicators
+- Created CategoryBreakdown component with progress bars for each budget category
+- Created EditBudgetDialog for updating budget amounts and category allocations
+- Created Budget page at `/trips/[tripId]/budget`
+- Added Progress UI component following shadcn/ui patterns
+
+**Files Created**:
+- `src/components/budget/BudgetOverview.tsx` (119 lines) - Total budget overview card
+- `src/components/budget/CategoryBreakdown.tsx` (154 lines) - Category breakdown with progress bars
+- `src/components/budget/EditBudgetDialog.tsx` (211 lines) - Budget edit dialog
+- `src/components/ui/progress.tsx` (29 lines) - Progress bar component
+- `src/app/(dashboard)/trips/[tripId]/budget/page.tsx` (230 lines) - Budget page
+
+**Features Implemented**:
+- Total budget display with spent/remaining/percentage visualization
+- 6 budget categories (accommodation, food, activities, transport, shopping, other)
+- Color-coded progress bars (green <80%, yellow 80-100%, red >100%)
+- Over-budget warnings at total and category levels
+- Multi-currency support with ISO 4217 codes
+- Edit dialog with real-time total calculation
+- Responsive design (mobile/tablet/desktop breakpoints)
+- Loading and error states with skeleton loaders
+- WCAG 2.1 AA compliant with ARIA labels
+- Framer Motion animations for smooth transitions
+
+**UI Components**:
+- Budget overview card with 3-column layout (budgeted/spent/remaining)
+- Progress bar showing percentage used with color indicators
+- Category cards with icons, amounts, and individual progress bars
+- Edit dialog with form validation and currency input
+- Warning alerts for over-budget scenarios
+
+**What's Next**:
+- Task 5.3: Expense CRUD API - Implement expense tracking with:
+  - POST/GET/PATCH/DELETE `/api/trips/[tripId]/expenses` endpoints
+  - Expense categories aligned with budget categories
+  - Link expense to event (optional)
+  - Multi-currency support
+  - Receipt upload support (Vercel Blob)
+
+**Commit**: `3d7c8b2` - feat(budget): implement Budget UI (task-5-2)
+
+**Duration**: 30 minutes
+
+**Progress**: Phase 5 Task 2 of 15 completed (13.3%)

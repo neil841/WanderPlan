@@ -125,7 +125,7 @@
       "completedAt": null,
       "tasks": {
         "task-5-1-budget-api": "completed",
-        "task-5-2-budget-ui": "pending",
+        "task-5-2-budget-ui": "completed",
         "task-5-3-expense-api": "pending",
         "task-5-4-expense-ui": "pending",
         "task-5-5-expense-split-api": "pending",
