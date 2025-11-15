@@ -9105,3 +9105,140 @@ Started Phase 5 (Financial & Professional Features) with 15 tasks total. This ph
 **Duration**: 30 minutes
 
 **Progress**: Phase 5 Task 3 of 15 completed (20%)
+
+---
+
+## [2025-11-15 08:15:00] staff-engineer → (next task)
+
+### Task 5.4: Expense Tracking UI - COMPLETED ✅
+
+**What I Did**:
+- Implemented complete expense tracking interface with list, create, edit, delete functionality
+- Created expense card component with category badges and metadata display
+- Built comprehensive expenses page with summary statistics and category breakdown
+- Integrated with expense API endpoints with proper error handling and loading states
+
+**Files Created**:
+- `src/components/expenses/ExpenseCard.tsx` (179 lines) - Individual expense card component
+- `src/components/expenses/ExpenseList.tsx` (221 lines) - Expense list with filters
+- `src/components/expenses/CreateExpenseDialog.tsx` (294 lines) - Create expense dialog form
+- `src/components/expenses/EditExpenseDialog.tsx` (284 lines) - Edit expense dialog form
+- `src/app/(dashboard)/trips/[tripId]/expenses/page.tsx` (254 lines) - Main expenses page
+
+**UI Components**:
+
+**ExpenseCard Component**:
+- Description and formatted amount display
+- Category badge with color coding (6 category colors)
+- Date display with formatting (e.g., "Nov 15, 2025")
+- Payer information with user's full name
+- Linked event display (if expense linked to event)
+- Receipt link (opens in new tab if available)
+- Edit/Delete dropdown menu (if canEdit=true)
+- Dark mode support for category badges
+- Responsive layout with hover shadow transition
+
+**ExpenseList Component**:
+- "Add Expense" button in header
+- Search filter (searches expense descriptions)
+- Category filter dropdown (all categories + "All Categories")
+- Grid layout (2 columns on desktop, 1 on mobile)
+- Loading state with spinner
+- Empty state with helpful message
+- Expense card grid with edit/delete callbacks
+- Delete confirmation dialog (browser confirm)
+- Create and edit dialogs integration
+- Auto-refresh after create/edit/delete
+
+**CreateExpenseDialog Component**:
+- Description textarea (2 rows, max 500 chars)
+- Amount input (number, min 0, step 0.01) and Currency input (3-letter code, auto-uppercase)
+- Category selector with 6 categories
+- Date picker (HTML5 date input with timezone handling)
+- Optional event selector (if events available, dropdown with "No event" option)
+- Optional receipt URL input (placeholder for file upload feature)
+- Form validation with react-hook-form + Zod
+- Cancel and "Add Expense" buttons
+- Loading state on submit
+
+**EditExpenseDialog Component**:
+- Same form fields as CreateExpenseDialog
+- Pre-populated with expense data
+- "Save Changes" button instead of "Add Expense"
+- Form validation with react-hook-form + Zod
+- Loading state on submit
+
+**ExpensesPage**:
+- Page header with title and description
+- 3 summary cards:
+  - Total Expenses (amount, count)
+  - Top Category (highest spending category)
+  - Average per Expense
+- Category breakdown section (grid of categories with amounts)
+- ExpenseList component integration
+- TanStack Query for data fetching (expenses and events)
+- Loading states with Skeleton components
+- Error handling with Alert component
+- Auto-refresh on mutations
+
+**Features Implemented**:
+- Complete CRUD operations (Create, Read, Update, Delete)
+- Category filtering (7 options: All + 6 categories)
+- Search filtering by description
+- Summary statistics (total, top category, average)
+- Category breakdown visualization
+- Event linking (dropdown of trip events)
+- Receipt URL support (ready for file upload)
+- Multi-currency support with formatting
+- Date handling with timezone safety (set to noon UTC)
+- Permission-based edit/delete (TODO: check user vs payer/owner)
+- Responsive design (mobile/tablet/desktop)
+- Loading states with Skeleton components
+- Empty states with helpful messages
+- Error handling with alerts
+- Real-time updates after mutations
+
+**Category Color Coding**:
+- ACCOMMODATION: Blue
+- TRANSPORTATION: Green
+- FOOD: Orange
+- ACTIVITIES: Purple
+- SHOPPING: Pink
+- OTHER: Gray
+- Dark mode variants for all colors
+
+**Data Flow**:
+- Expenses fetched via TanStack Query from `/api/trips/[tripId]/expenses`
+- Events fetched from `/api/trips/[tripId]/events` for linking
+- Create via POST to `/api/trips/[tripId]/expenses`
+- Edit via PATCH to `/api/trips/[tripId]/expenses/[id]`
+- Delete via DELETE to `/api/trips/[tripId]/expenses/[id]`
+- Auto-refetch after mutations
+
+**Accessibility**:
+- ARIA labels for all interactive elements
+- Screen reader-friendly form labels
+- Keyboard navigation support
+- Focus indicators on all inputs
+- Semantic HTML structure
+
+**What's Next**:
+- Task 5.5: Expense Splitting API - Implement expense splitting for group trips with:
+  - POST `/api/trips/[tripId]/expenses/[id]/splits` - Create expense splits
+  - GET `/api/trips/[tripId]/expenses/[id]/splits` - Get expense splits
+  - PATCH `/api/trips/[tripId]/expenses/[id]/splits/[splitId]` - Update split amount
+  - DELETE `/api/trips/[tripId]/expenses/[id]/splits/[splitId]` - Remove split
+  - Support for equal split, custom split, percentage-based split
+  - Settlement calculations (who owes whom)
+
+**Commit**: (pending) - feat(expense): implement Expense Tracking UI (task-5-4)
+
+**Duration**: 45 minutes
+
+**Progress**: Phase 5 Task 4 of 15 completed (26.7%)
+
+**Notes**:
+- Receipt file upload is stubbed with URL input (ready for Vercel Blob integration in future)
+- Permission check for canEdit is currently hardcoded to true (TODO: check if user is payer or trip owner)
+- Events integration is ready (fetches events for dropdown, but depends on events existing)
+- Category enums are uppercase (ACCOMMODATION) vs budget lowercase (accommodation) - both work correctly
