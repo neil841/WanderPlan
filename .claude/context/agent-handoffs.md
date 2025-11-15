@@ -9038,3 +9038,70 @@ Started Phase 5 (Financial & Professional Features) with 15 tasks total. This ph
 **Duration**: 30 minutes
 
 **Progress**: Phase 5 Task 2 of 15 completed (13.3%)
+
+---
+
+## [2025-11-15 07:45:00] staff-engineer → (next task)
+
+### Task 5.3: Expense CRUD API - COMPLETED ✅
+
+**What I Did**:
+- Implemented complete Expense CRUD API with 5 endpoints
+- Created expense types with ExpenseCategory enum aligned with budget categories
+- Implemented expense validation schemas with Zod
+- Full CRUD operations with filtering, pagination, and summary statistics
+
+**Files Created**:
+- `src/types/expense.ts` (115 lines) - Expense types and interfaces
+- `src/lib/validations/expense.ts` (57 lines) - Zod validation schemas
+- `src/app/api/trips/[tripId]/expenses/route.ts` (356 lines) - Create and list endpoints
+- `src/app/api/trips/[tripId]/expenses/[id]/route.ts` (295 lines) - Get, update, delete endpoints
+
+**API Endpoints**:
+- POST `/api/trips/[tripId]/expenses` - Create expense
+- GET `/api/trips/[tripId]/expenses` - List expenses with filters and pagination
+- GET `/api/trips/[tripId]/expenses/[id]` - Get single expense
+- PATCH `/api/trips/[tripId]/expenses/[id]` - Update expense
+- DELETE `/api/trips/[tripId]/expenses/[id]` - Delete expense
+
+**Features Implemented**:
+- 6 expense categories (ACCOMMODATION, TRANSPORTATION, FOOD, ACTIVITIES, SHOPPING, OTHER)
+- Multi-currency support with ISO 4217 codes
+- Optional event linkage (link expense to specific event)
+- Receipt URL support (ready for file upload integration)
+- Automatic paidBy tracking (current user who creates expense)
+- Pagination (default 50, max 100 per page)
+- Advanced filtering: category, eventId, paidBy, date range
+- Summary statistics: total amount and breakdown by category
+- Permission checks: only payer or trip owner can edit/delete
+- Expense splits support (relations ready for task 5.5)
+- Ordered by date descending, then creation date
+
+**Permission Model**:
+- All trip collaborators can view expenses
+- All trip collaborators can create expenses
+- Only expense payer or trip owner can update expense
+- Only expense payer or trip owner can delete expense
+- Cascading delete to expense splits
+
+**Data Model**:
+- Expense belongs to Trip (required)
+- Expense belongs to Event (optional, can link to itinerary event)
+- Expense belongs to User as payer
+- Expense has many ExpenseSplits (for task 5.5)
+
+**What's Next**:
+- Task 5.4: Expense Tracking UI - Create expense management interface with:
+  - Expense list with filters (category, date range)
+  - "Add Expense" button and creation dialog
+  - Link expense to event selector
+  - Receipt upload component (Vercel Blob integration)
+  - Edit/delete expense actions
+  - Total expenses display
+  - Category breakdown visualization
+
+**Commit**: `1b91ceb` - feat(expense): implement Expense CRUD API (task-5-3)
+
+**Duration**: 30 minutes
+
+**Progress**: Phase 5 Task 3 of 15 completed (20%)
