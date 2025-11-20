@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // Relax strict checking for test files
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "strict": false,
+    "strictNullChecks": false,
+    "noImplicitAny": false
+  },
+  "include": [
+    "src/__tests__/**/*",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx"
+  ]
+}

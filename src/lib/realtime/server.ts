@@ -17,8 +17,12 @@ import { Server as HTTPServer } from 'http';
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { getToken } from 'next-auth/jwt';
 import { prisma } from '@/lib/db/prisma';
+import { SocketEvent } from './events';
 
 export type SocketServer = SocketIOServer;
+
+// Re-export SocketEvent for backward compatibility
+export { SocketEvent };
 
 /**
  * Authenticated socket with user info
@@ -26,48 +30,6 @@ export type SocketServer = SocketIOServer;
 export interface AuthenticatedSocket extends Socket {
   userId?: string;
   userEmail?: string;
-}
-
-/**
- * Socket event types
- */
-export enum SocketEvent {
-  // Connection
-  CONNECTION = 'connection',
-  DISCONNECT = 'disconnect',
-  ERROR = 'error',
-
-  // Trip rooms
-  JOIN_TRIP = 'trip:join',
-  LEAVE_TRIP = 'trip:leave',
-
-  // Messages
-  MESSAGE_SENT = 'message:sent',
-  MESSAGE_RECEIVED = 'message:received',
-  MESSAGE_DELETED = 'message:deleted',
-  TYPING_START = 'typing:start',
-  TYPING_STOP = 'typing:stop',
-
-  // Activity
-  ACTIVITY_CREATED = 'activity:created',
-
-  // Collaborators
-  COLLABORATOR_JOINED = 'collaborator:joined',
-  COLLABORATOR_LEFT = 'collaborator:left',
-  COLLABORATOR_ROLE_CHANGED = 'collaborator:role_changed',
-
-  // Events
-  EVENT_CREATED = 'event:created',
-  EVENT_UPDATED = 'event:updated',
-  EVENT_DELETED = 'event:deleted',
-  EVENT_REORDERED = 'event:reordered',
-
-  // Trip updates
-  TRIP_UPDATED = 'trip:updated',
-
-  // Presence
-  USER_ONLINE = 'user:online',
-  USER_OFFLINE = 'user:offline',
 }
 
 /**

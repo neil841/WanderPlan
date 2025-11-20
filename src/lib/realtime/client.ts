@@ -16,7 +16,7 @@
  */
 
 import type { Socket } from 'socket.io-client';
-import { SocketEvent } from './server';
+import { SocketEvent } from './events';
 
 let socket: Socket | null = null;
 let socketIOPromise: Promise<typeof import('socket.io-client')> | null = null;

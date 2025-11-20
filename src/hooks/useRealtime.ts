@@ -25,7 +25,7 @@ import {
   isSocketConnected,
   getSocket,
 } from '@/lib/realtime/client';
-import { SocketEvent } from '@/lib/realtime/server';
+import { SocketEvent } from '@/lib/realtime/events';
 
 /**
  * Hook to manage socket connection
