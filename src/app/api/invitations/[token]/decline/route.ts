@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/db/prisma';
+import prisma from '@/lib/db/prisma';
 
 /**
  * POST /api/invitations/[token]/decline
@@ -35,7 +35,7 @@ export async function POST(
         trip: {
           select: {
             id: true,
-            title: true,
+            name: true,
           },
         },
         user: {

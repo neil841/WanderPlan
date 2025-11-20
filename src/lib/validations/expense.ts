@@ -13,7 +13,7 @@ import { ExpenseCategory } from '@/types/expense';
 export const createExpenseSchema = z.object({
   eventId: z.string().uuid('Invalid event ID').optional(),
   category: z.nativeEnum(ExpenseCategory, {
-    errorMap: () => ({ message: 'Invalid expense category' }),
+    message: 'Invalid expense category',
   }),
   description: z
     .string()
@@ -38,7 +38,7 @@ export const updateExpenseSchema = z.object({
   eventId: z.string().uuid('Invalid event ID').nullable().optional(),
   category: z
     .nativeEnum(ExpenseCategory, {
-      errorMap: () => ({ message: 'Invalid expense category' }),
+      message: 'Invalid expense category',
     })
     .optional(),
   description: z

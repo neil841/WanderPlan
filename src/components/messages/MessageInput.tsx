@@ -105,7 +105,7 @@ export function MessageInput({
         <div className="flex items-center justify-between px-4 py-2 bg-muted border-b">
           <div className="flex flex-col gap-0.5 text-sm">
             <span className="text-muted-foreground">
-              Replying to <span className="font-medium">{replyingTo.user.name || replyingTo.user.email}</span>
+              Replying to <span className="font-medium">{`${replyingTo.user.firstName} ${replyingTo.user.lastName}` || replyingTo.user.email}</span>
             </span>
             <span className="text-xs text-muted-foreground truncate max-w-md">
               {replyingTo.content}

@@ -9,7 +9,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { voteIdeaSchema } from '@/lib/validations/idea';
 import { broadcastToTrip } from '@/lib/realtime/server';
-import { SocketEvent } from '@/types/realtime';
+import { SocketEvent } from '@/lib/realtime/server';
 
 /**
  * POST /api/trips/[tripId]/ideas/[id]/vote
@@ -33,7 +33,7 @@ export async function POST(
     const validation = voteIdeaSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid request data', details: validation.error.errors },
+        { error: 'Invalid request data', details: validation.error.issues },
         { status: 400 }
       );
     }

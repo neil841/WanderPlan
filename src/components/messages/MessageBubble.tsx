@@ -53,8 +53,9 @@ export function MessageBubble({
     setIsEditing(false);
   };
 
-  const initials = message.user.name
-    ? message.user.name
+  const userName = `${message.user.firstName} ${message.user.lastName}`;
+  const initials = userName
+    ? userName
         .split(' ')
         .map((n) => n[0])
         .join('')
@@ -76,7 +77,7 @@ export function MessageBubble({
     >
       {/* Avatar */}
       <Avatar className="h-8 w-8 mt-1">
-        <AvatarImage src={message.user.image || undefined} alt={message.user.name || message.user.email} />
+        <AvatarImage src={message.user.avatarUrl || undefined} alt={userName || message.user.email} />
         <AvatarFallback>{initials}</AvatarFallback>
       </Avatar>
 
@@ -94,7 +95,7 @@ export function MessageBubble({
             isCurrentUser ? 'flex-row-reverse' : 'flex-row'
           )}
         >
-          <span className="font-medium">{message.user.name || message.user.email}</span>
+          <span className="font-medium">{userName || message.user.email}</span>
           <span>{formattedTime}</span>
           {message.isEdited && <span className="italic">(edited)</span>}
         </div>

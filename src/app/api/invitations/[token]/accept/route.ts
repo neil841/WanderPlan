@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/db/prisma';
+import prisma from '@/lib/db/prisma';
 import { ActivityActionType } from '@prisma/client';
 
 /**
@@ -36,7 +36,7 @@ export async function POST(
         trip: {
           select: {
             id: true,
-            title: true,
+            name: true,
             createdBy: true,
           },
         },

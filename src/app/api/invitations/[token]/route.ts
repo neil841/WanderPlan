@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db/prisma';
+import prisma from '@/lib/db/prisma';
 
 /**
  * GET /api/invitations/[token]
@@ -29,12 +29,12 @@ export async function GET(
         trip: {
           select: {
             id: true,
-            title: true,
+            name: true,
             description: true,
-            destination: true,
+            destinations: true,
             startDate: true,
             endDate: true,
-            imageUrl: true,
+            coverImageUrl: true,
             visibility: true,
           },
         },

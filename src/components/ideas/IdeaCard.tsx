@@ -58,8 +58,9 @@ export function IdeaCard({
   const canChangeStatus = userRole === 'OWNER' || userRole === 'ADMIN';
   const canDelete = isAuthor || userRole === 'OWNER' || userRole === 'ADMIN';
 
-  const initials = idea.creator.name
-    ? idea.creator.name
+  const creatorName = `${idea.creator.firstName} ${idea.creator.lastName}`;
+  const initials = creatorName
+    ? creatorName
         .split(' ')
         .map((n) => n[0])
         .join('')
@@ -88,13 +89,13 @@ export function IdeaCard({
           {/* Avatar and Info */}
           <div className="flex items-center gap-3 flex-1">
             <Avatar className="h-10 w-10">
-              <AvatarImage src={idea.creator.image || undefined} />
+              <AvatarImage src={idea.creator.avatarUrl || undefined} />
               <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col gap-1">
               <h3 className="font-semibold text-lg leading-tight">{idea.title}</h3>
               <p className="text-sm text-muted-foreground">
-                by {idea.creator.name || idea.creator.email} · {formattedTime}
+                by {creatorName || idea.creator.email} · {formattedTime}
               </p>
             </div>
           </div>

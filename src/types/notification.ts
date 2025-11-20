@@ -4,7 +4,7 @@
  * Notifications are user-specific activity alerts
  */
 
-import type { ActivityActionType } from '@prisma/client';
+import type { ActivityActionType, Prisma } from '@prisma/client';
 
 // Notification is based on Activity but includes read status
 export interface Notification {
@@ -18,7 +18,7 @@ export interface Notification {
     id: string;
     tripId: string;
     actionType: ActivityActionType;
-    actionData: Record<string, any>;
+    actionData: Prisma.JsonValue;
     createdAt: Date;
     user: {
       id: string;

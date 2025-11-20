@@ -2,7 +2,7 @@
  * Activity Type Definitions
  */
 
-import type { ActivityActionType } from '@prisma/client';
+import type { ActivityActionType, Prisma } from '@prisma/client';
 import type { User } from './user';
 
 // Base Activity type from database
@@ -11,7 +11,7 @@ export interface Activity {
   tripId: string;
   userId: string;
   actionType: ActivityActionType;
-  actionData: Record<string, any>;
+  actionData: Prisma.JsonValue;
   createdAt: Date;
 }
 
@@ -32,12 +32,14 @@ export interface TripUpdatedData {
     oldValue: string | null;
     newValue: string | null;
   }[];
+  [key: string]: any;
 }
 
 export interface EventCreatedData {
   eventId: string;
   eventTitle: string;
   eventType: string;
+  [key: string]: any;
 }
 
 export interface EventUpdatedData {
@@ -48,22 +50,26 @@ export interface EventUpdatedData {
     oldValue: string | null;
     newValue: string | null;
   }[];
+  [key: string]: any;
 }
 
 export interface EventDeletedData {
   eventTitle: string;
   eventType: string;
+  [key: string]: any;
 }
 
 export interface CollaboratorAddedData {
   collaboratorId: string;
   collaboratorName: string;
   role: string;
+  [key: string]: any;
 }
 
 export interface CollaboratorRemovedData {
   collaboratorName: string;
   role: string;
+  [key: string]: any;
 }
 
 export interface ExpenseAddedData {
@@ -72,11 +78,13 @@ export interface ExpenseAddedData {
   amount: number;
   currency: string;
   category: string;
+  [key: string]: any;
 }
 
 export interface MessagePostedData {
   messageId: string;
   preview: string; // First 100 chars of message
+  [key: string]: any;
 }
 
 // API Request/Response types

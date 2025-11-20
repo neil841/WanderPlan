@@ -9,7 +9,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/db/prisma';
+import prisma from '@/lib/db/prisma';
 import { z } from 'zod';
 import { CollaboratorRole } from '@prisma/client';
 import { sendCollaboratorInvitation } from '@/lib/email/send-invitation';
@@ -49,7 +49,7 @@ export async function POST(
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid request data', details: validation.error.errors },
+        { error: 'Invalid request data', details: validation.error.issues },
         { status: 400 }
       );
     }
@@ -76,7 +76,7 @@ export async function POST(
       },
       select: {
         id: true,
-        title: true,
+        name: true,
         createdBy: true,
       },
     });
@@ -186,7 +186,7 @@ export async function POST(
         await sendCollaboratorInvitation({
           to: inviteeUser.email,
           inviterName: `${session.user.firstName} ${session.user.lastName}`,
-          tripTitle: trip.title,
+          tripTitle: trip.name,
           role,
           message,
           invitationId: updatedCollaborator.id,
@@ -233,7 +233,7 @@ export async function POST(
     await sendCollaboratorInvitation({
       to: inviteeUser.email,
       inviterName: `${session.user.firstName} ${session.user.lastName}`,
-      tripTitle: trip.title,
+      tripTitle: trip.name,
       role,
       message,
       invitationId: collaborator.id,
@@ -244,11 +244,11 @@ export async function POST(
       data: {
         tripId,
         userId: session.user.id,
-        type: 'COLLABORATOR_INVITED',
-        description: `Invited ${inviteeUser.firstName} ${inviteeUser.lastName} as ${role.toLowerCase()}`,
-        metadata: {
+        actionType: 'COLLABORATOR_ADDED',
+        actionData: {
           collaboratorId: collaborator.id,
-          inviteeEmail: inviteeUser.email,
+          collaboratorName: `${inviteeUser.firstName} ${inviteeUser.lastName}`,
+          collaboratorEmail: inviteeUser.email,
           role,
         },
       },

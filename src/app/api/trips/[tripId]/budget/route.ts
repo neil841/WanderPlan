@@ -168,7 +168,7 @@ export async function PATCH(
     const validation = updateBudgetSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid request data', details: validation.error.errors },
+        { error: 'Invalid request data', details: validation.error.issues },
         { status: 400 }
       );
     }
@@ -187,7 +187,7 @@ export async function PATCH(
               some: {
                 userId: session.user.id,
                 status: 'ACCEPTED',
-                role: { in: ['OWNER', 'EDITOR'] },
+                role: { in: ['ADMIN', 'EDITOR'] },
               },
             },
           },

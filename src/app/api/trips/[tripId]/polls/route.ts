@@ -11,7 +11,7 @@ import { prisma } from '@/lib/db';
 import { createPollSchema } from '@/lib/validations/poll';
 import type { PollsResponse, PollWithResults } from '@/types/poll';
 import { broadcastToTrip } from '@/lib/realtime/server';
-import { SocketEvent } from '@/types/realtime';
+import { SocketEvent } from '@/lib/realtime/server';
 
 /**
  * POST /api/trips/[tripId]/polls
@@ -35,7 +35,7 @@ export async function POST(
     const validation = createPollSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid request data', details: validation.error.errors },
+        { error: 'Invalid request data', details: validation.error.issues },
         { status: 400 }
       );
     }

@@ -210,7 +210,7 @@ export async function POST(req: NextRequest) {
             error: {
               code: 'VALIDATION_ERROR',
               message: 'Invalid tag data',
-              details: error.errors.map((err) => ({
+              details: error.issues.map((err) => ({
                 field: err.path.join('.'),
                 message: err.message,
               })),

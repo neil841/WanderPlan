@@ -72,7 +72,7 @@ export default function MessagesPage() {
       .filter((userId) => userId !== session?.user?.id)
       .map((userId) => {
         const user = messages.find((m) => m.userId === userId)?.user;
-        return user?.name || user?.email || 'Someone';
+        return user ? `${user.firstName} ${user.lastName}` : user?.email || 'Someone';
       });
   }, [typingUsers, session?.user?.id, messages]);
 

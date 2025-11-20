@@ -5,7 +5,7 @@
  */
 
 import { CollaboratorRole, CollaboratorStatus } from '@prisma/client';
-import { prisma } from '@/lib/db/prisma';
+import prisma from '@/lib/db/prisma';
 
 /**
  * Permission context for a user on a trip

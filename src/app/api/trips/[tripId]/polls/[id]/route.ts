@@ -11,7 +11,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import type { PollWithResults } from '@/types/poll';
 import { broadcastToTrip } from '@/lib/realtime/server';
-import { SocketEvent } from '@/types/realtime';
+import { SocketEvent } from '@/lib/realtime/server';
 
 /**
  * GET /api/trips/[tripId]/polls/[id]

@@ -28,7 +28,7 @@ export function useLocationSearch(query: string, delay: number = 500) {
     // Reset if query is too short
     if (!query || query.length < 3) {
       setResults([]);
-      return;
+      return undefined;
     }
 
     // Debounce search

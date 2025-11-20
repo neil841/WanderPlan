@@ -9,6 +9,9 @@
 
 import { EventType } from '@prisma/client';
 
+// Re-export EventType for use in other modules
+export { EventType };
+
 /**
  * Location data structure stored as JSON in database
  */

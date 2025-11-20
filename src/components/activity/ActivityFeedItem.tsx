@@ -61,31 +61,32 @@ function getActivityIcon(actionType: ActivityActionType) {
 function formatActivityMessage(activity: ActivityWithUser): string {
   const userName = `${activity.user.firstName} ${activity.user.lastName}`;
   const { actionType, actionData } = activity;
+  const data = actionData as any; // Type assertion for JsonValue to object access
 
   switch (actionType) {
     case ActivityActionType.MESSAGE_POSTED:
-      return `${userName} posted a message${actionData.isReply ? ' (reply)' : ''}`;
+      return `${userName} posted a message${data.isReply ? ' (reply)' : ''}`;
 
     case ActivityActionType.EVENT_CREATED:
-      return `${userName} created ${actionData.eventType?.toLowerCase() || 'event'}: "${actionData.eventTitle}"`;
+      return `${userName} created ${data.eventType?.toLowerCase() || 'event'}: "${data.eventTitle}"`;
 
     case ActivityActionType.EVENT_UPDATED:
-      return `${userName} updated "${actionData.eventTitle}"`;
+      return `${userName} updated "${data.eventTitle}"`;
 
     case ActivityActionType.EVENT_DELETED:
-      return `${userName} deleted ${actionData.eventType?.toLowerCase() || 'event'}: "${actionData.eventTitle}"`;
+      return `${userName} deleted ${data.eventType?.toLowerCase() || 'event'}: "${data.eventTitle}"`;
 
     case ActivityActionType.COLLABORATOR_ADDED:
-      return `${userName} added ${actionData.collaboratorName} as ${actionData.role?.toLowerCase()}`;
+      return `${userName} added ${data.collaboratorName} as ${data.role?.toLowerCase()}`;
 
     case ActivityActionType.COLLABORATOR_REMOVED:
-      return `${userName} removed ${actionData.collaboratorName}`;
+      return `${userName} removed ${data.collaboratorName}`;
 
     case ActivityActionType.EXPENSE_ADDED:
-      return `${userName} added expense: ${actionData.description} (${actionData.currency || '$'}${actionData.amount})`;
+      return `${userName} added expense: ${data.description} (${data.currency || '$'}${data.amount})`;
 
     case ActivityActionType.TRIP_UPDATED:
-      const changesCount = actionData.changes?.length || 0;
+      const changesCount = data.changes?.length || 0;
       return `${userName} updated trip${changesCount > 1 ? ` (${changesCount} changes)` : ''}`;
 
     default:

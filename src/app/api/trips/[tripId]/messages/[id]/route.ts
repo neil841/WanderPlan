@@ -10,7 +10,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { updateMessageSchema } from '@/lib/validations/message';
 import { broadcastToTrip } from '@/lib/realtime/server';
-import { SocketEvent } from '@/types/realtime';
+import { SocketEvent } from '@/lib/realtime/server';
 
 /**
  * PATCH /api/trips/[tripId]/messages/[id]
@@ -34,7 +34,7 @@ export async function PATCH(
     const validation = updateMessageSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid request data', details: validation.error.errors },
+        { error: 'Invalid request data', details: validation.error.issues },
         { status: 400 }
       );
     }

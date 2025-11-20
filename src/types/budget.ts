@@ -23,6 +23,7 @@ export interface CategoryBudget {
   budgeted: number;
   spent: number;
   remaining: number;
+  [key: string]: any;
 }
 
 /**

@@ -9,7 +9,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/db/prisma';
+import prisma from '@/lib/db/prisma';
 import { z } from 'zod';
 import { CollaboratorRole } from '@prisma/client';
 
@@ -46,7 +46,7 @@ export async function PATCH(
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid request data', details: validation.error.errors },
+        { error: 'Invalid request data', details: validation.error.issues },
         { status: 400 }
       );
     }
@@ -61,7 +61,7 @@ export async function PATCH(
       },
       select: {
         id: true,
-        title: true,
+        name: true,
         createdBy: true,
         collaborators: {
           where: {
@@ -83,7 +83,7 @@ export async function PATCH(
     }
 
     const isOwner = trip.createdBy === session.user.id;
-    const userRole = isOwner ? 'OWNER' : trip.collaborators[0]?.role;
+    const userRole = isOwner ? 'ADMIN' : trip.collaborators[0]?.role;
 
     // Check if user has permission to change roles
     if (!isOwner && userRole !== 'ADMIN') {
@@ -163,11 +163,10 @@ export async function PATCH(
       data: {
         tripId,
         userId: session.user.id,
-        type: 'COLLABORATOR_ROLE_CHANGED',
-        description: `Changed ${collaborator.user.firstName} ${collaborator.user.lastName}'s role from ${collaborator.role.toLowerCase()} to ${newRole.toLowerCase()}`,
-        metadata: {
+        actionType: 'COLLABORATOR_ROLE_CHANGED',
+        actionData: {
           collaboratorId,
-          userId: collaborator.userId,
+          collaboratorName: `${collaborator.user.firstName} ${collaborator.user.lastName}`,
           oldRole: collaborator.role,
           newRole,
         },
@@ -215,7 +214,7 @@ export async function DELETE(
       },
       select: {
         id: true,
-        title: true,
+        name: true,
         createdBy: true,
         collaborators: {
           where: {
@@ -239,7 +238,7 @@ export async function DELETE(
 
     const isOwner = trip.createdBy === session.user.id;
     const userCollaborator = trip.collaborators[0];
-    const userRole = isOwner ? 'OWNER' : userCollaborator?.role;
+    const userRole = isOwner ? 'ADMIN' : userCollaborator?.role;
 
     // Get the collaborator being removed
     const collaborator = await prisma.tripCollaborator.findUnique({
@@ -294,13 +293,10 @@ export async function DELETE(
       data: {
         tripId,
         userId: session.user.id,
-        type: isSelfRemoval ? 'COLLABORATOR_LEFT' : 'COLLABORATOR_REMOVED',
-        description: isSelfRemoval
-          ? `Left the trip`
-          : `Removed ${collaborator.user.firstName} ${collaborator.user.lastName} from the trip`,
-        metadata: {
+        actionType: isSelfRemoval ? 'COLLABORATOR_LEFT' : 'COLLABORATOR_REMOVED',
+        actionData: {
           collaboratorId,
-          userId: collaborator.userId,
+          collaboratorName: `${collaborator.user.firstName} ${collaborator.user.lastName}`,
           role: collaborator.role,
           isSelfRemoval,
         },

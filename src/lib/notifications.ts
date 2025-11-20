@@ -18,7 +18,7 @@ export async function createNotificationsForActivity(
   tripId: string,
   actionUserId: string,
   actionType: ActivityActionType
-) {
+): Promise<number> {
   try {
     // 1. Get all collaborators for the trip (excluding the action performer)
     const trip = await prisma.trip.findUnique({
@@ -38,7 +38,7 @@ export async function createNotificationsForActivity(
 
     if (!trip) {
       console.error('Trip not found:', tripId);
-      return;
+      return 0;
     }
 
     // 2. Build list of users to notify

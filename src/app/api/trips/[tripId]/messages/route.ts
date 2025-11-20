@@ -14,7 +14,7 @@ import {
 } from '@/lib/validations/message';
 import type { MessagesResponse } from '@/types/message';
 import { broadcastToTrip } from '@/lib/realtime/server';
-import { SocketEvent } from '@/types/realtime';
+import { SocketEvent } from '@/lib/realtime/server';
 import { createNotificationsForActivity } from '@/lib/notifications';
 
 /**
@@ -39,7 +39,7 @@ export async function POST(
     const validation = createMessageSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid request data', details: validation.error.errors },
+        { error: 'Invalid request data', details: validation.error.issues },
         { status: 400 }
       );
     }
@@ -181,7 +181,7 @@ export async function GET(
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid query parameters', details: validation.error.errors },
+        { error: 'Invalid query parameters', details: validation.error.issues },
         { status: 400 }
       );
     }
