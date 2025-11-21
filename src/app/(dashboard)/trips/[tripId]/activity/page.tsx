@@ -31,6 +31,8 @@ const activityTypeLabels: Record<ActivityActionType, string> = {
   EVENT_DELETED: 'Events Deleted',
   COLLABORATOR_ADDED: 'Collaborators Added',
   COLLABORATOR_REMOVED: 'Collaborators Removed',
+  COLLABORATOR_ROLE_CHANGED: 'Role Changes',
+  COLLABORATOR_LEFT: 'Collaborators Left',
   EXPENSE_ADDED: 'Expenses Added',
   MESSAGE_POSTED: 'Messages Posted',
 };

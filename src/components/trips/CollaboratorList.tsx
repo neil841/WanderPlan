@@ -1,11 +1,11 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Crown, Shield, Edit, Eye, Plus } from 'lucide-react';
+import { Crown, Shield, Edit, Eye, Plus, Users } from 'lucide-react';
 import { TripDetails } from '@/hooks/useTrip';
 
 interface CollaboratorListProps {
@@ -48,14 +48,14 @@ export function CollaboratorList({
     },
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, x: -10 },
     visible: {
       opacity: 1,
       x: 0,
       transition: {
         duration: 0.3,
-        ease: 'easeOut',
+        ease: [0.4, 0, 0.2, 1] as const,
       },
     },
   };

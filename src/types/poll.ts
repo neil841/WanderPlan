@@ -69,4 +69,7 @@ export interface VotePollRequest {
 export interface PollsResponse {
   polls: PollWithResults[];
   total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }

@@ -222,9 +222,9 @@ export async function POST(req: NextRequest) {
           validatedData.tags.map((tagName) =>
             tx.tag.upsert({
               where: {
-                name_tripId: {
-                  name: tagName,
+                tripId_name: {
                   tripId: newTrip.id,
+                  name: tagName,
                 },
               },
               create: {

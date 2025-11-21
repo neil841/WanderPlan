@@ -121,19 +121,27 @@ function formatNotificationMessage(notification: Notification): string {
   const userName = `${activity.user.firstName} ${activity.user.lastName}`;
   const { actionType, actionData } = activity;
 
+  // Type-safe helper to access JsonValue properties
+  const getData = (key: string): any => {
+    if (actionData && typeof actionData === 'object' && !Array.isArray(actionData)) {
+      return (actionData as Record<string, any>)[key];
+    }
+    return undefined;
+  };
+
   switch (actionType) {
     case 'MESSAGE_POSTED':
       return `${userName} posted a message`;
     case 'EVENT_CREATED':
-      return `${userName} created ${actionData.eventType?.toLowerCase() || 'an event'}`;
+      return `${userName} created ${getData('eventType')?.toLowerCase() || 'an event'}`;
     case 'EVENT_UPDATED':
       return `${userName} updated an event`;
     case 'EVENT_DELETED':
       return `${userName} deleted an event`;
     case 'COLLABORATOR_ADDED':
-      return `${userName} added ${actionData.collaboratorName}`;
+      return `${userName} added ${getData('collaboratorName')}`;
     case 'COLLABORATOR_REMOVED':
-      return `${userName} removed ${actionData.collaboratorName}`;
+      return `${userName} removed ${getData('collaboratorName')}`;
     case 'EXPENSE_ADDED':
       return `${userName} added an expense`;
     case 'TRIP_UPDATED':

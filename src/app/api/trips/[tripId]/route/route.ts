@@ -16,7 +16,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { authOptions } from '@/lib/auth/auth-options';
 import { prisma } from '@/lib/db';
 import { calculateRoute, OSRMCoordinate, simplifyRoute } from '@/lib/map/osrm';
 
@@ -77,11 +76,10 @@ export async function GET(
         where: {
           id: { in: eventIds },
           tripId,
-          deletedAt: null,
         },
         select: {
           id: true,
-          name: true,
+          title: true,
           type: true,
           location: true,
           startDateTime: true,
@@ -97,11 +95,10 @@ export async function GET(
       events = await prisma.event.findMany({
         where: {
           tripId,
-          deletedAt: null,
         },
         select: {
           id: true,
-          name: true,
+          title: true,
           type: true,
           location: true,
           startDateTime: true,

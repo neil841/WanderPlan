@@ -6,15 +6,10 @@
 
 /**
  * Expense categories (aligned with budget categories)
+ * Re-export Prisma's ExpenseCategory to ensure type compatibility
  */
-export enum ExpenseCategory {
-  ACCOMMODATION = 'ACCOMMODATION',
-  TRANSPORTATION = 'TRANSPORTATION',
-  FOOD = 'FOOD',
-  ACTIVITIES = 'ACTIVITIES',
-  SHOPPING = 'SHOPPING',
-  OTHER = 'OTHER',
-}
+export { ExpenseCategory } from '@prisma/client';
+import type { ExpenseCategory } from '@prisma/client';
 
 /**
  * Expense split information

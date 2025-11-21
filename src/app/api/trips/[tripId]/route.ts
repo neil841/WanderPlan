@@ -298,8 +298,8 @@ export async function GET(
         id: doc.id,
         name: doc.name,
         type: doc.type,
-        url: doc.url,
-        size: doc.size,
+        url: doc.fileUrl,
+        size: doc.fileSize,
         uploadedBy: {
           id: doc.uploader.id,
           name: `${doc.uploader.firstName} ${doc.uploader.lastName}`,

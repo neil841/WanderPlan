@@ -12,7 +12,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { authOptions } from '@/lib/auth/auth-options';
 import { prisma } from '@/lib/db';
 import {
   fetchWeatherForecast,
@@ -69,7 +68,8 @@ export async function GET(
       },
       select: {
         id: true,
-        destination: true,
+        name: true,
+        destinations: true,
         startDate: true,
         endDate: true,
       },
@@ -98,7 +98,6 @@ export async function GET(
     const eventWithLocation = await prisma.event.findFirst({
       where: {
         tripId,
-        deletedAt: null,
       },
       select: {
         location: true,
@@ -110,7 +109,8 @@ export async function GET(
 
     let lat: number | undefined;
     let lon: number | undefined;
-    let locationName = trip.destination;
+    const primaryDestination = trip.destinations[0] || trip.name;
+    let locationName = primaryDestination;
 
     if (eventWithLocation?.location) {
       const location = eventWithLocation.location as any;
@@ -122,7 +122,7 @@ export async function GET(
       ) {
         lat = location.lat;
         lon = location.lon;
-        locationName = location.name || trip.destination;
+        locationName = location.name || primaryDestination;
       }
     }
 

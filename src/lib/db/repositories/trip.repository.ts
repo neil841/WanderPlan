@@ -208,6 +208,8 @@ export class TripRepository {
             where: { status: 'ACCEPTED' },
             select: {
               id: true,
+              userId: true,
+              role: true,
             },
           },
           events: {
@@ -366,6 +368,11 @@ export class TripRepository {
       createdBy: trip.createdBy,
       createdAt: trip.createdAt,
       updatedAt: trip.updatedAt,
+      creator: {
+        name: `${trip.creator.firstName} ${trip.creator.lastName}`,
+        email: trip.creator.email,
+        avatarUrl: trip.creator.avatarUrl,
+      },
       ownerName: `${trip.creator.firstName} ${trip.creator.lastName}`,
       collaboratorCount: trip.collaborators.length,
       eventCount: trip.events.length,

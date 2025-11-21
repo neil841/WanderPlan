@@ -237,7 +237,6 @@ export async function GET(
             text: true,
             order: true,
             createdAt: true,
-            updatedAt: true,
           },
         },
         // Only fetch current user's votes

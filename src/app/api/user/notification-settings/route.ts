@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 3. Parse settings JSON
-    const settings = user.settings as UserNotificationSettings;
+    const settings = user.settings as unknown as UserNotificationSettings;
 
     return NextResponse.json({
       success: true,
@@ -91,7 +91,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // 3. Merge new settings with existing settings
-    const currentSettings = user.settings as UserNotificationSettings;
+    const currentSettings = user.settings as unknown as UserNotificationSettings;
     const updatedSettings: UserNotificationSettings = {
       ...currentSettings,
       email: {

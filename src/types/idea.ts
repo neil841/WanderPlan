@@ -60,4 +60,7 @@ export interface VoteIdeaRequest {
 export interface IdeasResponse {
   ideas: IdeaWithVotes[];
   total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }

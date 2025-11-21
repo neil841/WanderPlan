@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -50,14 +50,14 @@ export function TripOverview({ trip }: TripOverviewProps) {
     },
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
     visible: {
       opacity: 1,
       y: 0,
       transition: {
         duration: 0.4,
-        ease: 'easeOut',
+        ease: [0.4, 0, 0.2, 1] as const,
       },
     },
   };
@@ -266,12 +266,12 @@ export function TripOverview({ trip }: TripOverviewProps) {
 
               <Separator />
 
-              {/* Budget Breakdown */}
-              {trip.budget.categoryBudgets && Object.keys(trip.budget.categoryBudgets).length > 0 && (
+              {/* Budget Breakdown - TODO: Implement category budgets display */}
+              {false && trip.budget && (
                 <div>
                   <h4 className="text-sm font-semibold mb-3">Budget Breakdown</h4>
                   <div className="grid grid-cols-2 gap-4">
-                    {Object.entries(trip.budget.categoryBudgets as Record<string, any>).map(([category, data]) => (
+                    {Object.entries({} as Record<string, any>).map(([category, data]) => (
                       <div key={category} className="space-y-1">
                         <p className="text-xs text-muted-foreground capitalize">{category}</p>
                         <p className="text-sm font-medium">

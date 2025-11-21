@@ -59,7 +59,7 @@ export default function MessagesPage() {
   // Real-time hooks
   const { inRoom } = useTripRoom(tripId);
   const { startTyping, stopTyping, typingUsers } = useTypingIndicator(tripId);
-  const { messages: realtimeMessages } = useRealtimeMessages(tripId);
+  useRealtimeMessages(tripId); // Sets up real-time message listeners
 
   // Combine paginated messages from all pages
   const messages = useMemo(() => {
