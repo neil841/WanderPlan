@@ -30,25 +30,39 @@ export default async function ProfileSettingsPage() {
     redirect('/login?callbackUrl=/settings/profile');
   }
 
-  // 2. Fetch user profile data
+  // 2. Fetch user profile data directly from database (server-side)
   let profileData: ProfileData | null = null;
   let error: string | null = null;
 
   try {
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-    const response = await fetch(`${baseUrl}/api/user/profile`, {
-      headers: {
-        Cookie: `next-auth.session-token=${session.user.id}`, // Pass session for server-side fetch
+    const prisma = (await import('@/lib/db/prisma')).default;
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        avatarUrl: true,
+        bio: true,
+        phone: true,
+        timezone: true,
       },
-      cache: 'no-store', // Always fetch fresh data
     });
 
-    if (response.ok) {
-      const result = await response.json();
-      profileData = result.data;
+    if (user) {
+      profileData = {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        avatarUrl: user.avatarUrl,
+        bio: user.bio,
+        phone: user.phone,
+        timezone: user.timezone,
+      };
     } else {
-      const result = await response.json();
-      error = result.error?.message || 'Failed to load profile';
+      error = 'User not found';
     }
   } catch (err) {
     console.error('[Profile Page] Error fetching profile:', err);

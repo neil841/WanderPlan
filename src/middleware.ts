@@ -40,13 +40,13 @@ export async function middleware(request: NextRequest) {
 
   // Check email verification for non-API routes
   if (!pathname.startsWith('/api')) {
-    // Allow profile and settings pages for unverified users
-    const allowedPaths = ['/profile', '/settings', '/dashboard'];
+    // Allow profile, settings, dashboard, and trips pages for unverified users
+    const allowedPaths = ['/settings/profile', '/settings', '/dashboard', '/trips'];
     const isAllowedPath = allowedPaths.some((path) => pathname.startsWith(path));
 
     if (!token.emailVerified && !isAllowedPath) {
-      // Redirect unverified users to profile page with warning
-      const profileUrl = new URL('/profile', request.url);
+      // Redirect unverified users to settings/profile page with warning
+      const profileUrl = new URL('/settings/profile', request.url);
       return NextResponse.redirect(profileUrl);
     }
   }
