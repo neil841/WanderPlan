@@ -80,10 +80,27 @@ export function TripHeader({ trip }: TripHeaderProps) {
   const handleArchive = async () => {
     setIsArchiving(true);
     try {
-      // TODO: Implement archive API call
-      console.log('Archive trip:', trip.id);
+      const response = await fetch(`/api/trips/${trip.id}/archive`, {
+        method: 'PATCH',
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error?.message || 'Failed to archive trip');
+      }
+
+      // Invalidate trip cache to refresh data
+      invalidateTrip(trip.id);
+
+      // Show success message
+      alert(data.message || 'Trip archived successfully');
+
+      // Redirect to trips list
+      router.push('/trips');
     } catch (error) {
       console.error('Failed to archive trip:', error);
+      alert(error instanceof Error ? error.message : 'Failed to archive trip');
     } finally {
       setIsArchiving(false);
     }
@@ -91,10 +108,28 @@ export function TripHeader({ trip }: TripHeaderProps) {
 
   const handleDuplicate = async () => {
     try {
-      // TODO: Implement duplicate API call
-      console.log('Duplicate trip:', trip.id);
+      const response = await fetch(`/api/trips/${trip.id}/duplicate`, {
+        method: 'POST',
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error?.message || 'Failed to duplicate trip');
+      }
+
+      // Show success message
+      alert('Trip duplicated successfully!');
+
+      // Redirect to the new duplicated trip
+      if (data.data?.id) {
+        router.push(`/trips/${data.data.id}`);
+      } else {
+        router.push('/trips');
+      }
     } catch (error) {
       console.error('Failed to duplicate trip:', error);
+      alert(error instanceof Error ? error.message : 'Failed to duplicate trip');
     }
   };
 
@@ -104,11 +139,24 @@ export function TripHeader({ trip }: TripHeaderProps) {
     }
 
     try {
-      // TODO: Implement delete API call
-      console.log('Delete trip:', trip.id);
+      const response = await fetch(`/api/trips/${trip.id}`, {
+        method: 'DELETE',
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error?.message || 'Failed to delete trip');
+      }
+
+      // Show success message
+      alert('Trip deleted successfully');
+
+      // Redirect to trips list
       router.push('/trips');
     } catch (error) {
       console.error('Failed to delete trip:', error);
+      alert(error instanceof Error ? error.message : 'Failed to delete trip');
     }
   };
 

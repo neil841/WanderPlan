@@ -12,21 +12,21 @@ import { z } from 'zod';
  */
 export const updateProfileSchema = z.object({
   firstName: z
-    .string({ message: 'First name is required' })
+    .string()
+    .trim()
     .min(1, 'First name cannot be empty')
     .max(50, 'First name must be less than 50 characters')
-    .trim()
     .optional(),
 
   lastName: z
-    .string({ message: 'Last name is required' })
+    .string()
+    .trim()
     .min(1, 'Last name cannot be empty')
     .max(50, 'Last name must be less than 50 characters')
-    .trim()
     .optional(),
 
   email: z
-    .string({ message: 'Email is required' })
+    .string()
     .email('Invalid email format')
     .toLowerCase()
     .trim()
@@ -37,13 +37,15 @@ export const updateProfileSchema = z.object({
     .max(500, 'Bio must be less than 500 characters')
     .trim()
     .optional()
-    .nullable(),
+    .nullable()
+    .or(z.literal('')),
 
   phone: z
     .string()
     .regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number format (use E.164 format)')
     .optional()
-    .nullable(),
+    .nullable()
+    .or(z.literal('')),
 
   timezone: z
     .string()
@@ -59,6 +61,17 @@ export const updateProfileSchema = z.object({
       { message: 'Invalid timezone' }
     )
     .optional(),
+}).transform((data) => {
+  // Convert empty strings to undefined for firstName/lastName
+  // This prevents validation errors on empty strings
+  return {
+    ...data,
+    firstName: data.firstName === '' ? undefined : data.firstName,
+    lastName: data.lastName === '' ? undefined : data.lastName,
+    email: data.email === '' ? undefined : data.email,
+    bio: data.bio === '' ? null : data.bio,
+    phone: data.phone === '' ? null : data.phone,
+  };
 });
 
 /**

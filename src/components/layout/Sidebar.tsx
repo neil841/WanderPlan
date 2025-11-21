@@ -57,7 +57,7 @@ const navItems: NavItem[] = [
   },
   {
     label: 'Settings',
-    href: '/settings',
+    href: '/settings/notifications',
     icon: Settings,
   },
 ];
