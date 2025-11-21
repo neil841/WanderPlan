@@ -23,7 +23,9 @@ import {
   Calendar,
   User,
   Tag,
+  Users,
 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { Expense, ExpenseCategory } from '@/types/expense';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -115,6 +117,37 @@ export function ExpenseCard({
                     Paid by {expense.payer.firstName} {expense.payer.lastName}
                   </span>
                 </div>
+              )}
+
+              {/* Split Indicator */}
+              {expense.splits && expense.splits.length > 0 && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center gap-1 cursor-help">
+                        <Users className="h-3 w-3" aria-hidden="true" />
+                        <span>
+                          Split with {expense.splits.length} {expense.splits.length === 1 ? 'person' : 'people'}
+                        </span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <div className="space-y-1">
+                        <p className="font-medium text-xs">Split with:</p>
+                        {expense.splits.map((split) => (
+                          <div key={split.id} className="flex items-center justify-between gap-4 text-xs">
+                            <span>
+                              {split.user?.firstName} {split.user?.lastName}
+                            </span>
+                            <span className="font-medium">
+                              {formatCurrency(split.amount, expense.currency)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               )}
 
               {/* Event */}

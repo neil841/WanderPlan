@@ -39,6 +39,8 @@ const categoryLabels: Record<ExpenseCategory, string> = {
   OTHER: 'Other',
 };
 
+type SplitFilter = 'ALL' | 'SPLIT' | 'NOT_SPLIT';
+
 export function ExpenseList({
   tripId,
   expenses,
@@ -50,6 +52,7 @@ export function ExpenseList({
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<ExpenseCategory | 'ALL'>('ALL');
+  const [splitFilter, setSplitFilter] = useState<SplitFilter>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Filter expenses
@@ -58,7 +61,14 @@ export function ExpenseList({
     const matchesSearch = expense.description
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+
+    // Split filter
+    const matchesSplit =
+      splitFilter === 'ALL' ||
+      (splitFilter === 'SPLIT' && expense.splits && expense.splits.length > 0) ||
+      (splitFilter === 'NOT_SPLIT' && (!expense.splits || expense.splits.length === 0));
+
+    return matchesCategory && matchesSearch && matchesSplit;
   });
 
   const handleCreateExpense = async (data: any) => {
@@ -159,8 +169,8 @@ export function ExpenseList({
           value={categoryFilter}
           onValueChange={(value) => setCategoryFilter(value as ExpenseCategory | 'ALL')}
         >
-          <SelectTrigger className="w-full sm:w-[200px]">
-            <SelectValue placeholder="Filter by category" />
+          <SelectTrigger className="w-full sm:w-[180px]">
+            <SelectValue placeholder="Category" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">All Categories</SelectItem>
@@ -169,6 +179,19 @@ export function ExpenseList({
                 {label}
               </SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+        <Select
+          value={splitFilter}
+          onValueChange={(value) => setSplitFilter(value as SplitFilter)}
+        >
+          <SelectTrigger className="w-full sm:w-[160px]">
+            <SelectValue placeholder="Split status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">All Expenses</SelectItem>
+            <SelectItem value="SPLIT">Split Expenses</SelectItem>
+            <SelectItem value="NOT_SPLIT">Not Split</SelectItem>
           </SelectContent>
         </Select>
       </div>
