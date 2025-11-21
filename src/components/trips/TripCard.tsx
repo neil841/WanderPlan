@@ -148,7 +148,7 @@ export function TripCard({ trip, viewMode = 'grid' }: TripCardProps) {
           <CardFooter className="pt-3 border-t">
             <div className="flex items-center gap-2">
               <Avatar className="w-6 h-6">
-                <AvatarImage src={trip.creator.avatarUrl || undefined} alt={trip.creator.name || 'User'} />
+                <AvatarImage src={trip.creator.image || undefined} alt={trip.creator.name || 'User'} />
                 <AvatarFallback className="text-xs">
                   {trip.creator.name
                     ? trip.creator.name.substring(0, 2).toUpperCase()

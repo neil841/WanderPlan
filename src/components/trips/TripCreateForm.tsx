@@ -49,14 +49,14 @@ const createTripFormSchema = z
       .max(2000, 'Description must be less than 2000 characters')
       .optional(),
     startDate: z.date({
-      required_error: 'Start date is required',
+      message: 'Start date is required',
     }),
     endDate: z.date({
-      required_error: 'End date is required',
+      message: 'End date is required',
     }),
-    destinations: z.array(z.string()).default([]),
-    tags: z.array(z.string()).default([]),
-    visibility: z.enum(['private', 'shared', 'public']).default('private'),
+    destinations: z.array(z.string()),
+    tags: z.array(z.string()),
+    visibility: z.enum(['private', 'shared', 'public']),
   })
   .refine((data) => data.endDate >= data.startDate, {
     message: 'End date must be after or equal to start date',

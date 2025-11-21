@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
             error: {
               code: 'VALIDATION_ERROR',
               message: 'Invalid query parameters',
-              details: error.errors.map((err) => ({
+              details: error.issues.map((err) => ({
                 field: err.path.join('.'),
                 message: err.message,
               })),
@@ -169,7 +169,7 @@ export async function POST(req: NextRequest) {
             error: {
               code: 'VALIDATION_ERROR',
               message: 'Invalid trip data',
-              details: error.errors.map((err) => ({
+              details: error.issues.map((err) => ({
                 field: err.path.join('.'),
                 message: err.message,
               })),
@@ -222,9 +222,9 @@ export async function POST(req: NextRequest) {
           validatedData.tags.map((tagName) =>
             tx.tag.upsert({
               where: {
-                name_tripId: {
-                  name: tagName,
+                tripId_name: {
                   tripId: newTrip.id,
+                  name: tagName,
                 },
               },
               create: {

@@ -11,6 +11,22 @@ import prisma from '@/lib/db/prisma';
 import { Prisma, TripVisibility } from '@prisma/client';
 
 /**
+ * Valid user role types for trip access
+ */
+type UserRole = 'owner' | 'admin' | 'editor' | 'viewer';
+
+/**
+ * Type guard to validate and convert collaborator role to user role
+ */
+function toUserRole(role: string | undefined | null): UserRole {
+  const normalized = role?.toLowerCase();
+  if (normalized === 'admin' || normalized === 'editor' || normalized === 'viewer') {
+    return normalized;
+  }
+  return 'viewer';
+}
+
+/**
  * Query parameters for listing trips
  */
 export interface TripListParams {
@@ -192,6 +208,8 @@ export class TripRepository {
             where: { status: 'ACCEPTED' },
             select: {
               id: true,
+              userId: true,
+              role: true,
             },
           },
           events: {
@@ -303,6 +321,8 @@ export class TripRepository {
           select: {
             firstName: true,
             lastName: true,
+            email: true,
+            avatarUrl: true,
           },
         },
         collaborators: {
@@ -348,12 +368,15 @@ export class TripRepository {
       createdBy: trip.createdBy,
       createdAt: trip.createdAt,
       updatedAt: trip.updatedAt,
+      creator: {
+        name: `${trip.creator.firstName} ${trip.creator.lastName}`,
+        email: trip.creator.email,
+        avatarUrl: trip.creator.avatarUrl,
+      },
       ownerName: `${trip.creator.firstName} ${trip.creator.lastName}`,
       collaboratorCount: trip.collaborators.length,
       eventCount: trip.events.length,
-      userRole: isOwner
-        ? 'owner'
-        : (userCollaboration?.role?.toLowerCase() as any) || 'viewer',
+      userRole: isOwner ? 'owner' : toUserRole(userCollaboration?.role),
       tags: trip.tags.map((t) => t.name),
     };
   }

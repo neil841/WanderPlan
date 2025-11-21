@@ -10,6 +10,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 export interface TripDetails {
   id: string;
   name: string;
+  title?: string; // Alias for name (some components use title)
   description: string | null;
   startDate: string | null;
   endDate: string | null;
@@ -17,6 +18,7 @@ export interface TripDetails {
   visibility: 'PRIVATE' | 'SHARED' | 'PUBLIC';
   coverImageUrl: string | null;
   isArchived: boolean;
+  createdBy: string; // User ID of trip creator
   createdAt: string;
   updatedAt: string;
 

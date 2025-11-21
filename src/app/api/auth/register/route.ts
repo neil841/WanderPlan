@@ -38,7 +38,23 @@ import { registerSchema } from '@/lib/validations/auth';
 export async function POST(req: NextRequest) {
   try {
     // 1. Parse and validate request body
-    const body = await req.json();
+    let body;
+    try {
+      body = await req.json();
+    } catch (jsonError) {
+      console.error('[DEV] Failed to parse JSON body:', jsonError);
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'INVALID_REQUEST',
+            message: 'Invalid JSON in request body',
+          },
+        },
+        { status: 400 }
+      );
+    }
+
     const validated = registerSchema.parse(body);
 
     // 2. Check if user with email already exists

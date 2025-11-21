@@ -1,7 +1,9 @@
 {
   "validationInterval": 5,
   "enabled": true,
-  "lastValidationTaskCount": 0,
+  "lastValidationTaskCount": 29,
+  "lastPhaseValidation": "phase-2-trip-management",
+  "lastPhaseValidationDate": "2025-11-12T13:35:00Z",
   "validationAgents": [
     "senior-code-reviewer",
     "qa-testing-agent",
@@ -11,8 +13,9 @@
   ],
   "uiValidationEnabled": true,
   "chromeDevToolsValidation": {
-    "enabled": true,
-    "validateAfterEveryUITask": true,
+    "enabled": false,
+    "validateAfterEveryUITask": false,
+    "note": "Disabled for Claude Code for Web (no MCP support). Use manual testing + automated component tests instead.",
     "viewports": [
       { "name": "Desktop", "width": 1920, "height": 1080 },
       { "name": "Tablet", "width": 768, "height": 1024 },
@@ -70,5 +73,26 @@
     "format": "markdown",
     "includeTimestamps": true,
     "severityLevels": ["BLOCKER", "CRITICAL", "MAJOR", "MINOR", "INFO"]
+  },
+  "alternativeValidation": {
+    "mcpServersUnavailable": true,
+    "strategies": {
+      "uiValidation": "manual-testing-with-react-testing-library",
+      "componentTests": "jest-react-testing-library",
+      "visualRegression": "manual-screenshots",
+      "accessibility": "static-analysis-eslint-jsx-a11y",
+      "shadcnComponents": "manual-cli-installation"
+    },
+    "manualValidationChecklist": [
+      "Run app locally: npm run dev",
+      "Test on Desktop (1920x1080), Tablet (768x1024), Mobile (375x667)",
+      "Check console for errors (F12)",
+      "Test keyboard navigation (Tab, Enter, Escape)",
+      "Verify responsive design (resize browser)",
+      "Test all interactive elements (buttons, forms, links)",
+      "Check accessibility with browser tools (Lighthouse, axe DevTools)",
+      "Take screenshots for documentation"
+    ],
+    "shadcnComponentInstallation": "npx shadcn@latest add [component-name]"
   }
 }
