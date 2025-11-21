@@ -219,7 +219,7 @@ export async function PATCH(
     }
 
     // Update category budgets if provided
-    let updatedCategoryBudgets = budget.categoryBudgets as CategoryBudgets;
+    const updatedCategoryBudgets = budget.categoryBudgets as CategoryBudgets;
 
     if (categoryBudgets) {
       // Merge new category budgets with existing ones

@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
 
     let results: POIResult[] = [];
     let source: 'overpass' | 'foursquare' | 'both' = 'overpass';
-    let errors: string[] = [];
+    const errors: string[] = [];
 
     // Try Overpass API first
     try {
