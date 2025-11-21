@@ -492,46 +492,6 @@ When re-validating with MCP:
 
 ---
 
----
-
-### Phase 5 - Financial & Professional Features (In Progress)
-
-| Task ID | Description | Files Modified | Validation Status |
-|---------|-------------|----------------|-------------------|
-| task-5-6-expense-split-ui | Expense Splitting UI with Settlement Dashboard | src/components/expenses/SplitExpenseDialog.tsx<br>src/components/expenses/SettlementSummary.tsx<br>src/components/expenses/SettlementCard.tsx<br>src/components/expenses/CreateExpenseDialog.tsx (modified)<br>src/components/expenses/ExpenseCard.tsx (modified)<br>src/components/expenses/ExpenseList.tsx (modified) | ⏸️ Deferred |
-
-#### Phase 5 Chrome DevTools Validation Checklist
-
-**task-5-6-expense-split-ui specific**:
-- Test expense splitting UI on 3 viewports (Desktop 1920x1080, Tablet 768x1024, Mobile 375x667)
-- Test split type selection (None/Equal/Custom)
-- Test equal split collaborator multi-select
-- Test per-person amount calculation (real-time)
-- Test custom split with amount input
-- Test custom split with percentage input
-- Test toggle between amount ($) and percentage (%)
-- Test split validation (must add up to total)
-- Test visual feedback (green ✓ when valid, red ✗ when invalid)
-- Test submit disabled until valid configuration
-- Test settlement summary view
-- Test summary statistics cards (total expenses, participants, net balance)
-- Test settlement card display (who owes who)
-- Test settlement tabs (All/You Owe/Owed to You)
-- Test expense list split indicator badge
-- Test split details tooltip
-- Test split status filter dropdown
-- Test responsive design (cards/forms stack on mobile)
-- Test keyboard navigation (all interactive elements)
-- Test screen reader compatibility (ARIA labels, descriptions)
-- Console error checks
-- Performance testing with 50+ expenses
-- Test empty states (no settlements, no expenses)
-- Test loading states (API fetches)
-- Test error states (API failures)
-- Accessibility audit (WCAG 2.1 AA compliance)
-
----
-
 **Current Status**: Tracking enabled, development proceeding normally without MCP validation requirements.
 
-**Next Update**: When Phase 5 UI tasks are completed.
+**Next Update**: When Phase 4 UI tasks are completed.
