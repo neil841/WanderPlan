@@ -59,38 +59,3 @@ export const updateExpenseSchema = z.object({
   date: z.string().datetime('Invalid date format').optional(),
   receiptUrl: z.string().url('Invalid receipt URL').nullable().optional(),
 });
-
-/**
- * Custom split schema
- */
-export const customSplitSchema = z
-  .object({
-    userId: z.string().uuid('Invalid user ID'),
-    amount: z.number().nonnegative('Amount must be non-negative').optional(),
-    percentage: z
-      .number()
-      .min(0, 'Percentage must be at least 0')
-      .max(100, 'Percentage must be at most 100')
-      .optional(),
-  })
-  .refine(
-    (data) => data.amount !== undefined || data.percentage !== undefined,
-    {
-      message: 'Either amount or percentage must be provided',
-    }
-  )
-  .refine(
-    (data) => !(data.amount !== undefined && data.percentage !== undefined),
-    {
-      message: 'Cannot provide both amount and percentage',
-    }
-  );
-
-/**
- * Create expense with splits schema
- */
-export const createExpenseWithSplitsSchema = createExpenseSchema.extend({
-  splitType: z.enum(['EQUAL', 'CUSTOM']).optional(),
-  splits: z.array(customSplitSchema).optional(),
-  splitWithUserIds: z.array(z.string().uuid('Invalid user ID')).optional(),
-});
