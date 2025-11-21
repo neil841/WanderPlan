@@ -8,9 +8,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { createExpenseSchema } from '@/lib/validations/expense';
+import {
+  createExpenseSchema,
+  createExpenseWithSplitsSchema,
+} from '@/lib/validations/expense';
 import type { ExpensesResponse, ExpenseCategory } from '@/types/expense';
 import { Decimal } from '@prisma/client/runtime/library';
+import {
+  calculateEqualSplit,
+  calculateCustomSplit,
+  validateSplits,
+} from '@/lib/expenses/calculations';
 
 /**
  * POST /api/trips/[tripId]/expenses
@@ -30,8 +38,8 @@ export async function POST(
     const { tripId } = params;
     const body = await request.json();
 
-    // Validate request body
-    const validation = createExpenseSchema.safeParse(body);
+    // Validate request body (with or without splits)
+    const validation = createExpenseWithSplitsSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
         { error: 'Invalid request data', details: validation.error.issues },
@@ -39,8 +47,18 @@ export async function POST(
       );
     }
 
-    const { eventId, category, description, amount, currency, date, receiptUrl } =
-      validation.data;
+    const {
+      eventId,
+      category,
+      description,
+      amount,
+      currency,
+      date,
+      receiptUrl,
+      splitType,
+      splits,
+      splitWithUserIds,
+    } = validation.data;
 
     // Check if user has access to this trip (must be collaborator or owner)
     const trip = await prisma.trip.findFirst({
@@ -85,42 +103,159 @@ export async function POST(
       }
     }
 
-    // Create expense (paidBy is the current user)
-    const expense = await prisma.expense.create({
-      data: {
-        tripId,
-        eventId: eventId || null,
-        category,
-        description,
-        amount: new Decimal(amount),
-        currency,
-        date: new Date(date),
-        paidBy: session.user.id,
-        receiptUrl: receiptUrl || null,
-      },
-      include: {
-        payer: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            avatarUrl: true,
+    // Prepare expense splits if provided
+    let expenseSplits: Array<{ userId: string; amount: number }> = [];
+
+    if (splitType === 'EQUAL' && splitWithUserIds && splitWithUserIds.length > 0) {
+      // Validate that all users are collaborators or trip owner
+      const validUsers = await prisma.user.findMany({
+        where: {
+          id: { in: splitWithUserIds },
+          OR: [
+            { id: trip.createdBy },
+            {
+              collaborations: {
+                some: {
+                  tripId,
+                  status: 'ACCEPTED',
+                },
+              },
+            },
+          ],
+        },
+        select: { id: true },
+      });
+
+      if (validUsers.length !== splitWithUserIds.length) {
+        return NextResponse.json(
+          { error: 'One or more users are not collaborators on this trip' },
+          { status: 400 }
+        );
+      }
+
+      // Calculate equal split
+      expenseSplits = calculateEqualSplit(amount, splitWithUserIds);
+    } else if (splitType === 'CUSTOM' && splits && splits.length > 0) {
+      // Validate custom splits
+      try {
+        validateSplits(amount, splits);
+      } catch (error) {
+        return NextResponse.json(
+          { error: error instanceof Error ? error.message : 'Invalid splits' },
+          { status: 400 }
+        );
+      }
+
+      // Validate that all users are collaborators or trip owner
+      const splitUserIds = splits.map((s) => s.userId);
+      const validUsers = await prisma.user.findMany({
+        where: {
+          id: { in: splitUserIds },
+          OR: [
+            { id: trip.createdBy },
+            {
+              collaborations: {
+                some: {
+                  tripId,
+                  status: 'ACCEPTED',
+                },
+              },
+            },
+          ],
+        },
+        select: { id: true },
+      });
+
+      if (validUsers.length !== splitUserIds.length) {
+        return NextResponse.json(
+          { error: 'One or more users in splits are not collaborators on this trip' },
+          { status: 400 }
+        );
+      }
+
+      // Calculate custom split
+      expenseSplits = calculateCustomSplit(amount, splits);
+    } else {
+      // No splits provided - default to payer paying full amount
+      expenseSplits = [{ userId: session.user.id, amount }];
+    }
+
+    // Create expense and splits in a transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Create expense
+      const expense = await tx.expense.create({
+        data: {
+          tripId,
+          eventId: eventId || null,
+          category,
+          description,
+          amount: new Decimal(amount),
+          currency,
+          date: new Date(date),
+          paidBy: session.user.id,
+          receiptUrl: receiptUrl || null,
+        },
+      });
+
+      // Create expense splits
+      const splitRecords = await tx.expenseSplit.createMany({
+        data: expenseSplits.map((split) => ({
+          expenseId: expense.id,
+          userId: split.userId,
+          amount: new Decimal(split.amount),
+        })),
+      });
+
+      // Fetch created expense with relations
+      const expenseWithRelations = await tx.expense.findUnique({
+        where: { id: expense.id },
+        include: {
+          payer: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              avatarUrl: true,
+            },
+          },
+          event: {
+            select: {
+              id: true,
+              title: true,
+            },
+          },
+          splits: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  email: true,
+                  avatarUrl: true,
+                },
+              },
+            },
           },
         },
-        event: {
-          select: {
-            id: true,
-            title: true,
-          },
-        },
-      },
+      });
+
+      return expenseWithRelations;
     });
+
+    if (!result) {
+      throw new Error('Failed to create expense');
+    }
 
     // Transform for response
     const expenseResponse = {
-      ...expense,
-      amount: Number(expense.amount),
+      ...result,
+      amount: Number(result.amount),
+      splits: result.splits.map((split) => ({
+        ...split,
+        amount: Number(split.amount),
+      })),
     };
 
     return NextResponse.json(
@@ -253,6 +388,19 @@ export async function GET(
             title: true,
           },
         },
+        splits: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                avatarUrl: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -287,6 +435,10 @@ export async function GET(
     const expensesResponse = expenses.map((exp) => ({
       ...exp,
       amount: Number(exp.amount),
+      splits: exp.splits.map((split) => ({
+        ...split,
+        amount: Number(split.amount),
+      })),
     }));
 
     const response: ExpensesResponse = {
