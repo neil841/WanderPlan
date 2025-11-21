@@ -9242,3 +9242,103 @@ Started Phase 5 (Financial & Professional Features) with 15 tasks total. This ph
 - Permission check for canEdit is currently hardcoded to true (TODO: check if user is payer or trip owner)
 - Events integration is ready (fetches events for dropdown, but depends on events existing)
 - Category enums are uppercase (ACCOMMODATION) vs budget lowercase (accommodation) - both work correctly
+
+---
+
+## [2025-11-21 17:47:00] ROLLBACK - Quality Control Intervention
+
+### Rollback Action: Tasks 5.5 & 5.6
+**Reason**: Improper agentic workflow - bypassed specialized agents  
+**Status**: ✅ Successfully Rolled Back  
+**Reverted Commits**:
+- `0d6da0e` - Task 5.6 Expense Split UI
+- `487bf56` - Task 5.5 Expense Split API
+
+### Why Rollback Was Necessary
+
+**Protocol Violation**:
+- Used `Task` tool with `general-purpose` subagent instead of specialized agents
+- Bypassed premium-ux-designer for UI design
+- Bypassed shadcn-implementation-builder for UI implementation
+- Missing design specifications in `.claude/design/`
+- No two-step validation (design review → implementation review)
+
+**Quality Concerns**:
+- Potential UX issues that premium designer would have caught
+- Missing accessibility-first design approach
+- No component wireframes or design artifacts
+- Less thorough than specialized agent workflow
+
+**Financial Feature Risk**:
+- Tasks 5.5-5.6 handle money (expense splitting)
+- Requires highest quality standards
+- Premium designer expertise critical for UX
+- Cannot compromise on quality for speed
+
+### Files Reverted
+
+**Task 5.6 UI** (removed):
+- `src/components/expenses/SettlementCard.tsx`
+- `src/components/expenses/SettlementSummary.tsx`
+- `src/components/expenses/CreateExpenseDialog.tsx` (reverted to previous version)
+- `src/components/expenses/ExpenseCard.tsx` (reverted)
+- `src/components/expenses/ExpenseList.tsx` (reverted)
+- `.claude/reports/task-5-6-implementation-summary.md`
+
+**Task 5.5 API** (removed):
+- `src/lib/expenses/calculations.ts`
+- `src/app/api/trips/[tripId]/expenses/settlements/route.ts`
+- `src/types/expense.ts` (split types removed)
+- `src/lib/validations/expense.ts` (split schemas removed)
+- `src/app/api/trips/[tripId]/expenses/route.ts` (reverted to basic version)
+
+### Project State Updated
+
+- Tasks 5.5 and 5.6 marked as "pending"
+- Completed tasks count: 56 → 54
+- Agent run history cleaned up
+- Ready for proper implementation
+
+### Next Steps - Proper Agentic Workflow
+
+**Task 5.5 (Expense Split API)**:
+1. Use `/orchestrate` OR `/agents:staff-engineer`
+2. Staff engineer implements API following protocols
+3. Proper agent lock management
+4. Detailed handoff notes
+5. ~15 minutes
+
+**Task 5.6 (Expense Split UI)**:
+1. Use `/orchestrate` OR:
+   - First: `/agents:premium-ux-designer`
+     - Design UI components with UX best practices
+     - Create design specifications
+     - WCAG AA accessibility-first design
+     - Component wireframes
+   - Then: `/agents:shadcn-implementation-builder`
+     - Implement per design specs
+     - Production-ready TypeScript
+     - Full state management
+2. ~30-40 minutes (20 min design + 20 min implementation)
+
+**Total time investment**: ~50-55 minutes for proper quality
+
+### Lesson Learned
+
+✅ **Always use specialized agents** - They exist for a reason  
+✅ **Never bypass protocols for speed** - Quality > Speed for financial features  
+✅ **Premium UX Designer is mandatory for UI tasks** - Not optional  
+✅ **Follow the agentic loop exactly** - It's designed to catch issues early  
+
+### Recommendation for Future
+
+When tempted to bypass agents:
+1. **STOP** - Ask "Am I using the right agent?"
+2. **CHECK** - Read `.claude/commands/agents/` for correct agent
+3. **USE** - `/orchestrate` when in doubt (it selects correctly)
+4. **NEVER** - Use general-purpose for specialized work
+
+---
+
+**Orchestrator Ready**: Tasks 5.5-5.6 pending, proper agents will be invoked next
+
