@@ -72,5 +72,29 @@ export async function generateInvoiceNumber(): Promise<string> {
 export function isValidInvoiceNumber(invoiceNumber: string): boolean {
   // Format: INV-YYYYMMDD-XXXX
   const pattern = /^INV-\d{8}-\d{4}$/;
-  return pattern.test(invoiceNumber);
+
+  // Check basic format first
+  if (!pattern.test(invoiceNumber)) {
+    return false;
+  }
+
+  // Extract date portion (YYYYMMDD) and validate it's a real date
+  const datePart = invoiceNumber.split('-')[1];
+  const year = parseInt(datePart.substring(0, 4), 10);
+  const month = parseInt(datePart.substring(4, 6), 10);
+  const day = parseInt(datePart.substring(6, 8), 10);
+
+  // Validate month (01-12)
+  if (month < 1 || month > 12) {
+    return false;
+  }
+
+  // Validate day (01-31, with month-specific limits)
+  // Get actual number of days in the month
+  const daysInMonth = new Date(year, month, 0).getDate();
+  if (day < 1 || day > daysInMonth) {
+    return false;
+  }
+
+  return true;
 }

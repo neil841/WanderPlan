@@ -18,17 +18,40 @@ import type { InvoiceStatus } from '@/types/invoice';
  * @param dbStatus - Status from database (DRAFT, SENT, PAID)
  * @param dueDate - Invoice due date
  * @param paidAt - Payment date (if paid)
+ * @param currentDate - Current date for comparison (defaults to now)
  * @returns Effective status including OVERDUE if applicable
  */
 function calculateInvoiceStatus(
   dbStatus: string,
   dueDate: Date,
-  paidAt: Date | null
+  paidAt: Date | null,
+  currentDate: Date = new Date()
 ): InvoiceStatus {
-  // If status is SENT and past due date and not paid, return OVERDUE
-  if (dbStatus === 'SENT' && dueDate < new Date() && !paidAt) {
-    return 'OVERDUE';
+  // PAID status never changes
+  if (dbStatus === 'PAID' || paidAt) {
+    return 'PAID';
   }
+
+  // DRAFT status stays DRAFT
+  if (dbStatus === 'DRAFT') {
+    return 'DRAFT';
+  }
+
+  // SENT status can become OVERDUE
+  if (dbStatus === 'SENT' && dueDate) {
+    // Normalize to midnight for fair comparison
+    const dueDateMidnight = new Date(dueDate);
+    dueDateMidnight.setHours(0, 0, 0, 0);
+
+    const currentDateMidnight = new Date(currentDate);
+    currentDateMidnight.setHours(0, 0, 0, 0);
+
+    // Only overdue if current date is AFTER due date
+    if (currentDateMidnight > dueDateMidnight) {
+      return 'OVERDUE';
+    }
+  }
+
   return dbStatus as InvoiceStatus;
 }
 
