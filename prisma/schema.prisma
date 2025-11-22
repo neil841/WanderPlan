@@ -128,6 +128,11 @@ model User {
   // User settings stored as JSON
   settings      Json      @default("{\"notifications\":{\"email\":{\"tripInvites\":true,\"tripUpdates\":true,\"messages\":true,\"marketing\":false},\"push\":{\"enabled\":false}},\"privacy\":{\"defaultTripVisibility\":\"PRIVATE\",\"showProfile\":true},\"preferences\":{\"defaultCurrency\":\"USD\",\"measurementUnit\":\"metric\"}}")
 
+  // Google Calendar integration tokens
+  googleCalendarAccessToken  String?   @map("google_calendar_access_token") @db.Text
+  googleCalendarRefreshToken String?   @map("google_calendar_refresh_token") @db.Text
+  googleCalendarTokenExpiry  DateTime? @map("google_calendar_token_expiry")
+
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
