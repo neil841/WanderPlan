@@ -10,6 +10,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { createClientSchema, clientQuerySchema } from '@/lib/validations/crm';
 import type { ClientsResponse } from '@/types/crm';
+import { checkGenericRateLimit } from '@/lib/auth/rate-limit';
 
 /**
  * POST /api/crm/clients
@@ -21,6 +22,23 @@ export async function POST(request: NextRequest) {
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Rate limiting (prevent spam/abuse)
+    const { isLimited, resetInMinutes } = checkGenericRateLimit(
+      `crm-clients:${session.user.id}`,
+      60, // Max 60 client creations
+      60 * 60 * 1000 // per hour
+    );
+
+    if (isLimited) {
+      return NextResponse.json(
+        {
+          error: 'Rate limit exceeded',
+          message: `Too many client creations. Please try again in ${resetInMinutes} minutes.`,
+        },
+        { status: 429 }
+      );
     }
 
     const body = await request.json();

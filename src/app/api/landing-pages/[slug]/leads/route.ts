@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createLeadSchema, slugParamSchema } from '@/lib/validations/landing-page';
 import prisma from '@/lib/db/prisma';
+import { checkGenericRateLimit } from '@/lib/auth/rate-limit';
 
 /**
  * POST /api/landing-pages/[slug]/leads
@@ -38,6 +39,27 @@ export async function POST(
   { params }: { params: { slug: string } }
 ) {
   try {
+    // Rate limiting (PUBLIC endpoint - prevent spam/DoS)
+    const identifier = req.ip || req.headers.get('x-forwarded-for') || 'anonymous';
+    const { isLimited, resetInMinutes } = checkGenericRateLimit(
+      `lead-capture:${identifier}`,
+      10, // Max 10 lead submissions
+      15 * 60 * 1000 // per 15 minutes
+    );
+
+    if (isLimited) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'RATE_LIMIT_EXCEEDED',
+            message: `Too many submissions. Please try again in ${resetInMinutes} minutes.`,
+          },
+        },
+        { status: 429 }
+      );
+    }
+
     // Validate slug parameter
     let validatedSlug;
     try {

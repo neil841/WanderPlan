@@ -11,6 +11,7 @@ import { prisma } from '@/lib/db';
 import { createInvoiceSchema, invoiceQuerySchema } from '@/lib/validations/invoice';
 import { generateInvoiceNumber } from '@/lib/invoices/invoice-number';
 import type { InvoicesResponse, InvoiceStatus } from '@/types/invoice';
+import { checkGenericRateLimit } from '@/lib/auth/rate-limit';
 
 /**
  * Calculate effective invoice status (including dynamic OVERDUE)
@@ -42,6 +43,23 @@ export async function POST(request: NextRequest) {
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Rate limiting (prevent spam/abuse)
+    const { isLimited, resetInMinutes } = checkGenericRateLimit(
+      `invoices:${session.user.id}`,
+      60, // Max 60 invoice creations
+      60 * 60 * 1000 // per hour
+    );
+
+    if (isLimited) {
+      return NextResponse.json(
+        {
+          error: 'Rate limit exceeded',
+          message: `Too many invoice creations. Please try again in ${resetInMinutes} minutes.`,
+        },
+        { status: 429 }
+      );
     }
 
     const body = await request.json();

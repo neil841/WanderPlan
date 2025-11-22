@@ -120,6 +120,7 @@ export function LeadCaptureForm({ landingPageSlug, config }: LeadCaptureFormProp
                       id="firstName"
                       type="text"
                       {...register('firstName')}
+                      aria-required="true"
                       aria-invalid={!!errors.firstName}
                     />
                     {errors.firstName && (
@@ -138,6 +139,7 @@ export function LeadCaptureForm({ landingPageSlug, config }: LeadCaptureFormProp
                       id="lastName"
                       type="text"
                       {...register('lastName')}
+                      aria-required="true"
                       aria-invalid={!!errors.lastName}
                     />
                     {errors.lastName && (
@@ -160,6 +162,7 @@ export function LeadCaptureForm({ landingPageSlug, config }: LeadCaptureFormProp
                   id="email"
                   type="email"
                   {...register('email')}
+                  aria-required="true"
                   aria-invalid={!!errors.email}
                 />
                 {errors.email && (
@@ -198,13 +201,13 @@ export function LeadCaptureForm({ landingPageSlug, config }: LeadCaptureFormProp
 
             {/* Submit Button */}
             <Button type="submit" disabled={isSubmitting} className="w-full" size="lg">
-              {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" aria-hidden="true" />}
               {config.submitText}
             </Button>
 
             {/* Trust Indicator */}
             <div className="flex items-center justify-center gap-2 text-sm text-neutral-500">
-              <Lock className="w-4 h-4" />
+              <Lock className="w-4 h-4" aria-hidden="true" />
               <span>Your information is secure and will never be shared</span>
             </div>
           </form>

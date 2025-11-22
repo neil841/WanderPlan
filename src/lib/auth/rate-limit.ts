@@ -144,3 +144,57 @@ export function getRateLimitStatus(identifier: string): {
     resetInMinutes: Math.ceil((entry.resetAt - now) / 60000),
   };
 }
+
+/**
+ * Generic rate limiting function for any endpoint
+ *
+ * @param identifier - Unique identifier (email, IP, userId, etc.)
+ * @param maxAttempts - Maximum allowed attempts
+ * @param windowMs - Time window in milliseconds
+ * @returns Object with rate limit status
+ *
+ * @example
+ * const { isLimited, resetInMinutes } = checkGenericRateLimit('lead:192.168.1.1', 10, 15 * 60 * 1000);
+ * if (isLimited) {
+ *   return NextResponse.json({ error: `Rate limit exceeded. Try again in ${resetInMinutes} minutes` }, { status: 429 });
+ * }
+ */
+export function checkGenericRateLimit(
+  identifier: string,
+  maxAttempts: number,
+  windowMs: number
+): {
+  isLimited: boolean;
+  remainingAttempts: number;
+  resetInMinutes: number;
+} {
+  const now = Date.now();
+  const entry = rateLimitStore.get(identifier);
+
+  // No entry or expired entry - allow and create new entry
+  if (!entry || entry.resetAt < now) {
+    rateLimitStore.set(identifier, {
+      count: 1,
+      resetAt: now + windowMs,
+    });
+    return {
+      isLimited: false,
+      remainingAttempts: maxAttempts - 1,
+      resetInMinutes: 0,
+    };
+  }
+
+  // Increment count
+  entry.count += 1;
+
+  // Check if limit exceeded
+  const isLimited = entry.count > maxAttempts;
+  const remainingAttempts = Math.max(0, maxAttempts - entry.count);
+  const resetInMinutes = Math.ceil((entry.resetAt - now) / 60000);
+
+  return {
+    isLimited,
+    remainingAttempts,
+    resetInMinutes,
+  };
+}
