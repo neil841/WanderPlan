@@ -32,15 +32,11 @@ jest.mock('@/lib/email/send-payment-confirmation', () => ({
   sendPaymentConfirmation: jest.fn(),
 }));
 
-// Mock Next.js headers
+// Mock Next.js headers (will be configured per test)
+const mockHeadersGet = jest.fn();
 jest.mock('next/headers', () => ({
   headers: jest.fn(() => ({
-    get: jest.fn((name: string) => {
-      if (name === 'stripe-signature') {
-        return 'mock_signature';
-      }
-      return null;
-    }),
+    get: mockHeadersGet,
   })),
 }));
 
@@ -50,6 +46,14 @@ describe('Stripe Webhook - Security Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     process.env = { ...originalEnv };
+
+    // Default: return mock signature (tests that need different behavior will override)
+    mockHeadersGet.mockImplementation((name: string) => {
+      if (name === 'stripe-signature') {
+        return 'mock_signature';
+      }
+      return null;
+    });
   });
 
   afterAll(() => {
@@ -58,10 +62,8 @@ describe('Stripe Webhook - Security Tests', () => {
 
   describe('🔒 Signature Verification (CRITICAL)', () => {
     it('should reject webhooks with missing signature header', async () => {
-      const { headers } = require('next/headers');
-      headers.mockReturnValue({
-        get: jest.fn(() => null), // No signature
-      });
+      // Override default mock to return null for this test
+      mockHeadersGet.mockReturnValue(null);
 
       const request = new Request('http://localhost:3000/api/webhooks/stripe', {
         method: 'POST',
