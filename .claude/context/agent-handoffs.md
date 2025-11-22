@@ -16244,3 +16244,80 @@ BLOCKER-008 required tests for:
 4. Commit fixes
 5. Hand off to qa-testing-agent for integration tests (task 6.9)
 
+
+## [2025-11-22 19:30:00] staff-engineer → orchestrator
+
+### What I Did
+Fixed 2 bugs exposed by business logic tests written by qa-testing-agent
+
+**BUG #1: Invoice Number Validation (LOW severity)**
+- **Problem**: `isValidInvoiceNumber()` only validated regex format, accepted invalid dates
+- **Example**: Accepted `INV-20251322-0001` (month 13 invalid) and `INV-20251232-0001` (day 32 invalid)
+- **Fix**: Added month (1-12) and day (1-31) validation with month-specific day limits
+- **File Modified**: `src/lib/invoices/invoice-number.ts`
+- **Test**: `src/__tests__/lib/invoices/invoice-number.test.ts:245-246`
+- **Result**: ✅ 17/17 invoice number tests passing
+
+**BUG #2: OVERDUE Status Calculation (MEDIUM severity)**  
+- **Problem**: `calculateInvoiceStatus()` used `dueDate < new Date()` without normalization
+- **Example**: Invoice due 2024-11-16, current 2024-11-10 → incorrectly marked OVERDUE
+- **Root Cause**: No currentDate parameter, no date normalization, time portions causing issues
+- **Fix**:
+  - Added `currentDate` parameter with default value `new Date()`
+  - Normalized both dates to midnight for day-based comparison
+  - Changed logic: `currentDateMidnight > dueDateMidnight` (invoice overdue day AFTER due date)
+  - Clarified business rule: Invoice due dates are day-based, not time-based
+- **Files Modified**:
+  - `src/app/api/invoices/route.ts` (calculateInvoiceStatus function)
+  - `src/app/api/invoices/[id]/route.ts` (calculateInvoiceStatus function)
+  - `src/__tests__/lib/invoices/overdue-status.test.ts` (test function + net-15 test)
+- **Test**: `src/__tests__/lib/invoices/overdue-status.test.ts:312-323` (net-15 payment terms)
+- **Result**: ✅ 28/28 OVERDUE status tests passing
+
+### Test Results After Fixes
+```bash
+✅ Invoice number validation: 17/17 passing
+✅ OVERDUE status calculation: 28/28 passing
+✅ Financial calculations: 34/34 passing
+✅ Validation schemas: 52/52 passing
+✅ TOTAL: 131/131 business logic tests passing
+```
+
+### Business Logic Changes
+**Invoice Due Date Semantics (Important)**:
+- Due dates are now **day-based**, not time-based
+- Invoice due Nov 16th:
+  - ✅ Nov 10th → SENT (6 days before)
+  - ✅ Nov 16th → SENT (on due date, valid until end of day)
+  - ❌ Nov 17th → OVERDUE (1 day after)
+- This matches real-world invoice payment terms (net-15, net-30, etc.)
+
+### Files Changed
+1. `src/lib/invoices/invoice-number.ts` - Added date validation to isValidInvoiceNumber()
+2. `src/app/api/invoices/route.ts` - Updated calculateInvoiceStatus() with normalization
+3. `src/app/api/invoices/[id]/route.ts` - Updated calculateInvoiceStatus() with normalization
+4. `src/__tests__/lib/invoices/overdue-status.test.ts` - Updated test function and 1 test case
+5. `src/__tests__/lib/invoices/invoice-number.test.ts` - No changes (tests already correct)
+
+### Commit
+- **Hash**: `424ff92`
+- **Message**: "fix(business-logic): resolve invoice number validation and OVERDUE status calculation bugs"
+
+### Project State Updates
+- Updated blocker-008 bugs to `fixed: true`
+- Test metrics: 184 total, 184 passing, 0 failing
+- All business logic bugs resolved ✅
+
+### What's Next
+All critical business logic bugs are now fixed. The codebase is ready for:
+1. Integration testing (task-6-9)
+2. E2E testing (task-6-10)
+3. Production deployment preparation
+
+### Recommendations
+- Consider extracting `calculateInvoiceStatus()` to a shared utility file (`src/lib/invoices/status.ts`) to avoid duplication between route files
+- Future enhancement: Add timezone handling for international invoices (currently assumes server timezone)
+
+---
+**Status**: ✅ Complete - All business logic tests passing, bugs fixed
+**Next Agent**: Orchestrator to continue Phase 6 tasks
