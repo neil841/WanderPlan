@@ -5,7 +5,7 @@
   "currentPhase": "phase-5-financial-professional",
   "activeAgent": null,
   "agentLockTimestamp": null,
-  "lastUpdated": "2025-11-22T12:00:00.000Z",
+  "lastUpdated": "2025-11-22T12:45:00.000Z",
   "lastValidation": "2025-11-15T04:30:00.000Z",
   "lastValidationType": "phase-transition-checkpoint",
   "lastCheckpointResults": {
@@ -219,14 +219,42 @@
       "fixedIn": "commit-533dd7b",
       "timeToFix": "30 minutes",
       "lastReportedIn": "accessibility-phase-4-transition"
+    },
+    {
+      "id": "blocker-007",
+      "agent": "qa-testing-agent",
+      "type": "missing-tests-security",
+      "description": "CRITICAL: Zero test coverage for security-critical code. Must write tests for: 1) Stripe webhook signature verification and payment processing, 2) Authentication and row-level security on all API endpoints, 3) Public lead capture endpoint input validation and spam prevention. Risk: Fake payments, unauthorized data access, database corruption.",
+      "createdAt": "2025-11-22T12:45:00.000Z",
+      "resolved": false,
+      "severity": "CRITICAL",
+      "affectsProduction": true,
+      "estimatedEffort": "8-12 hours",
+      "priority": 1,
+      "mustFixBefore": "production-deployment",
+      "lastReportedIn": "test-results-phase-5"
+    },
+    {
+      "id": "blocker-008",
+      "agent": "qa-testing-agent",
+      "type": "missing-tests-business-logic",
+      "description": "CRITICAL: Zero test coverage for business logic. Must write tests for: 1) Financial calculations (invoice/proposal subtotal, tax, discount, total), 2) Invoice number generation (uniqueness, concurrent creation), 3) OVERDUE status calculation (date comparisons, timezones), 4) Input validation schemas (Zod). Risk: Incorrect billing, duplicate invoice numbers, wrong status calculations.",
+      "createdAt": "2025-11-22T12:45:00.000Z",
+      "resolved": false,
+      "severity": "CRITICAL",
+      "affectsProduction": true,
+      "estimatedEffort": "12-18 hours",
+      "priority": 2,
+      "mustFixBefore": "production-deployment",
+      "lastReportedIn": "test-results-phase-5"
     }
   ],
   "metrics": {
     "totalTasks": 51,
     "completedTasks": 63,
     "failedTasks": 0,
-    "totalAgentRuns": 76,
-    "lastAgentRun": "staff-engineer",
+    "totalAgentRuns": 77,
+    "lastAgentRun": "qa-testing-agent",
     "agentRunHistory": [
       {
         "agent": "staff-engineer",
@@ -360,7 +388,7 @@
     "errorMetrics": {
       "totalErrors": 0,
       "recoverableErrors": 0,
-      "blockerErrors": 3,
+      "blockerErrors": 5,
       "criticalErrors": 0,
       "staleLocks": 0,
       "skippedValidations": 5
