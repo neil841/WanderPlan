@@ -530,3 +530,443 @@ Before marking task-5-10-proposal-ui as validated:
 **Issues Found**: _____________
 **Resolution**: _____________
 
+
+## Landing Page Builder UI - Phase 1 (task-5-15-landing-page-ui-phase-1)
+
+**Created**: 2025-11-22
+**Agent**: shadcn-implementation-builder
+**Status**: PENDING VALIDATION
+
+**Note**: This is **Phase 1 of 6** from the 10-day implementation roadmap. Additional phases (Editor, Public Page, Polish) are pending.
+
+### Test Environment Setup
+```bash
+# 1. Start development server
+npm run dev
+
+# 2. Navigate to landing pages list
+# URL: http://localhost:3000/crm/landing-pages
+```
+
+### Required Breakpoints
+All tests must be performed on 3 viewport sizes:
+1. **Desktop**: 1920x1080
+2. **Tablet**: 768x1024
+3. **Mobile**: 375x667 (iPhone SE)
+
+---
+
+### Test Scenario 1: Landing Pages List Page (Empty State)
+
+**URL**: `http://localhost:3000/crm/landing-pages`
+
+#### Desktop (1920x1080)
+```bash
+# Resize viewport
+mcp__chrome-devtools__resize_page --width=1920 --height=1080
+
+# Capture page structure
+mcp__chrome-devtools__take_snapshot
+
+# Visual verification
+mcp__chrome-devtools__take_screenshot
+
+# Check console for errors
+mcp__chrome-devtools__list_console_messages --types=["error", "warn"]
+```
+
+**Verify Empty State**:
+- [ ] Large file icon displayed
+- [ ] "No Landing Pages Yet" heading
+- [ ] Descriptive text visible
+- [ ] "Create Landing Page" button prominent
+- [ ] No layout issues
+
+#### Mobile (375x667)
+```bash
+mcp__chrome-devtools__resize_page --width=375 --height=667
+mcp__chrome-devtools__take_screenshot
+```
+
+**Verify**:
+- [ ] Empty state centered
+- [ ] Button full-width or appropriately sized
+- [ ] Text readable
+
+---
+
+### Test Scenario 2: Create Landing Page Dialog
+
+**Trigger**: Click "Create Landing Page" button
+
+#### Desktop (1920x1080)
+```bash
+# Click create button
+mcp__chrome-devtools__click --uid="<create-button-uid>"
+
+# Dialog should open
+mcp__chrome-devtools__take_snapshot
+mcp__chrome-devtools__take_screenshot
+```
+
+**Verify Dialog Content**:
+- [ ] Dialog title: "Create Landing Page"
+- [ ] Description text visible
+- [ ] Title input field (required asterisk)
+- [ ] Slug input field with "/p/" prefix
+- [ ] Description textarea (optional)
+- [ ] Cancel button
+- [ ] "Create & Edit" button (primary)
+
+**Verify Auto-Slug Generation**:
+```bash
+# Type in title field
+mcp__chrome-devtools__fill --uid="<title-input-uid>" --value="Paris Adventure 2025"
+
+# Check slug field auto-populated
+# Should show: paris-adventure-2025
+```
+
+**Verify**:
+- [ ] Slug auto-generates from title
+- [ ] Slug converts to lowercase
+- [ ] Spaces replaced with hyphens
+- [ ] Special characters removed
+
+**Verify Form Validation**:
+```bash
+# Try to submit empty form
+mcp__chrome-devtools__click --uid="<submit-button-uid>"
+```
+
+**Verify**:
+- [ ] "Title is required" error appears
+- [ ] "Slug is required" error appears
+- [ ] Errors styled with red text
+- [ ] Error messages appear below fields
+
+**Verify Invalid Slug**:
+```bash
+# Enter invalid slug (uppercase, spaces)
+mcp__chrome-devtools__fill --uid="<slug-input-uid>" --value="Invalid Slug!"
+
+# Submit
+mcp__chrome-devtools__click --uid="<submit-button-uid>"
+```
+
+**Verify**:
+- [ ] Validation error: "Slug must contain only lowercase letters, numbers, and hyphens"
+
+#### Mobile (375x667)
+```bash
+mcp__chrome-devtools__resize_page --width=375 --height=667
+mcp__chrome-devtools__take_screenshot
+```
+
+**Verify**:
+- [ ] Dialog full-screen or appropriately sized
+- [ ] All form fields accessible
+- [ ] Buttons tappable (min 44x44px)
+- [ ] Keyboard doesn't obscure inputs
+
+---
+
+### Test Scenario 3: Landing Pages List (With Data)
+
+**Prerequisites**: Create 2-3 test landing pages
+
+**URL**: `http://localhost:3000/crm/landing-pages`
+
+#### Desktop (1920x1080)
+```bash
+mcp__chrome-devtools__resize_page --width=1920 --height=1080
+mcp__chrome-devtools__take_screenshot
+```
+
+**Verify Table**:
+- [ ] All 7 columns visible (Title, Slug, Trip, Status, Leads, Updated, Actions)
+- [ ] Title column shows page titles
+- [ ] Slug column shows monospace formatted slugs
+- [ ] Trip column shows trip name or "—"
+- [ ] Status badges color-coded (🟢 Published=green, 🔴 Draft=gray)
+- [ ] Leads column shows "0 leads" with user icon
+- [ ] Updated column shows formatted dates
+- [ ] Actions dropdown menu on each row
+
+**Verify Row Hover**:
+- [ ] Rows highlight on hover
+- [ ] Transition smooth
+
+#### Tablet (768x1024)
+```bash
+mcp__chrome-devtools__resize_page --width=768 --height=1024
+mcp__chrome-devtools__take_screenshot
+```
+
+**Verify**:
+- [ ] Trip column hidden (responsive behavior)
+- [ ] Leads column hidden (responsive behavior)
+- [ ] Remaining columns visible
+- [ ] Table remains readable
+
+#### Mobile (375x667)
+```bash
+mcp__chrome-devtools__resize_page --width=375 --height=667
+mcp__chrome-devtools__take_screenshot
+```
+
+**Verify**:
+- [ ] Table scrolls horizontally OR switches to card layout
+- [ ] All data accessible
+- [ ] Touch targets adequate
+
+---
+
+### Test Scenario 4: Search and Filters
+
+#### Search Functionality
+```bash
+# Get search input UID
+mcp__chrome-devtools__take_snapshot
+
+# Type in search
+mcp__chrome-devtools__fill --uid="<search-input-uid>" --value="Paris"
+```
+
+**Verify**:
+- [ ] Search debounces (300ms delay)
+- [ ] Table filters in real-time
+- [ ] Only matching pages shown
+- [ ] "No landing pages found" message if no results
+
+#### Status Filter
+```bash
+# Click status dropdown
+mcp__chrome-devtools__click --uid="<status-select-uid>"
+
+# Select "Published"
+mcp__chrome-devtools__click --uid="<published-option-uid>"
+```
+
+**Verify**:
+- [ ] Filter dropdown works
+- [ ] Table updates to show only published pages
+- [ ] Filter persists
+
+---
+
+### Test Scenario 5: Actions Dropdown
+
+**Trigger**: Click actions dropdown on a row
+
+```bash
+# Click actions button
+mcp__chrome-devtools__click --uid="<actions-button-uid>"
+
+# Dropdown should open
+mcp__chrome-devtools__take_snapshot
+mcp__chrome-devtools__take_screenshot
+```
+
+**Verify Published Page Actions**:
+- [ ] "View Public Page" (opens in new tab)
+- [ ] Separator
+- [ ] "Edit"
+- [ ] "Duplicate"
+- [ ] Separator
+- [ ] "Delete" (red text)
+
+**Verify Draft Page Actions**:
+- [ ] No "View Public Page" option (since not published)
+- [ ] "Edit"
+- [ ] "Duplicate"
+- [ ] "Delete" (red text)
+
+---
+
+### Test Scenario 6: Delete Confirmation Dialog
+
+**Trigger**: Click "Delete" in actions menu
+
+```bash
+# Click delete action
+mcp__chrome-devtools__click --uid="<delete-action-uid>"
+
+# Dialog should open
+mcp__chrome-devtools__take_snapshot
+mcp__chrome-devtools__take_screenshot
+```
+
+**Verify Dialog Content**:
+- [ ] Dialog title: "Delete Landing Page"
+- [ ] Large warning triangle icon (red)
+- [ ] "This action cannot be undone" description
+- [ ] Confirmation message with page title
+- [ ] Details box showing: Title, Slug, Status
+- [ ] Warning alert box
+- [ ] Cancel button
+- [ ] "Delete Landing Page" button (red, destructive)
+
+**Verify Deletion Flow**:
+```bash
+# Click confirm delete
+mcp__chrome-devtools__click --uid="<confirm-delete-button-uid>"
+```
+
+**Verify**:
+- [ ] Loading spinner appears on button
+- [ ] Button text changes to "Deleting..."
+- [ ] Success toast appears
+- [ ] Dialog closes
+- [ ] Page removed from table
+- [ ] Table updates automatically
+
+---
+
+### Test Scenario 7: Pagination
+
+**Prerequisites**: Create 25+ test landing pages
+
+**URL**: `http://localhost:3000/crm/landing-pages`
+
+```bash
+mcp__chrome-devtools__take_screenshot
+```
+
+**Verify Pagination Controls**:
+- [ ] "Showing X to Y of Z" text
+- [ ] Previous button (disabled on page 1)
+- [ ] "Page X of Y" indicator
+- [ ] Next button
+- [ ] Buttons work correctly
+
+```bash
+# Click next page
+mcp__chrome-devtools__click --uid="<next-button-uid>"
+```
+
+**Verify**:
+- [ ] Page advances to page 2
+- [ ] Table updates with new data
+- [ ] Previous button now enabled
+- [ ] URL updates with page parameter (optional)
+
+---
+
+### Accessibility Tests (All Pages)
+
+#### Keyboard Navigation
+**Verify**:
+- [ ] Tab order is logical (search → filter → create button → table)
+- [ ] All interactive elements focusable
+- [ ] Focus visible (2px outline)
+- [ ] Escape key closes dialogs
+- [ ] Enter key submits forms
+- [ ] Enter/Space activates buttons
+
+#### Screen Reader Compatibility
+**Verify**:
+- [ ] All buttons have accessible labels (aria-label)
+- [ ] Form fields have associated labels (htmlFor/id)
+- [ ] Error messages announced (role="alert")
+- [ ] Status badges have aria-label
+- [ ] Table has proper structure (thead, tbody)
+
+#### Color Contrast (WCAG 2.1 AA)
+**Verify**:
+- [ ] Normal text: 4.5:1 minimum
+- [ ] Large text: 3:1 minimum
+- [ ] Interactive elements: 3:1 minimum
+- [ ] Status badges meet contrast requirements
+
+---
+
+### Performance Tests
+
+#### Desktop (1920x1080)
+```bash
+# Start performance trace
+mcp__chrome-devtools__performance_start_trace --reload=true --autoStop=true
+
+# After trace completes, analyze
+mcp__chrome-devtools__performance_analyze_insight --insightSetId="<id>" --insightName="LCPBreakdown"
+```
+
+**Verify Core Web Vitals**:
+- [ ] LCP < 2.5s
+- [ ] FID < 100ms
+- [ ] CLS < 0.1
+
+#### Network Tests
+```bash
+# Check network requests
+mcp__chrome-devtools__list_network_requests
+```
+
+**Verify**:
+- [ ] No failed requests (404, 500)
+- [ ] API requests complete in <200ms
+- [ ] No CORS errors
+
+---
+
+### Error Handling Tests
+
+#### Network Error
+**Simulate**: Disconnect network, reload page
+
+**Verify**:
+- [ ] Error alert appears: "Failed to load landing pages"
+- [ ] No app crash
+- [ ] User can retry
+
+#### Invalid Data
+**Test**: Create landing page with duplicate slug
+
+**Verify**:
+- [ ] API returns error
+- [ ] Error message displayed in dialog
+- [ ] Dialog remains open
+- [ ] User can correct and retry
+
+---
+
+## Summary Checklist
+
+Before marking Phase 1 as validated:
+
+- [ ] Empty state displays correctly
+- [ ] Create dialog works (validation, auto-slug, submission)
+- [ ] Table displays data correctly
+- [ ] Search and filters work
+- [ ] Actions dropdown works
+- [ ] Delete confirmation works
+- [ ] Pagination works (if >20 pages)
+- [ ] Responsive on all 3 breakpoints
+- [ ] Keyboard navigation works
+- [ ] Screen reader compatible
+- [ ] Color contrast meets WCAG AA
+- [ ] Performance meets targets
+- [ ] Error handling works
+- [ ] No console errors
+
+**Estimated Testing Time**: 45-60 minutes
+
+---
+
+## Notes for Validator
+
+- **Phase Status**: This is Phase 1 of 6. Editor, Public Page, and Polish phases are pending.
+- **Test Data**: Create 5-10 test landing pages with various states (draft, published)
+- **Browser**: Use Chrome or Chromium (required for Chrome DevTools MCP)
+- **Prerequisites**: Development server running (`npm run dev`)
+- **API**: Landing pages API must be working (`/api/landing-pages`)
+
+---
+
+**Validation Date**: _____________
+**Validated By**: _____________
+**Status**: PENDING
+**Issues Found**: _____________
+**Resolution**: _____________
+
