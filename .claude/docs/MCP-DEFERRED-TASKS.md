@@ -1,623 +1,532 @@
-# MCP Deferred Tasks - For Future Re-validation
+# MCP-DEFERRED-TASKS.md
 
-**Purpose**: This document tracks all frontend tasks and component installations that should be re-validated with MCP servers (chromedevtools, shadcn) when normal Claude usage resets.
+This file contains UI validation tasks that require Chrome DevTools MCP testing.
 
-**Status**: Claude Code for Web (no MCP support) - tracking for future re-validation
-
-**Last Updated**: 2025-11-12
+**IMPORTANT**: These tasks must be completed before the features are considered production-ready.
 
 ---
 
-## 📋 Tasks Requiring Chrome DevTools MCP Validation
+## Proposal Management UI Validation (task-5-10-proposal-ui)
 
-### Phase 1 - Foundation & Authentication (Completed)
+**Created**: 2025-11-22
+**Agent**: shadcn-implementation-builder
+**Status**: PENDING VALIDATION
 
-| Task ID | Description | Files Modified | Validation Status |
-|---------|-------------|----------------|-------------------|
-| task-1-6-registration-ui | Registration form UI | `src/app/(auth)/register/page.tsx` | ⏸️ Deferred |
-| task-1-8-login-ui | Login form UI | `src/app/(auth)/login/page.tsx` | ⏸️ Deferred |
-| task-1-12-dashboard-layout | Dashboard layout with sidebar | `src/app/(dashboard)/layout.tsx`, `src/components/layout/*` | ⏸️ Deferred |
-
-**Chrome DevTools Validation Needed**:
-- Test on 3 viewports (Desktop 1920x1080, Tablet 768x1024, Mobile 375x667)
-- Console error checks
-- Performance trace (Core Web Vitals)
-- Accessibility audit
-- Screenshot capture for documentation
-
----
-
-### Phase 2 - Trip Management Core (Completed)
-
-| Task ID | Description | Files Modified | Validation Status |
-|---------|-------------|----------------|-------------------|
-| task-2-2-trip-list-ui | Trip list page with filters | `src/app/(dashboard)/trips/page.tsx`, `src/components/trips/TripList.tsx`, `src/components/trips/TripCard.tsx`, `src/components/trips/TripFilters.tsx` | ⏸️ Deferred |
-| task-2-4-trip-create-ui | Create trip dialog | `src/components/trips/CreateTripDialog.tsx` | ⏸️ Deferred |
-| task-2-6-trip-overview-ui | Trip details page | `src/app/(dashboard)/trips/[tripId]/page.tsx`, `src/components/trips/TripOverview.tsx`, `src/components/trips/TripHeader.tsx`, `src/components/trips/TripTabs.tsx` | ⏸️ Deferred |
-| task-2-8-trip-edit-ui | Edit trip dialog | `src/components/trips/EditTripDialog.tsx` | ⏸️ Deferred |
-
-**Chrome DevTools Validation Needed**:
-- Test all CRUD operations on 3 viewports
-- Verify drag-and-drop interactions (if any)
-- Test form validation UX
-- Check loading states and skeleton loaders
-- Performance audit for list rendering
-- Accessibility testing for dialogs and forms
-
----
-
-### Phase 3 - Itinerary & Events (In Progress)
-
-| Task ID | Description | Files Modified | Validation Status |
-|---------|-------------|----------------|-------------------|
-| task-3-3-itinerary-day-view | Itinerary Builder UI with drag-and-drop | `src/app/(dashboard)/trips/[tripId]/itinerary/page.tsx`, `src/components/itinerary/ItineraryBuilder.tsx`, `src/components/itinerary/DayColumn.tsx`, `src/components/itinerary/EventCard.tsx`, `src/components/itinerary/DraggableEvent.tsx`, `src/components/itinerary/UnscheduledEvents.tsx`, `src/components/itinerary/EmptyDay.tsx`, `src/hooks/useItineraryData.ts`, `src/hooks/useEventReorder.ts` | ⏸️ Deferred |
-| task-3-4-event-forms | Event Creation Forms for all 6 event types | `src/components/events/CreateEventDialog.tsx`, `src/components/events/FlightForm.tsx`, `src/components/events/HotelForm.tsx`, `src/components/events/ActivityForm.tsx`, `src/components/events/RestaurantForm.tsx`, `src/components/events/TransportationForm.tsx`, `src/components/events/DestinationForm.tsx`, `src/components/events/LocationAutocomplete.tsx`, `src/components/events/CostInput.tsx`, `src/hooks/useCreateEvent.ts`, `src/hooks/useLocationSearch.ts` | ⏸️ Deferred |
-| task-3-5-event-edit-delete | Event Edit & Delete functionality | `src/components/events/CreateEventDialog.tsx` (modified for edit mode), `src/components/events/EditEventDialog.tsx`, `src/components/events/DeleteEventDialog.tsx`, `src/components/itinerary/EventCard.tsx` (added edit/delete buttons), `src/hooks/useUpdateEvent.ts`, `src/hooks/useDeleteEvent.ts` | ⏸️ Deferred |
-| task-3-6-calendar-view | Calendar View Integration with FullCalendar | `src/app/(dashboard)/trips/[tripId]/calendar/page.tsx`, `src/components/calendar/TripCalendar.tsx`, `src/hooks/useCalendarEvents.ts` | ⏸️ Deferred |
-| task-3-7-map-markers | Map View with Event Markers using Leaflet | `src/app/(dashboard)/trips/[tripId]/map/page.tsx`, `src/components/map/TripMap.tsx`, `src/components/map/EventPopup.tsx`, `src/lib/map/icons.ts`, `src/styles/globals.css` (Leaflet styles) | ⏸️ Deferred |
-| task-3-8-map-routes | Route Visualization with OSRM | `src/app/api/trips/[tripId]/route/route.ts`, `src/lib/map/osrm.ts`, `src/components/map/RouteLayer.tsx`, `src/components/map/TripMap.tsx` (modified) | ⏸️ Deferred |
-| task-3-9-poi-search | POI Search Integration (OSM + Foursquare) | `src/app/api/search/poi/route.ts`, `src/lib/search/overpass.ts`, `src/lib/search/foursquare.ts`, `src/components/search/POISearch.tsx`, `src/components/search/POIResult.tsx`, `src/app/(dashboard)/trips/[tripId]/map/page.tsx` (modified) | ⏸️ Deferred |
-| task-3-10-destination-guides | Destination Guides with Wikipedia API | `src/app/api/destinations/[slug]/route.ts`, `src/lib/destinations/wikipedia.ts`, `src/app/(public)/destinations/[slug]/page.tsx`, `src/components/destinations/DestinationGuide.tsx` | ⏸️ Deferred |
-| task-3-11-weather | Weather Forecast Integration with OpenWeatherMap | `src/app/api/trips/[tripId]/weather/route.ts`, `src/lib/weather/openweather.ts`, `src/components/trips/WeatherWidget.tsx`, `src/components/trips/TripOverview.tsx` (modified) | ⏸️ Deferred |
-
-**Chrome DevTools Validation Needed**:
-- Test drag-and-drop on 3 viewports (Desktop 1920x1080, Tablet 768x1024, Mobile 375x667)
-- Test touch interactions for mobile drag-and-drop
-- Verify event card rendering and animations
-- Test auto-save functionality
-- Performance testing with 50+ events
-- Keyboard navigation testing for accessibility
-- Screen reader compatibility testing
-- Console error checks
-- Core Web Vitals measurement
-- **task-3-4-event-forms specific**:
-  - Test all 6 event type forms on 3 viewports
-  - Test location autocomplete with Nominatim API
-  - Test form validation for each event type
-  - Test cost input with currency selector
-  - Test date/time pickers
-  - Verify tab transitions and animations
-  - Test keyboard navigation through tabs and form fields
-  - Screen reader testing for form accessibility
-  - Test form submission (success/error states)
-  - Performance testing with location search debouncing
-- **task-3-5-event-edit-delete specific**:
-  - Test edit dialog on 3 viewports (Desktop 1920x1080, Tablet 768x1024, Mobile 375x667)
-  - Test delete confirmation dialog with keyboard navigation
-  - Test edit/delete buttons visibility (hover on desktop, always on mobile)
-  - Test optimistic updates (immediate UI feedback)
-  - Test error rollback (when API call fails)
-  - Test edit form pre-filling for all 6 event types
-  - Test permission checks (canEdit prop)
-  - Verify toast notifications (success/error states)
-  - Test button click event propagation (stopPropagation)
-  - Accessibility testing for dialogs and buttons
-- **task-3-6-calendar-view specific**:
-  - Test calendar view switching (month/week/day) on 3 viewports
-  - Test event drag-and-drop to reschedule dates
-  - Test event resize functionality (if enabled)
-  - Test date click to create new event
-  - Test event click to open edit dialog
-  - Test "+N more" link when multiple events on same day
-  - Test calendar navigation (prev/next month, today button)
-  - Test timezone handling
-  - Verify event colors match itinerary colors
-  - Test responsive layout (toolbar stacking on mobile)
-  - Test with 50+ events (performance)
-  - Keyboard navigation testing
-  - Screen reader testing for calendar controls
-  - Console error checks
-  - Performance trace (calendar rendering)
-- **task-3-7-map-markers specific**:
-  - Test map rendering on 3 viewports (Desktop 1920x1080, Tablet 768x1024, Mobile 375x667)
-  - Test custom marker icons display correctly for all 6 event types
-  - Test marker clustering with 100+ events (performance)
-  - Verify cluster expansion/collapse on zoom
-  - Test marker click to open event popup
-  - Test popup content rendering (title, date, location, cost)
-  - Test "View Details" button in popup
-  - Test auto-fit bounds to show all markers
-  - Test map controls (zoom +/-, pan with drag)
-  - Test scroll wheel zoom
-  - Test touch gestures on mobile (pinch zoom, pan)
-  - Verify OpenStreetMap tiles load correctly
-  - Test with no events (empty state)
-  - Test with events without location data
-  - Test map legend visibility and accuracy
-  - Test event count badge
-  - Console error checks
-  - Performance testing with 50+ markers
-  - Memory leak testing (add/remove markers repeatedly)
-  - Responsive layout (legend and badges stack on mobile)
-- **task-3-8-map-routes specific**:
-  - Test route rendering on 3 viewports (Desktop 1920x1080, Tablet 768x1024, Mobile 375x667)
-  - Test route visibility toggle (show/hide route)
-  - Test profile switching (car/bike/foot) updates route
-  - Verify OSRM API integration (route calculation)
-  - Test route polyline rendering (blue line on map)
-  - Test distance and duration display accuracy
-  - Test route with 2 events (minimum)
-  - Test route with 10+ events (waypoint simplification)
-  - Test route with 25+ events (OSRM limit handling)
-  - Verify route auto-fits bounds when shown
-  - Test route API error handling (OSRM down, invalid coordinates)
-  - Test route caching (5-minute cache)
-  - Test profile icon buttons (car/bike/foot)
-  - Verify route updates when profile changes
-  - Test responsive layout (route control panel on mobile)
-  - Console error checks
-  - Performance testing with complex routes
-  - Test API endpoint directly (GET /api/trips/[id]/route)
-- **task-3-9-poi-search specific**:
-  - Test POI search panel on 3 viewports (Desktop 1920x1080, Tablet 768x1024, Mobile 375x667)
-  - Test search button toggle (show/hide panel)
-  - Test text search input and submission
-  - Test category filter buttons (8 categories)
-  - Test radius slider (1-10km)
-  - Verify OSM Overpass API integration
-  - Test Foursquare fallback (when Overpass fails)
-  - Test POI result rendering (name, category, address, rating, price)
-  - Test "Add to Itinerary" button
-  - Test POI to event conversion (correct event type mapping)
-  - Test event creation from POI (location, notes populated)
-  - Test with no results (empty state)
-  - Test with API errors (error handling)
-  - Test search result scrolling (many results)
-  - Test responsive layout (panel width on mobile)
-  - Verify source badge (OSM vs Foursquare)
-  - Test category emoji icons
-  - Console error checks
-  - Test API endpoint directly (GET /api/search/poi)
-  - Performance testing with 50+ results
-- **task-3-10-destination-guides specific**:
-  - Test destination guide page on 3 viewports (Desktop 1920x1080, Tablet 768x1024, Mobile 375x667)
-  - Test Wikipedia API integration (fetch destination data)
-  - Test image rendering (Wikipedia thumbnail)
-  - Test overview section display
-  - Test "Best Time to Visit" section
-  - Test "Budget Tips" list rendering
-  - Test "Add to Trip" button (redirects to trips)
-  - Test "View on Wikipedia" button (opens in new tab)
-  - Test with valid destination slug (e.g., "paris", "tokyo")
-  - Test with invalid destination (404 error handling)
-  - Test loading state
-  - Test error state (destination not found)
-  - Test navigation (back button)
-  - Test responsive image hero section
-  - Test coordinates display (if available)
-  - Test Wikipedia attribution footer
-  - Verify 24-hour cache headers
-  - Console error checks
-  - Test API endpoint directly (GET /api/destinations/[slug])
-  - Performance testing (Wikipedia API latency)
-- **task-3-11-weather specific**:
-  - Test weather widget on 3 viewports (Desktop 1920x1080, Tablet 768x1024, Mobile 375x667)
-  - Test OpenWeatherMap API integration
-  - Test with valid trip (has events with location data)
-  - Test with trip without location data (empty state)
-  - Test loading state (spinner display)
-  - Test error state (API key not configured)
-  - Test weather data display (date, temp min/max, conditions, description)
-  - Test weather icons (rain, snow, cloud, sun)
-  - Test additional weather details (precipitation, wind speed)
-  - Test responsive layout (stacks properly on mobile)
-  - Verify 1-hour cache headers
-  - Test API endpoint directly (GET /api/trips/[tripId]/weather)
-  - Test with trip dates in past/future
-  - Test with trip duration >7 days (forecast limit)
-  - Console error checks
-  - Performance testing (API response time)
-
----
-
-### Phase 4 - Collaboration & Communication (In Progress)
-
-| Task ID | Description | Files Modified | Validation Status |
-|---------|-------------|----------------|-------------------|
-| task-4-2-collaborator-ui | Collaborator Management UI | `src/app/(dashboard)/trips/[tripId]/collaborators/page.tsx`, `src/components/collaborators/CollaboratorManagement.tsx`, `src/components/collaborators/InviteDialog.tsx`, `src/components/collaborators/CollaboratorCard.tsx`, `src/hooks/useCollaborators.ts` | ⏸️ Deferred |
-
-**Chrome DevTools Validation Needed**:
-- Test collaborator management UI on 3 viewports (Desktop 1920x1080, Tablet 768x1024, Mobile 375x667)
-- Test invite dialog form (email validation, role selector, message input)
-- Test role change dropdown (VIEWER/EDITOR/ADMIN)
-- Test remove collaborator confirmation dialog
-- Test pending invitations tab
-- Test empty states (no collaborators, no pending invitations)
-- Test permission-based UI (owner vs admin vs editor views)
-- Test responsive design (cards stack on mobile)
-- Test avatar display and initials fallback
-- Test status badges (pending/accepted/declined)
-- Verify keyboard navigation and accessibility
-- Console error checks
-- Performance testing with 50+ collaborators
-
----
-
-## 🎨 shadcn Components Installed (Manual CLI)
-
-### Phase 1 Components
-
-| Component | Installation Command | Used In | Date Added |
-|-----------|---------------------|---------|------------|
-| button | `npx shadcn@latest add button` | Multiple forms/dialogs | Phase 1 |
-| input | `npx shadcn@latest add input` | Auth forms | Phase 1 |
-| label | `npx shadcn@latest add label` | Forms | Phase 1 |
-| form | `npx shadcn@latest add form` | Auth forms | Phase 1 |
-| card | `npx shadcn@latest add card` | Dashboard layout | Phase 1 |
-| avatar | `npx shadcn@latest add avatar` | User profile | Phase 1 |
-| dropdown-menu | `npx shadcn@latest add dropdown-menu` | User menu | Phase 1 |
-| separator | `npx shadcn@latest add separator` | Layouts | Phase 1 |
-
-### Phase 2 Components
-
-| Component | Installation Command | Used In | Date Added |
-|-----------|---------------------|---------|------------|
-| dialog | `npx shadcn@latest add dialog` | Create/Edit trip modals | Phase 2 |
-| select | `npx shadcn@latest add select` | Trip filters | Phase 2 |
-| popover | `npx shadcn@latest add popover` | Date picker, filters | Phase 2 |
-| calendar | `npx shadcn@latest add calendar` | Date selection | Phase 2 |
-| badge | `npx shadcn@latest add badge` | Tags, status labels | Phase 2 |
-| tabs | `npx shadcn@latest add tabs` | Trip detail tabs | Phase 2 |
-| checkbox | `npx shadcn@latest add checkbox` | Bulk operations | Phase 2 |
-| tooltip | `npx shadcn@latest add tooltip` | Info hints | Phase 2 |
-| alert-dialog | `npx shadcn@latest add alert-dialog` | Delete confirmations | Phase 2 |
-
-### Phase 3 Components
-
-| Component | Installation Command | Used In | Status |
-|-----------|---------------------|---------|--------|
-| _To be tracked as needed_ | | | |
-
-**Note**: This section tracks components that should be verified with shadcn MCP for correct registry versions and customizations.
-
----
-
-## 🔄 Re-validation Workflow (Future)
-
-When Claude normal usage resets and MCP servers are available:
-
-### Step 1: Re-enable MCP in Config
-```json
-// .claude/config/validation-config.json
-{
-  "chromeDevToolsValidation": {
-    "enabled": true,
-    "validateAfterEveryUITask": true
-  }
-}
-```
-
-### Step 2: Run Chrome DevTools Validation on All Deferred Tasks
-
-**Phase 1 Tasks** (3 tasks):
+### Test Environment Setup
 ```bash
-# For each task marked ⏸️ Deferred:
-1. Start dev server: npm run dev
-2. Connect Chrome DevTools MCP
-3. Test task-1-6-registration-ui:
-   - Navigate to /register
-   - Test 3 viewports
-   - Capture screenshots
-   - Check console errors
-   - Run performance trace
-   - Generate validation report
-4. Repeat for task-1-8-login-ui, task-1-12-dashboard-layout
+# 1. Start development server
+npm run dev
+
+# 2. Navigate to proposals section
+# URL: http://localhost:3000/crm/proposals
 ```
 
-**Phase 2 Tasks** (4 tasks):
+### Required Breakpoints
+All tests must be performed on 3 viewport sizes:
+1. **Desktop**: 1920x1080
+2. **Tablet**: 768x1024
+3. **Mobile**: 375x667 (iPhone SE)
+
+---
+
+### Test Scenario 1: Proposal List Page
+
+**URL**: `http://localhost:3000/crm/proposals`
+
+#### Desktop (1920x1080)
 ```bash
-# For each task:
-1. Test trip list page (task-2-2)
-2. Test create dialog (task-2-4)
-3. Test trip overview (task-2-6)
-4. Test edit dialog (task-2-8)
-5. Generate comprehensive report
+# Resize viewport
+mcp__chrome-devtools__resize_page --width=1920 --height=1080
+
+# Capture page structure
+mcp__chrome-devtools__take_snapshot
+
+# Visual verification
+mcp__chrome-devtools__take_screenshot
+
+# Check console for errors
+mcp__chrome-devtools__list_console_messages --types=["error", "warn"]
 ```
 
-**Phase 3 Tasks** (TBD):
+**Verify**:
+- [ ] All 7 table columns visible (Title, Client, Trip, Status, Total, Valid Until, Actions)
+- [ ] Search bar and filters appear correctly
+- [ ] "Create Proposal" button in top-right
+- [ ] Pagination controls at bottom
+- [ ] No horizontal scroll
+- [ ] Status badges have correct colors (DRAFT=gray, SENT=blue, ACCEPTED=green, REJECTED=red)
+- [ ] Currency formatted with symbols and commas
+- [ ] Row hover effect works
+- [ ] Dropdown menu opens on action button click
+
+#### Tablet (768x1024)
 ```bash
-# Will be tracked as completed
+mcp__chrome-devtools__resize_page --width=768 --height=1024
+mcp__chrome-devtools__take_screenshot
+mcp__chrome-devtools__list_console_messages --types=["error", "warn"]
 ```
 
-### Step 3: Verify shadcn Components
+**Verify**:
+- [ ] Trip column hidden (expected behavior)
+- [ ] Table remains readable
+- [ ] No element overlap
+- [ ] Touch targets adequate (min 44x44px)
 
+#### Mobile (375x667)
 ```bash
-# Use shadcn MCP to verify all installed components
-# Check for:
-- Correct registry versions
-- Missing customizations
-- Deprecated patterns
-- Better alternatives available
+mcp__chrome-devtools__resize_page --width=375 --height=667
+mcp__chrome-devtools__take_screenshot
+mcp__chrome-devtools__list_console_messages --types=["error", "warn"]
 ```
 
-### Step 4: Fix Issues Found
+**Verify**:
+- [ ] Table switches to card layout (or scrollable table)
+- [ ] No horizontal scroll
+- [ ] All text readable (min 16px)
+- [ ] Touch targets adequate (min 44x44px)
+- [ ] Search bar full-width
+- [ ] Filters accessible
 
+#### Interaction Tests
 ```bash
-# Address any issues discovered:
-- UI bugs on specific viewports
-- Performance issues
-- Accessibility violations
-- Component version mismatches
+# Get snapshot to find element UIDs
+mcp__chrome-devtools__take_snapshot
+
+# Test search input
+mcp__chrome-devtools__fill --uid="<search-input-uid>" --value="test"
+
+# Test status filter
+mcp__chrome-devtools__click --uid="<status-select-uid>"
+
+# Test row action menu
+mcp__chrome-devtools__click --uid="<action-button-uid>"
 ```
 
----
-
-## 📊 Estimated Re-validation Time
-
-| Phase | UI Tasks | Time per Task | Total Time |
-|-------|----------|---------------|------------|
-| Phase 1 | 3 tasks | 15 min | 45 min |
-| Phase 2 | 4 tasks | 15 min | 60 min |
-| Phase 3 | TBD | 15 min | TBD |
-| **Total** | **7+** | **15 min** | **~2 hours** |
-
-**Note**: This is for comprehensive re-validation only. Not blocking current development.
+**Verify**:
+- [ ] Search debounces (300ms delay)
+- [ ] Filters update URL params
+- [ ] Pagination works
+- [ ] Empty state shows when no results
+- [ ] Loading skeletons appear during fetch
 
 ---
 
-## 🎯 Priority for Re-validation
+### Test Scenario 2: Create Proposal Page
 
-### HIGH Priority (User-facing, complex interactions)
-- ⏸️ task-2-2-trip-list-ui - Main list page with filters
-- ⏸️ task-2-6-trip-overview-ui - Trip details page
-- ⏸️ task-1-12-dashboard-layout - Main layout/navigation
+**URL**: `http://localhost:3000/crm/proposals/new`
 
-### MEDIUM Priority (Dialogs, forms)
-- ⏸️ task-2-4-trip-create-ui - Create trip modal
-- ⏸️ task-2-8-trip-edit-ui - Edit trip modal
-- ⏸️ task-1-6-registration-ui - Registration form
-- ⏸️ task-1-8-login-ui - Login form
+#### Desktop (1920x1080)
+```bash
+mcp__chrome-devtools__resize_page --width=1920 --height=1080
+mcp__chrome-devtools__take_snapshot
+mcp__chrome-devtools__take_screenshot
+mcp__chrome-devtools__list_console_messages --types=["error", "warn"]
+```
 
-### LOW Priority (Simple, well-tested components)
-- None yet (all UI is important)
+**Verify Section 1 - Basic Information**:
+- [ ] Title input with character counter (shows at >150 chars)
+- [ ] Client ID input (labeled as required with asterisk)
+- [ ] Trip ID input (optional, no asterisk)
+- [ ] Description textarea (max 2000 chars)
+- [ ] Valid Until date picker works
+- [ ] Info icons visible with tooltips
 
----
+**Verify Section 2 - Line Items**:
+- [ ] Line item table displays correctly
+- [ ] All fields in one row: Description, Qty, Unit Price, Total, Remove button
+- [ ] Total auto-calculates (qty × unit price)
+- [ ] "Add Line Item" button adds new row
+- [ ] Remove button disabled when only 1 line item
+- [ ] Subtotal updates in real-time
+- [ ] Subtotal displayed prominently
 
-## 📝 Notes
+**Verify Section 3 - Financial Summary**:
+- [ ] Subtotal (read-only, matches line items sum)
+- [ ] Tax input (optional)
+- [ ] Discount input (optional)
+- [ ] Currency selector shows 8 currencies (USD, EUR, GBP, CAD, AUD, JPY, CHF, CNY)
+- [ ] Total displays prominently with large font
+- [ ] Total = subtotal + tax - discount
 
-### Chrome DevTools MCP Capabilities
-- Automated viewport testing (Desktop, Tablet, Mobile)
-- Screenshot capture for documentation
-- Console error detection
-- Performance trace (LCP, FID, CLS)
-- Network request monitoring
-- Accessibility audit integration
-- Element inspection and interaction testing
+**Verify Section 4 - Additional Details**:
+- [ ] Internal Notes textarea with info icon
+- [ ] Terms and Conditions textarea with info icon
+- [ ] Character counters appear at >1800 (notes) and >4500 (terms)
 
-### shadcn MCP Capabilities
-- Component registry lookup
-- Automatic installation from registry
-- Version verification
-- Customization extraction
-- Dependency management
-- Component documentation
+**Verify Form Actions**:
+- [ ] Cancel button navigates back
+- [ ] Save as Draft button submits form
+- [ ] Loading spinner during submission
+- [ ] Form validation errors appear inline
 
-### Why Deferred?
-- Claude Code for Web doesn't support MCP servers
-- Development continues without blocking on manual validation
-- Re-validation can be batched when MCP is available
-- Current development relies on code review + automated tests
+#### Mobile (375x667)
+```bash
+mcp__chrome-devtools__resize_page --width=375 --height=667
+mcp__chrome-devtools__take_screenshot
+```
 
----
+**Verify**:
+- [ ] Single column layout
+- [ ] Line items stack vertically (not horizontal table)
+- [ ] No horizontal scroll
+- [ ] All text readable
+- [ ] Form inputs accessible with mobile keyboard
+- [ ] Buttons accessible (min 44x44px touch targets)
 
-## ✅ Completion Checklist (Future)
+#### Form Validation Tests
+```bash
+# Try to submit empty form
+mcp__chrome-devtools__click --uid="<submit-button-uid>"
+```
 
-When re-validating with MCP:
+**Verify**:
+- [ ] "Title is required" error appears
+- [ ] "Client ID is required" error appears
+- [ ] "At least one line item is required" error appears
+- [ ] Errors styled with red border
+- [ ] Error messages appear below fields
 
-- [ ] Re-enable Chrome DevTools validation in config
-- [ ] Connect to Chrome DevTools MCP server
-- [ ] Connect to shadcn MCP server
-- [ ] Run validation on all Phase 1 deferred tasks (3 tasks)
-- [ ] Run validation on all Phase 2 deferred tasks (4 tasks)
-- [ ] Run validation on all Phase 3 deferred tasks (TBD)
-- [ ] Verify all shadcn components are up-to-date
-- [ ] Generate comprehensive re-validation report
-- [ ] Fix all issues found (if any)
-- [ ] Mark all tasks as ✅ Validated
-- [ ] Update project quality score
+#### Calculation Tests
+```bash
+# Fill line item quantity and unit price
+mcp__chrome-devtools__fill --uid="<quantity-input-uid>" --value="2"
+mcp__chrome-devtools__fill --uid="<unit-price-input-uid>" --value="100"
+```
 
----
-
-### Phase 4 - Collaboration & Communication (In Progress)
-
-| Task ID | Description | Files Modified | Validation Status |
-|---------|-------------|----------------|-------------------|
-| task-4-2-collaborator-ui | Collaborator Management UI | src/app/(dashboard)/trips/[tripId]/collaborators/page.tsx<br>src/components/collaborators/CollaboratorManagement.tsx<br>src/components/collaborators/InviteDialog.tsx<br>src/components/collaborators/CollaboratorCard.tsx<br>src/hooks/useCollaborators.ts | ⏸️ Deferred |
-| task-4-5-messaging-ui | Real-time Messaging Interface | src/app/(dashboard)/trips/[tripId]/messages/page.tsx<br>src/components/messages/MessageList.tsx<br>src/components/messages/MessageBubble.tsx<br>src/components/messages/MessageInput.tsx<br>src/components/messages/TypingIndicator.tsx<br>src/hooks/useMessages.ts | ⏸️ Deferred |
-| task-4-7-ideas-ui | Ideas/Suggestions UI with Voting | src/app/(dashboard)/trips/[tripId]/ideas/page.tsx<br>src/components/ideas/IdeaList.tsx<br>src/components/ideas/IdeaCard.tsx<br>src/components/ideas/CreateIdeaDialog.tsx<br>src/hooks/useIdeas.ts | ⏸️ Deferred |
-
-#### Phase 4 Chrome DevTools Validation Checklist
-
-**task-4-2-collaborator-ui specific**:
-- Test collaborator management UI on 3 viewports (Desktop 1920x1080, Tablet 768x1024, Mobile 375x667)
-- Test invite dialog form (email validation, role selector)
-- Test role change dropdown (owner/admin only)
-- Test remove collaborator confirmation dialog
-- Test pending invitations tab
-- Test permission-based UI (owner vs admin vs editor views)
-- Test responsive design (cards stack on mobile)
-- Console error checks
-- Performance testing with 50+ collaborators
-- Test real-time collaborator updates
-- Test resend invitation button
-- Test stats cards (total/active/pending counts)
-
-**task-4-5-messaging-ui specific**:
-- Test messaging UI on 3 viewports (Desktop 1920x1080, Tablet 768x1024, Mobile 375x667)
-- Test message list with infinite scroll
-- Test message input (text area auto-resize)
-- Test send button (enabled/disabled states)
-- Test message bubbles (current user vs others)
-- Test sender avatar and timestamp display
-- Test edit message (inline editing)
-- Test delete message (confirmation dialog)
-- Test reply to message (threading)
-- Test typing indicator (shows other users typing)
-- Test real-time message updates (new messages appear instantly)
-- Test keyboard shortcuts (Enter to send, Shift+Enter for new line)
-- Test empty state (no messages yet)
-- Test loading state (spinner)
-- Test permission checks (edit/delete own messages only)
-- Test responsive design (message bubbles max-width on mobile)
-- Console error checks
-- Performance testing with 500+ messages
-- Test auto-scroll to bottom on new messages
-- Test load more button (pagination)
-- Accessibility audit (keyboard navigation, screen reader support)
-
-**task-4-7-ideas-ui specific**:
-- Test ideas UI on 3 viewports (Desktop 1920x1080, Tablet 768x1024, Mobile 375x667)
-- Test create idea dialog (title/description validation)
-- Test idea card display (avatar, timestamp, status badge)
-- Test upvote button (toggle on/off, count update)
-- Test downvote button (toggle on/off, count update)
-- Test net vote count display
-- Test status badges (Pending/Accepted/Rejected colors)
-- Test status filter tabs (All/Pending/Accepted/Rejected)
-- Test sort dropdown (Most Recent/Most Votes)
-- Test stats cards (Total/Accepted/Pending counts)
-- Test edit idea (author/owner/admin only)
-- Test delete idea (author/owner/admin only)
-- Test accept idea (owner/admin only)
-- Test reject idea (owner/admin only)
-- Test actions dropdown menu
-- Test permission-based UI (show/hide actions based on role)
-- Test empty state (no ideas yet)
-- Test loading state (spinner)
-- Test real-time vote updates
-- Test responsive design (cards stack on mobile)
-- Console error checks
-- Performance testing with 100+ ideas
-- Accessibility audit (keyboard navigation, ARIA labels)
+**Verify**:
+- [ ] Line item total shows $200.00 (2 × 100)
+- [ ] Subtotal updates to $200.00
+- [ ] Add tax of $20, total becomes $220.00
+- [ ] Add discount of $10, total becomes $210.00
+- [ ] Currency symbol changes when currency selector changed
 
 ---
 
-**Current Status**: Tracking enabled, development proceeding normally without MCP validation requirements.
+### Test Scenario 3: Proposal View Page
 
-**Next Update**: When Phase 4 UI tasks are completed.
+**URL**: `http://localhost:3000/crm/proposals/[id]` (use existing proposal ID)
 
-### Phase 5 - Financial & Professional Features (In Progress)
+#### Desktop (1920x1080)
+```bash
+mcp__chrome-devtools__resize_page --width=1920 --height=1080
+mcp__chrome-devtools__take_snapshot
+mcp__chrome-devtools__take_screenshot
+mcp__chrome-devtools__list_console_messages --types=["error", "warn"]
+```
 
-| Task ID | Description | Files Created/Modified | Validation Status | Agent Workflow |
-|---------|-------------|----------------------|-------------------|----------------|
-| task-5-6-expense-split-ui | Expense Splitting UI with Settlement Dashboard | **Created**:<br>• src/lib/expenses/split-helpers.ts<br>• src/hooks/useExpenseSplit.ts<br>• src/hooks/useSettlements.ts<br>• src/components/expenses/SettlementCard.tsx<br>• src/components/expenses/SettlementSummary.tsx<br>• src/components/ui/radio-group.tsx<br>**Modified**:<br>• src/components/expenses/CreateExpenseDialog.tsx<br>• src/components/expenses/ExpenseCard.tsx<br>• src/components/expenses/ExpenseList.tsx | ⏸️ Deferred | ✅ premium-ux-designer → shadcn-implementation-builder (PROPER) |
+**Verify Header**:
+- [ ] "Travel Proposal" heading
+- [ ] Proposal title (large, bold)
+- [ ] Status badge
+- [ ] Created date
+- [ ] Valid Until date (if set)
 
-#### Phase 5 Chrome DevTools Validation Checklist
+**Verify Sections**:
+- [ ] Client Information (name, email)
+- [ ] Trip Information (if linked)
+- [ ] Description (if provided)
+- [ ] Proposed Services table (line items)
+- [ ] Financial summary (subtotal, tax, discount, total)
+- [ ] Terms and Conditions (if provided)
 
-**task-5-6-expense-split-ui specific** (PROPER WORKFLOW USED ✅):
-- Test expense splitting UI on 3 viewports (Desktop 1920x1080, Tablet 768x1024, Mobile 375x667)
-- Test split type selection (I paid / Split equally / Custom split)
-- Test equal split collaborator multi-select (checkbox grid)
-- Test per-person amount calculation (real-time updates)
-- Test custom split with amount input mode
-- Test custom split with percentage input mode
-- Test toggle between amount ($) and percentage (%)
-- Test split validation (must add up to total)
-- Test visual feedback (green ✓ when valid, red ✗ when invalid)
-- Test submit button disabled state until valid configuration
-- Test settlement summary dashboard
-- Test summary statistics cards (total expenses, you owe, owed to you)
-- Test settlement card display (user avatars, direction arrows)
-- Test settlement tabs (All / You Owe / Owed to You)
-- Test expense list split indicator badge
-- Test split details tooltip (hover)
-- Test split status filter dropdown (All / Split / Not Split)
-- Test responsive design (cards/forms stack on mobile)
-- Test keyboard navigation (all interactive elements)
-- Test screen reader compatibility (ARIA labels, live regions)
-- Test with 50+ expenses (performance)
-- Test empty states (no settlements, no expenses)
-- Test loading states (skeleton cards during API fetch)
-- Test error states (API failures with retry)
-- Console error checks
-- Accessibility audit (WCAG 2.1 AA compliance - already verified in code)
-- Performance trace (settlement calculations with many expenses)
+**Verify Action Bar** (not printed):
+- [ ] Edit button (visible only if status=DRAFT)
+- [ ] Send to Client button (visible only if status=DRAFT)
+- [ ] Print button
+- [ ] Delete button (visible if status≠ACCEPTED)
 
-**Design Quality**:
-- ✅ Full design specification created by premium-ux-designer
-- ✅ Design spec available: `.claude/design/expense-splitting-ui-spec.md`
-- ✅ Implementation follows spec exactly
-- ✅ TypeScript strict mode (no `any` types)
-- ✅ React best practices
-- ✅ shadcn/ui components used correctly
-- ✅ Mobile-responsive (tested in code)
-- ✅ WCAG 2.1 AA accessible (tested in code)
+**Verify Print Layout**:
+```bash
+# Open browser print dialog (can't automate, manual test)
+# Click Print button
+```
 
----
+**Manual verification**:
+- [ ] Print preview shows professional layout
+- [ ] Action bar hidden in print view
+- [ ] Page breaks at logical sections
+- [ ] Black and white friendly
+- [ ] No background colors in print
 
-| task-5-8-crm-ui | CRM Client Management UI | **Created**:<br>• src/app/(dashboard)/crm/clients/page.tsx<br>• src/components/crm/CreateClientDialog.tsx<br>• src/components/crm/EditClientDialog.tsx<br>• src/components/crm/DeleteClientDialog.tsx<br>• src/components/ui/table.tsx<br>• src/hooks/useClients.ts<br>• src/hooks/useClientFilters.ts<br>• src/hooks/useTags.ts | ⏸️ Deferred | ✅ premium-ux-designer → shadcn-implementation-builder (PROPER) |
+#### Mobile (375x667)
+```bash
+mcp__chrome-devtools__resize_page --width=375 --height=667
+mcp__chrome-devtools__take_screenshot
+```
 
-**task-5-8-crm-ui specific** (PROPER WORKFLOW USED ✅):
-- Test CRM client list page on 3 viewports (Desktop 1920x1080, Tablet 768x1024, Mobile 375x667)
-- Test data table with search, filters, sorting, pagination
-- Test search input (debounced 300ms)
-- Test status filter dropdown (All / LEAD / ACTIVE / INACTIVE)
-- Test tag filter multi-select
-- Test "Add Client" button (opens create dialog)
-- Test status badge colors (LEAD=blue, ACTIVE=green, INACTIVE=gray)
-- Test table row actions dropdown (Edit / Delete)
-- Test table sorting (click column headers)
-- Test pagination controls (Previous / Next / Page numbers)
-- Test Create Client Dialog:
-  - Test all 8 form fields (firstName, lastName, email, phone, status, source, tags, notes)
-  - Test required field validation (firstName, lastName, email)
-  - Test email format validation
-  - Test character limits (firstName 50, lastName 50, email 255, notes 1000)
-  - Test character counter (notes field)
-  - Test status dropdown with color-coded icons
-  - Test source autocomplete with suggestions
-  - Test tag autocomplete with create new functionality
-  - Test tag chips with remove button
-  - Test unsaved changes confirmation on close
-  - Test submit button disabled when invalid
-  - Test loading state during submission
-  - Test success toast notification
-  - Test error toast notification (duplicate email)
-- Test Edit Client Dialog:
-  - Test pre-populated form fields
-  - Test "Last updated" timestamp display
-  - Test all validation rules (same as create)
-  - Test update button text ("Update Client")
-  - Test unsaved changes confirmation
-  - Test success/error states
-- Test Delete Confirmation Dialog:
-  - Test warning icon and message
-  - Test client name and email display
-  - Test destructive action styling (red button)
-  - Test "This action cannot be undone" warning
-  - Test cancel button
-  - Test delete button with loading state
-  - Test success toast after deletion
-- Test responsive layouts:
-  - Desktop: Full table with all columns visible
-  - Tablet: Hybrid layout (hide Source column)
-  - Mobile: Card layout (table switches to cards)
-- Test keyboard navigation (Tab order, Enter to submit, Escape to close)
-- Test screen reader compatibility (ARIA labels, roles, live regions)
-- Test with 50+ clients (performance, pagination)
-- Test empty state (no clients yet)
-- Test loading state (skeleton loaders)
-- Test error state (API failure with retry)
-- Console error checks
-- Accessibility audit (WCAG 2.1 AA compliance)
-- Performance trace (table rendering, search debouncing)
-- Test Framer Motion animations (dialog enter/exit, table row fade-in, tag chips)
-
-**Design Quality**:
-- ✅ Full design specification created by premium-ux-designer (1,496 lines)
-- ✅ Design spec available: `.claude/design/crm-ui-spec.md`
-- ✅ Implementation follows spec exactly
-- ✅ TypeScript strict mode (no `any` types)
-- ✅ React best practices (React Hook Form + Zod validation)
-- ✅ shadcn/ui components used correctly (18 components)
-- ✅ TanStack Query for data management
-- ✅ URL-synced filters with useSearchParams
-- ✅ Mobile-responsive (3 breakpoints)
-- ✅ WCAG 2.1 AA accessible (comprehensive ARIA labels)
-- ✅ Framer Motion animations with reduced motion support
+**Verify**:
+- [ ] Single column layout
+- [ ] Line items table simplified (2 columns: Item + Total, hide Qty and Unit Price)
+- [ ] Financial summary full-width
+- [ ] All text readable
+- [ ] Action buttons accessible
 
 ---
 
-**Current Status**: Phase 5 - 7/15 tasks complete. Using proper agentic workflow.
+### Test Scenario 4: Edit Proposal Page
 
-**Next Update**: When additional Phase 5 UI tasks are completed.
+**URL**: `http://localhost:3000/crm/proposals/[id]/edit` (use DRAFT proposal ID)
+
+#### Desktop (1920x1080)
+```bash
+mcp__chrome-devtools__resize_page --width=1920 --height=1080
+mcp__chrome-devtools__take_snapshot
+mcp__chrome-devtools__take_screenshot
+```
+
+**Verify**:
+- [ ] Form pre-populated with existing proposal data
+- [ ] Title shows existing value
+- [ ] Line items show existing rows
+- [ ] Tax and discount show existing values
+- [ ] Currency shows existing value (read-only, cannot change)
+- [ ] Notes and terms show existing values
+- [ ] "Update Proposal" button (not "Save as Draft")
+- [ ] Last updated timestamp shown in header
+
+**Verify Validation**:
+- [ ] Cannot edit if status ≠ DRAFT
+- [ ] Alert shown: "Cannot edit proposals with status SENT"
+- [ ] Redirects to view page if not DRAFT
+
+**Verify Updates**:
+```bash
+# Change title
+mcp__chrome-devtools__fill --uid="<title-input-uid>" --value="Updated Title"
+
+# Submit
+mcp__chrome-devtools__click --uid="<submit-button-uid>"
+```
+
+**Verify**:
+- [ ] Success toast appears
+- [ ] Redirects to view page
+- [ ] Updated data shown in view page
+
+---
+
+### Test Scenario 5: Send Proposal Dialog
+
+**Trigger**: Click "Send to Client" button on view page (DRAFT proposal)
+
+#### Desktop (1920x1080)
+```bash
+# Click send button
+mcp__chrome-devtools__click --uid="<send-button-uid>"
+
+# Dialog should open
+mcp__chrome-devtools__take_snapshot
+mcp__chrome-devtools__take_screenshot
+```
+
+**Verify Dialog Content**:
+- [ ] Dialog title: "Send Proposal to Client"
+- [ ] Proposal summary box showing: Title, Client name, Email, Total
+- [ ] Email preview section with: Subject, Body, Call-to-action button
+- [ ] Info message: "Client will receive an email with a link to view the proposal"
+- [ ] Cancel button
+- [ ] "Confirm and Send" button (primary)
+
+**Verify Interaction**:
+```bash
+# Click confirm button
+mcp__chrome-devtools__click --uid="<confirm-button-uid>"
+```
+
+**Verify**:
+- [ ] Loading spinner appears on button
+- [ ] Button text changes to "Sending..."
+- [ ] Success toast appears
+- [ ] Dialog closes
+- [ ] Proposal status changes to SENT
+- [ ] "Send to Client" button becomes disabled
+
+---
+
+### Test Scenario 6: Delete Proposal Dialog
+
+**Trigger**: Click "Delete" button on view page (DRAFT proposal)
+
+#### Desktop (1920x1080)
+```bash
+# Click delete button
+mcp__chrome-devtools__click --uid="<delete-button-uid>"
+
+# Dialog should open
+mcp__chrome-devtools__take_snapshot
+mcp__chrome-devtools__take_screenshot
+```
+
+**Verify Dialog Content**:
+- [ ] Dialog title: "Delete Proposal"
+- [ ] Warning icon (large triangle)
+- [ ] Confirmation message: "Are you sure you want to delete this proposal?"
+- [ ] Proposal details box showing: Title, Client, Status, Total
+- [ ] Warning: "This action cannot be undone" (in red)
+- [ ] Additional warning: "You cannot delete proposals with ACCEPTED status"
+- [ ] Cancel button
+- [ ] "Delete Proposal" button (destructive/red)
+
+**Verify ACCEPTED Proposal**:
+- [ ] Delete button disabled if status=ACCEPTED
+- [ ] Alert shown in dialog: "You cannot delete proposals with ACCEPTED status"
+- [ ] "Delete Proposal" button disabled
+
+**Verify Deletion**:
+```bash
+# With DRAFT proposal, click confirm
+mcp__chrome-devtools__click --uid="<delete-confirm-button-uid>"
+```
+
+**Verify**:
+- [ ] Loading spinner appears
+- [ ] Button text changes to "Deleting..."
+- [ ] Success toast appears
+- [ ] Redirects to proposals list page
+- [ ] Deleted proposal no longer in list
+
+---
+
+### Accessibility Tests (All Pages)
+
+#### Keyboard Navigation
+**Verify**:
+- [ ] Tab order is logical (top to bottom, left to right)
+- [ ] All interactive elements focusable
+- [ ] Focus visible (2px outline)
+- [ ] Escape key closes dialogs
+- [ ] Enter key submits forms
+- [ ] Arrow keys navigate table (if implemented)
+
+#### Screen Reader Compatibility
+**Verify**:
+- [ ] All images have alt text or aria-hidden
+- [ ] All buttons have accessible labels (aria-label)
+- [ ] Form fields have associated labels (htmlFor/id)
+- [ ] Error messages announced (aria-live="polite")
+- [ ] Status badges have aria-label
+- [ ] Table has caption and proper structure
+
+#### Color Contrast (WCAG 2.1 AA)
+**Verify**:
+- [ ] Normal text: 4.5:1 minimum
+- [ ] Large text: 3:1 minimum
+- [ ] Interactive elements: 3:1 minimum
+- [ ] Status badges meet contrast requirements
+
+---
+
+### Performance Tests
+
+#### Desktop (1920x1080)
+```bash
+# Start performance trace
+mcp__chrome-devtools__performance_start_trace --reload=true --autoStop=true
+
+# After trace completes, analyze
+mcp__chrome-devtools__performance_analyze_insight --insightSetId="<id>" --insightName="LCPBreakdown"
+```
+
+**Verify Core Web Vitals**:
+- [ ] LCP < 2.5s
+- [ ] FID < 100ms
+- [ ] CLS < 0.1
+
+#### Network Tests
+```bash
+# Check network requests
+mcp__chrome-devtools__list_network_requests
+```
+
+**Verify**:
+- [ ] No failed requests (404, 500)
+- [ ] API requests complete in <200ms
+- [ ] No CORS errors
+- [ ] Reasonable bundle size (<500KB initial)
+
+---
+
+### Error Handling Tests
+
+#### Network Error
+**Simulate**: Turn off internet, reload page
+
+**Verify**:
+- [ ] Error alert appears
+- [ ] Error message is helpful
+- [ ] Retry mechanism available
+- [ ] No console errors beyond expected
+
+#### Invalid Proposal ID
+**Test**: Navigate to `/crm/proposals/invalid-uuid`
+
+**Verify**:
+- [ ] Error alert appears: "Failed to load proposal"
+- [ ] No app crash
+- [ ] User can navigate back
+
+#### Form Validation Errors
+**Test**: Try to submit incomplete form
+
+**Verify**:
+- [ ] Validation errors appear immediately
+- [ ] Error messages are clear and helpful
+- [ ] Focus moves to first error field
+- [ ] Can fix errors and resubmit
+
+---
+
+### Integration Tests
+
+#### Client Autocomplete (if implemented)
+**Verify**:
+- [ ] Typing in client field shows suggestions
+- [ ] Selecting client populates client ID
+- [ ] Search works with partial names
+
+#### Trip Autocomplete (if implemented)
+**Verify**:
+- [ ] Typing in trip field shows suggestions
+- [ ] Selecting trip populates trip ID
+- [ ] Can leave trip empty
+
+---
+
+## Summary Checklist
+
+Before marking task-5-10-proposal-ui as validated:
+
+- [ ] All 4 pages tested on 3 breakpoints (12 combinations)
+- [ ] All interactive elements tested
+- [ ] All user flows completed successfully
+- [ ] Accessibility tests pass
+- [ ] Performance tests meet targets
+- [ ] Error handling works correctly
+- [ ] No console errors
+- [ ] Form validation works
+- [ ] Calculations are accurate
+- [ ] Dialogs work correctly
+- [ ] Print layout works
+- [ ] Status workflow enforced
+- [ ] Integration with API confirmed
+
+**Estimated Testing Time**: 2-3 hours
+
+---
+
+## Notes for Validator
+
+- **Test Data Required**: Create at least 3 test proposals with different statuses (DRAFT, SENT, ACCEPTED)
+- **Browser**: Use Chrome or Chromium (required for Chrome DevTools MCP)
+- **Prerequisites**: Development server running (`npm run dev`)
+- **Database**: Ensure test proposals exist in database
+- **API**: Ensure all proposal API endpoints are working
+
+---
+
+**Validation Date**: _____________
+**Validated By**: _____________
+**Status**: PENDING
+**Issues Found**: _____________
+**Resolution**: _____________
+
