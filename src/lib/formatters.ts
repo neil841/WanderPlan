@@ -130,6 +130,39 @@ export function getStatusDisplay(status: string) {
 }
 
 /**
+ * Get invoice status display information
+ *
+ * @param status - Invoice status (including OVERDUE)
+ * @returns Status display info
+ */
+export function getInvoiceStatusDisplay(status: string) {
+  const displays = {
+    DRAFT: {
+      label: 'Draft',
+      icon: '📝',
+      className: 'bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300',
+    },
+    SENT: {
+      label: 'Sent',
+      icon: '📤',
+      className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300',
+    },
+    PAID: {
+      label: 'Paid',
+      icon: '✅',
+      className: 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-300',
+    },
+    OVERDUE: {
+      label: 'Overdue',
+      icon: '⚠️',
+      className: 'bg-red-100 text-red-700 font-semibold dark:bg-red-900/20 dark:text-red-300',
+    },
+  };
+
+  return displays[status as keyof typeof displays] || displays.DRAFT;
+}
+
+/**
  * Truncate text with ellipsis
  *
  * @param text - Text to truncate
