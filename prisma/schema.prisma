@@ -48,8 +48,6 @@ enum InvoiceStatus {
   DRAFT
   SENT
   PAID
-  OVERDUE
-  CANCELLED
 }
 
 enum ProposalStatus {
@@ -663,19 +661,35 @@ model Proposal {
 
 model Invoice {
   id            String        @id @default(uuid())
+  invoiceNumber String        @unique @map("invoice_number")
   userId        String        @map("user_id") // Agent who created it
   clientId      String        @map("client_id")
   tripId        String?       @map("trip_id")
-  invoiceNumber String        @unique @map("invoice_number")
 
+  title         String
+  description   String?       @db.Text
+
+  // Line items stored as JSON array (same as Proposal)
+  lineItems     Json          @map("line_items") @default("[]")
+
+  // Financial breakdown
   subtotal      Decimal       @db.Decimal(10, 2)
   tax           Decimal       @default(0) @db.Decimal(10, 2)
+  discount      Decimal       @default(0) @db.Decimal(10, 2)
   total         Decimal       @db.Decimal(10, 2)
-  currency      String        @db.Char(3)
+  currency      String        @default("USD") @db.Char(3)
 
+  // Invoice details
   status        InvoiceStatus @default(DRAFT)
+  issueDate     DateTime      @map("issue_date") @db.Date
   dueDate       DateTime      @map("due_date") @db.Date
   paidAt        DateTime?     @map("paid_at")
+
+  notes         String?       @db.Text
+  terms         String?       @db.Text
+
+  // Soft delete
+  deletedAt     DateTime?     @map("deleted_at")
 
   createdAt     DateTime      @default(now()) @map("created_at")
   updatedAt     DateTime      @updatedAt @map("updated_at")
@@ -684,53 +698,14 @@ model Invoice {
   agent         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   client        CrmClient     @relation(fields: [clientId], references: [id], onDelete: Cascade)
   trip          Trip?         @relation(fields: [tripId], references: [id], onDelete: SetNull)
-  lineItems     InvoiceLineItem[]
-  payments      Payment[]
 
   @@index([userId])
   @@index([clientId])
   @@index([tripId])
   @@index([status])
   @@index([invoiceNumber])
+  @@index([dueDate])
   @@map("invoices")
-}
-
-model InvoiceLineItem {
-  id          String   @id @default(uuid())
-  invoiceId   String   @map("invoice_id")
-  description String
-  quantity    Decimal  @db.Decimal(10, 2)
-  unitPrice   Decimal  @map("unit_price") @db.Decimal(10, 2)
-  total       Decimal  @db.Decimal(10, 2)
-  order       Int      @default(0)
-
-  createdAt   DateTime @default(now()) @map("created_at")
-
-  // Relations
-  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-
-  @@index([invoiceId])
-  @@map("invoice_line_items")
-}
-
-model Payment {
-  id                String   @id @default(uuid())
-  invoiceId         String   @map("invoice_id")
-  amount            Decimal  @db.Decimal(10, 2)
-  currency          String   @db.Char(3)
-  stripePaymentId   String?  @unique @map("stripe_payment_id") // Stripe payment intent ID
-  paymentMethod     String?  @map("payment_method") // card, bank_transfer, etc.
-  status            String   // succeeded, pending, failed
-
-  createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  invoice           Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-
-  @@index([invoiceId])
-  @@index([stripePaymentId])
-  @@map("payments")
 }
 
 // ==========================================
