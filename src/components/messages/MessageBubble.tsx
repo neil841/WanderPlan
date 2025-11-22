@@ -8,6 +8,7 @@
 
 import { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -203,6 +204,43 @@ export function MessageBubble({
             )}
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Skeleton loader for MessageBubble
+ */
+export function MessageBubbleSkeleton({ isCurrentUser = false }: { isCurrentUser?: boolean }) {
+  return (
+    <div
+      className={cn(
+        'flex gap-3',
+        isCurrentUser ? 'flex-row-reverse' : 'flex-row'
+      )}
+    >
+      {/* Avatar */}
+      <Skeleton className="h-8 w-8 rounded-full mt-1 flex-shrink-0" />
+
+      {/* Message Content */}
+      <div
+        className={cn(
+          'flex flex-col gap-1 max-w-[70%]',
+          isCurrentUser ? 'items-end' : 'items-start'
+        )}
+      >
+        {/* Sender Name & Timestamp */}
+        <div className={cn(
+          'flex items-center gap-2',
+          isCurrentUser ? 'flex-row-reverse' : 'flex-row'
+        )}>
+          <Skeleton className="h-3 w-24" />
+          <Skeleton className="h-3 w-16" />
+        </div>
+
+        {/* Message Bubble */}
+        <Skeleton className="h-16 w-64 rounded-lg" />
       </div>
     </div>
   );

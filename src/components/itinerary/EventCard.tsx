@@ -17,6 +17,7 @@ import { EventResponse } from '@/types/event';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Plane,
   Hotel,
@@ -251,5 +252,37 @@ export function EventCard({ event, tripId, isDragging = false, canEdit = true }:
       onOpenChange={setDeleteDialogOpen}
     />
   </>
+  );
+}
+
+/**
+ * Skeleton loader for EventCard
+ */
+export function EventCardSkeleton() {
+  return (
+    <Card className="border">
+      <div className="flex items-start gap-3 p-4">
+        {/* Event type icon skeleton */}
+        <Skeleton className="h-12 w-12 rounded-lg flex-shrink-0" />
+
+        {/* Event details skeleton */}
+        <div className="flex-1 min-w-0 space-y-2">
+          {/* Title */}
+          <Skeleton className="h-5 w-3/4" />
+
+          {/* Time */}
+          <Skeleton className="h-4 w-32" />
+
+          {/* Location */}
+          <Skeleton className="h-4 w-48" />
+
+          {/* Badge */}
+          <Skeleton className="h-5 w-24 rounded-full" />
+        </div>
+
+        {/* Cost skeleton */}
+        <Skeleton className="h-6 w-16 flex-shrink-0" />
+      </div>
+    </Card>
   );
 }
