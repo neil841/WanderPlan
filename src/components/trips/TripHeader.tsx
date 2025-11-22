@@ -22,12 +22,15 @@ import {
   Trash2,
   Copy,
   Eye,
+  FileDown,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { TripDetails } from '@/hooks/useTrip';
 import { format } from 'date-fns';
 import { EditTripDialog } from './EditTripDialog';
+import { ExportPDFDialog } from './ExportPDFDialog';
+import { CalendarSyncDialog } from '@/components/integrations/CalendarSyncDialog';
 import { useInvalidateTrip } from '@/hooks/useTrip';
 
 interface TripHeaderProps {
@@ -54,6 +57,8 @@ export function TripHeader({ trip }: TripHeaderProps) {
   const invalidateTrip = useInvalidateTrip();
   const [isArchiving, setIsArchiving] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+  const [isCalendarSyncOpen, setIsCalendarSyncOpen] = useState(false);
 
   const canEdit = trip.userRole === 'owner' || trip.userRole === 'ADMIN';
   const canDelete = trip.userRole === 'owner';
@@ -270,6 +275,16 @@ export function TripHeader({ trip }: TripHeaderProps) {
               </div>
 
               {/* Additional Actions */}
+              <DropdownMenuItem onClick={() => setIsExportDialogOpen(true)}>
+                <FileDown className="w-4 h-4 mr-2" />
+                Export as PDF
+              </DropdownMenuItem>
+
+              <DropdownMenuItem onClick={() => setIsCalendarSyncOpen(true)}>
+                <Calendar className="w-4 h-4 mr-2" />
+                Sync to Calendar
+              </DropdownMenuItem>
+
               <DropdownMenuItem onClick={handleDuplicate}>
                 <Copy className="w-4 h-4 mr-2" />
                 Duplicate Trip
@@ -374,6 +389,22 @@ export function TripHeader({ trip }: TripHeaderProps) {
           // Refresh trip data after successful update
           invalidateTrip(trip.id);
         }}
+      />
+
+      {/* Export PDF Dialog */}
+      <ExportPDFDialog
+        tripId={trip.id}
+        tripName={trip.name}
+        open={isExportDialogOpen}
+        onOpenChange={setIsExportDialogOpen}
+      />
+
+      {/* Calendar Sync Dialog */}
+      <CalendarSyncDialog
+        tripId={trip.id}
+        tripName={trip.name}
+        open={isCalendarSyncOpen}
+        onOpenChange={setIsCalendarSyncOpen}
       />
     </motion.div>
   );

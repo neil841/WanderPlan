@@ -48,8 +48,6 @@ enum InvoiceStatus {
   DRAFT
   SENT
   PAID
-  OVERDUE
-  CANCELLED
 }
 
 enum ProposalStatus {
@@ -130,6 +128,11 @@ model User {
   // User settings stored as JSON
   settings      Json      @default("{\"notifications\":{\"email\":{\"tripInvites\":true,\"tripUpdates\":true,\"messages\":true,\"marketing\":false},\"push\":{\"enabled\":false}},\"privacy\":{\"defaultTripVisibility\":\"PRIVATE\",\"showProfile\":true},\"preferences\":{\"defaultCurrency\":\"USD\",\"measurementUnit\":\"metric\"}}")
 
+  // Google Calendar integration tokens
+  googleCalendarAccessToken  String?   @map("google_calendar_access_token") @db.Text
+  googleCalendarRefreshToken String?   @map("google_calendar_refresh_token") @db.Text
+  googleCalendarTokenExpiry  DateTime? @map("google_calendar_token_expiry")
+
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
@@ -152,7 +155,6 @@ model User {
   proposals             Proposal[]
   invoices              Invoice[]
   landingPages          LandingPage[]
-  leads                 Lead[]
   collaboratorInvites   TripCollaborator[]     @relation("CollaboratorInvitedBy")
   tripShareTokens       TripShareToken[]
 
@@ -250,6 +252,7 @@ model Trip {
   tags            Tag[]
   proposals       Proposal[]
   invoices        Invoice[]
+  landingPages    LandingPage[]
   shareTokens     TripShareToken[]
 
   @@index([createdBy])
@@ -621,11 +624,30 @@ model Proposal {
   tripId      String?        @map("trip_id")
   title       String
   description String?        @db.Text
-  totalPrice  Decimal        @map("total_price") @db.Decimal(10, 2)
-  currency    String         @db.Char(3)
+
+  // Line items stored as JSON array
+  lineItems   Json           @map("line_items") @default("[]")
+
+  // Financial breakdown
+  subtotal    Decimal        @db.Decimal(10, 2)
+  tax         Decimal        @default(0) @db.Decimal(10, 2)
+  discount    Decimal        @default(0) @db.Decimal(10, 2)
+  total       Decimal        @db.Decimal(10, 2)
+  currency    String         @default("USD") @db.Char(3)
+
+  // Proposal details
   status      ProposalStatus @default(DRAFT)
   validUntil  DateTime?      @map("valid_until") @db.Date
+  notes       String?        @db.Text // Internal notes
+  terms       String?        @db.Text // Terms and conditions
+
+  // Status timestamps
   sentAt      DateTime?      @map("sent_at")
+  acceptedAt  DateTime?      @map("accepted_at")
+  rejectedAt  DateTime?      @map("rejected_at")
+
+  // Soft delete
+  deletedAt   DateTime?      @map("deleted_at")
 
   createdAt   DateTime       @default(now()) @map("created_at")
   updatedAt   DateTime       @updatedAt @map("updated_at")
@@ -634,7 +656,6 @@ model Proposal {
   agent       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   client      CrmClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
   trip        Trip?     @relation(fields: [tripId], references: [id], onDelete: SetNull)
-  lineItems   ProposalLineItem[]
 
   @@index([userId])
   @@index([clientId])
@@ -643,39 +664,37 @@ model Proposal {
   @@map("proposals")
 }
 
-model ProposalLineItem {
-  id          String   @id @default(uuid())
-  proposalId  String   @map("proposal_id")
-  description String
-  quantity    Decimal  @db.Decimal(10, 2)
-  unitPrice   Decimal  @map("unit_price") @db.Decimal(10, 2)
-  total       Decimal  @db.Decimal(10, 2)
-  order       Int      @default(0)
-
-  createdAt   DateTime @default(now()) @map("created_at")
-
-  // Relations
-  proposal    Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
-
-  @@index([proposalId])
-  @@map("proposal_line_items")
-}
-
 model Invoice {
   id            String        @id @default(uuid())
+  invoiceNumber String        @unique @map("invoice_number")
   userId        String        @map("user_id") // Agent who created it
   clientId      String        @map("client_id")
   tripId        String?       @map("trip_id")
-  invoiceNumber String        @unique @map("invoice_number")
 
+  title         String
+  description   String?       @db.Text
+
+  // Line items stored as JSON array (same as Proposal)
+  lineItems     Json          @map("line_items") @default("[]")
+
+  // Financial breakdown
   subtotal      Decimal       @db.Decimal(10, 2)
   tax           Decimal       @default(0) @db.Decimal(10, 2)
+  discount      Decimal       @default(0) @db.Decimal(10, 2)
   total         Decimal       @db.Decimal(10, 2)
-  currency      String        @db.Char(3)
+  currency      String        @default("USD") @db.Char(3)
 
+  // Invoice details
   status        InvoiceStatus @default(DRAFT)
+  issueDate     DateTime      @map("issue_date") @db.Date
   dueDate       DateTime      @map("due_date") @db.Date
   paidAt        DateTime?     @map("paid_at")
+
+  notes         String?       @db.Text
+  terms         String?       @db.Text
+
+  // Soft delete
+  deletedAt     DateTime?     @map("deleted_at")
 
   createdAt     DateTime      @default(now()) @map("created_at")
   updatedAt     DateTime      @updatedAt @map("updated_at")
@@ -684,53 +703,14 @@ model Invoice {
   agent         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   client        CrmClient     @relation(fields: [clientId], references: [id], onDelete: Cascade)
   trip          Trip?         @relation(fields: [tripId], references: [id], onDelete: SetNull)
-  lineItems     InvoiceLineItem[]
-  payments      Payment[]
 
   @@index([userId])
   @@index([clientId])
   @@index([tripId])
   @@index([status])
   @@index([invoiceNumber])
+  @@index([dueDate])
   @@map("invoices")
-}
-
-model InvoiceLineItem {
-  id          String   @id @default(uuid())
-  invoiceId   String   @map("invoice_id")
-  description String
-  quantity    Decimal  @db.Decimal(10, 2)
-  unitPrice   Decimal  @map("unit_price") @db.Decimal(10, 2)
-  total       Decimal  @db.Decimal(10, 2)
-  order       Int      @default(0)
-
-  createdAt   DateTime @default(now()) @map("created_at")
-
-  // Relations
-  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-
-  @@index([invoiceId])
-  @@map("invoice_line_items")
-}
-
-model Payment {
-  id                String   @id @default(uuid())
-  invoiceId         String   @map("invoice_id")
-  amount            Decimal  @db.Decimal(10, 2)
-  currency          String   @db.Char(3)
-  stripePaymentId   String?  @unique @map("stripe_payment_id") // Stripe payment intent ID
-  paymentMethod     String?  @map("payment_method") // card, bank_transfer, etc.
-  status            String   // succeeded, pending, failed
-
-  createdAt         DateTime @default(now()) @map("created_at")
-  updatedAt         DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  invoice           Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-
-  @@index([invoiceId])
-  @@index([stripePaymentId])
-  @@map("payments")
 }
 
 // ==========================================
@@ -740,21 +720,27 @@ model Payment {
 model LandingPage {
   id            String   @id @default(uuid())
   userId        String   @map("user_id") // Agent who created it
+  tripId        String?  @map("trip_id") // Optional associated trip
   slug          String   @unique
   title         String
   description   String?  @db.Text
   content       Json     @default("{}") // Page builder JSON
   isPublished   Boolean  @default(false) @map("is_published")
+  publishedAt   DateTime? @map("published_at")
+  deletedAt     DateTime? @map("deleted_at")
 
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
   // Relations
   agent         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trip          Trip?    @relation(fields: [tripId], references: [id], onDelete: SetNull)
   leads         Lead[]
 
   @@index([userId])
   @@index([slug])
+  @@index([isPublished])
+  @@index([tripId])
   @@map("landing_pages")
 }
 

@@ -7,6 +7,7 @@
 'use client';
 
 import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -16,6 +17,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { Separator } from '@/components/ui/separator';
+import {
   MoreHorizontal,
   Edit,
   Trash2,
@@ -23,10 +31,12 @@ import {
   Calendar,
   User,
   Tag,
+  Users,
 } from 'lucide-react';
 import type { Expense, ExpenseCategory } from '@/types/expense';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { formatCurrency } from '@/lib/expenses/split-helpers';
 
 interface ExpenseCardProps {
   expense: Expense;
@@ -107,6 +117,51 @@ export function ExpenseCard({
                 <span>{formatDate(expense.date)}</span>
               </div>
 
+              {/* Split Indicator Badge with Tooltip */}
+              {expense.splits && expense.splits.length > 0 && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge
+                        variant="secondary"
+                        className="gap-1 cursor-help bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
+                      >
+                        <Users className="h-3 w-3" aria-hidden="true" />
+                        Split ({expense.splits.length})
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <div className="space-y-1">
+                        <p className="font-medium">Split Details</p>
+                        <div className="text-sm space-y-1">
+                          {expense.splits.map((split) => (
+                            <div
+                              key={split.id}
+                              className="flex justify-between gap-3"
+                            >
+                              <span>
+                                {split.user
+                                  ? `${split.user.firstName} ${split.user.lastName}`
+                                  : 'Unknown'}
+                              </span>
+                              <span className="font-medium">
+                                {formatCurrency(split.amount, expense.currency)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                        <Separator className="my-2" />
+                        <p className="text-xs text-muted-foreground">
+                          Total: {formatCurrency(expense.amount, expense.currency)} (
+                          {expense.splits.length} {expense.splits.length === 1 ? 'person' : 'people'}
+                          )
+                        </p>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+
               {/* Payer */}
               {expense.payer && (
                 <div className="flex items-center gap-1">
@@ -172,6 +227,38 @@ export function ExpenseCard({
               </DropdownMenuContent>
             </DropdownMenu>
           )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+/**
+ * Skeleton loader for ExpenseCard
+ */
+export function ExpenseCardSkeleton() {
+  return (
+    <Card>
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between gap-4">
+          {/* Left side: Details */}
+          <div className="flex-1 space-y-2">
+            {/* Description and Amount */}
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-48" />
+              <Skeleton className="h-8 w-32" />
+            </div>
+
+            {/* Metadata */}
+            <div className="flex flex-wrap items-center gap-3">
+              <Skeleton className="h-6 w-24 rounded-full" />
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-4 w-28" />
+            </div>
+          </div>
+
+          {/* Right side: Actions */}
+          <Skeleton className="h-8 w-8 rounded-md" />
         </div>
       </CardContent>
     </Card>

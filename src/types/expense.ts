@@ -60,6 +60,20 @@ export interface Expense {
 }
 
 /**
+ * Split type enum
+ */
+export type SplitType = 'EQUAL' | 'CUSTOM';
+
+/**
+ * Custom split input (either amount or percentage)
+ */
+export interface CustomSplitInput {
+  userId: string;
+  amount?: number;
+  percentage?: number;
+}
+
+/**
  * Create expense request
  */
 export interface CreateExpenseRequest {
@@ -70,6 +84,9 @@ export interface CreateExpenseRequest {
   currency: string;
   date: string; // ISO date string
   receiptUrl?: string;
+  splitType?: SplitType;
+  splits?: CustomSplitInput[];
+  splitWithUserIds?: string[];
 }
 
 /**
@@ -107,4 +124,38 @@ export interface ExpensesResponse {
  */
 export interface ExpenseResponse {
   expense: Expense;
+}
+
+/**
+ * User basic info for settlements
+ */
+export interface UserBasic {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  avatarUrl: string | null;
+}
+
+/**
+ * Settlement between two users
+ */
+export interface Settlement {
+  from: string; // userId who owes
+  to: string; // userId who should receive
+  amount: number;
+  fromUser: UserBasic;
+  toUser: UserBasic;
+}
+
+/**
+ * Settlements response
+ */
+export interface SettlementsResponse {
+  settlements: Settlement[];
+  summary: {
+    totalExpenses: number;
+    totalAmount: number;
+    participantCount: number;
+  };
 }

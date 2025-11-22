@@ -16,12 +16,22 @@ const FROM_EMAIL = process.env.FROM_EMAIL || 'onboarding@resend.dev';
 const FROM_NAME = process.env.FROM_NAME || 'WanderPlan';
 
 /**
+ * Email attachment interface
+ */
+interface EmailAttachment {
+  filename: string;
+  content: Buffer | string;
+  contentType?: string;
+}
+
+/**
  * Send an email using Resend
  *
  * @param to - Recipient email address
  * @param subject - Email subject line
  * @param html - HTML email content
  * @param text - Plain text email content (optional)
+ * @param attachments - Email attachments (optional)
  * @returns Promise with send result
  * @throws Error if email sending fails
  */
@@ -30,11 +40,13 @@ export async function sendEmail({
   subject,
   html,
   text,
+  attachments,
 }: {
   to: string;
   subject: string;
   html: string;
   text?: string;
+  attachments?: EmailAttachment[];
 }) {
   try {
     const { data, error } = await resend.emails.send({
@@ -43,6 +55,10 @@ export async function sendEmail({
       subject,
       html,
       text,
+      attachments: attachments?.map((attachment) => ({
+        filename: attachment.filename,
+        content: attachment.content,
+      })),
     });
 
     if (error) {
