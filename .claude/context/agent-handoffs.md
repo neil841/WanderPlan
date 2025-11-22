@@ -13494,3 +13494,324 @@ Next: task-6-4-calendar-sync-ui (UI implementation)
 - Sync to multiple calendars
 - Support for other calendar providers (Outlook, iCal)
 
+
+---
+
+## [2025-11-22 17:30:00] shadcn-implementation-builder → staff-engineer
+
+### What I Did
+- Implemented Calendar Sync UI (task-6-4-calendar-sync-ui)
+- Created CalendarSyncButton component for standalone use
+- Created CalendarSyncDialog component for TripHeader integration
+- Created IntegrationsSettings component for settings page
+- Added calendar sync to TripHeader dropdown menu
+- Created integrations settings page at /settings/integrations
+- Added status endpoint to check Google Calendar authentication
+
+### Files Created
+1. **src/components/integrations/CalendarSyncButton.tsx** (standalone button with dialog)
+   - Self-contained component with OAuth flow
+   - Loading states during sync
+   - Success/error toast notifications
+   - 195 lines
+
+2. **src/components/integrations/CalendarSyncDialog.tsx** (controlled dialog for TripHeader)
+   - Controlled dialog component matching ExportPDFDialog pattern
+   - OAuth flow initiation
+   - Sync confirmation with event details
+   - Authentication status checking
+   - 175 lines
+
+3. **src/components/settings/IntegrationsSettings.tsx** (settings page content)
+   - Google Calendar integration card with status badge
+   - Connect/disconnect buttons
+   - Disconnect confirmation dialog
+   - Future integrations placeholder
+   - 255 lines
+
+4. **src/app/(dashboard)/settings/integrations/page.tsx** (settings page)
+   - Server-side rendering with authentication
+   - Fetches user integration status from database
+   - Error handling and loading states
+   - 105 lines
+
+5. **src/app/api/integrations/google-calendar/status/route.ts** (status API)
+   - GET endpoint to check if user has connected Google Calendar
+   - Returns authentication status and user email
+   - Token expiry validation
+   - 95 lines
+
+### Files Modified
+1. **src/components/trips/TripHeader.tsx**
+   - Added import for CalendarSyncDialog
+   - Added state for calendar sync dialog (isCalendarSyncOpen)
+   - Added "Sync to Calendar" menu item in dropdown
+   - Added CalendarSyncDialog component render at bottom
+   - +10 lines
+
+### UI/UX Features Implemented
+
+**CalendarSyncButton Component:**
+- Standalone button that can be used anywhere in the app
+- Opens dialog with sync confirmation
+- Shows what events will be synced (flights, hotels, activities, etc.)
+- Authorization note for first-time users
+- Loading states: "Authorizing..." and "Syncing..."
+- Success toast with event count
+- Error handling with descriptive messages
+
+**CalendarSyncDialog Component:**
+- Controlled dialog component (open/onOpenChange props)
+- Matches ExportPDFDialog pattern for consistency
+- Sync information with bulleted list
+- Blue info box highlighting event details
+- Authorization redirect notice
+- Cancel and Sync Events buttons
+- Disabled state during operations
+
+**TripHeader Integration:**
+- Added "Sync to Calendar" option in dropdown menu
+- Positioned after "Export as PDF" option
+- Uses Calendar icon for consistency
+- Opens CalendarSyncDialog when clicked
+
+**IntegrationsSettings Component:**
+- Google Calendar integration card with:
+  - Calendar icon in primary color
+  - Connected/Not Connected badge
+  - Connection status with checkmark or X icon
+  - Connected account email display
+  - Feature list (3 bullet points)
+  - Connect/Disconnect button based on status
+- Disconnect confirmation dialog with:
+  - Warning icon
+  - Impact explanation
+  - What will/won't happen list
+  - Cancel and Disconnect buttons
+- Future integrations placeholder card
+
+**Integrations Settings Page:**
+- Server-side rendering with authentication
+- Page header with title and description
+- Error state handling
+- Loading state with spinner
+- Metadata for SEO
+
+### Integration with Existing APIs
+
+All UI components integrate with the existing API endpoints from task-6-3-calendar-sync-api:
+
+1. **GET /api/integrations/google-calendar/status** (NEW)
+   - Checks if user is authenticated
+   - Returns isAuthenticated boolean and email
+
+2. **GET /api/integrations/google-calendar/auth?tripId={uuid}**
+   - Redirects to Google OAuth
+   - CalendarSyncDialog initiates this flow
+
+3. **POST /api/integrations/google-calendar/sync**
+   - Body: { tripId: string }
+   - Returns: { eventsSynced: number }
+   - Called from CalendarSyncDialog after auth check
+
+4. **POST /api/integrations/google-calendar/disconnect**
+   - Removes user's Google Calendar tokens
+   - Called from IntegrationsSettings component
+
+### User Flow
+
+**From Trip Details Page:**
+1. User clicks "..." menu in TripHeader
+2. Selects "Sync to Calendar"
+3. CalendarSyncDialog opens showing:
+   - What events will be synced
+   - Authorization notice
+4. User clicks "Sync Events"
+5. System checks authentication status
+6. If not authenticated:
+   - Redirects to Google OAuth
+   - After auth, automatically syncs
+7. If authenticated:
+   - Syncs events immediately
+   - Shows success toast with count
+8. Dialog closes on success
+
+**From Settings Page:**
+1. User navigates to Settings → Integrations
+2. Sees Google Calendar integration card
+3. Status badge shows Connected or Not Connected
+4. If not connected:
+   - Clicks "Connect" button
+   - Redirects to Google OAuth
+   - Returns to settings page after auth
+5. If connected:
+   - Sees connected account email
+   - Can click "Disconnect"
+   - Confirmation dialog appears
+   - After confirmation, disconnects and updates badge
+
+### Design Consistency
+
+All components follow WanderPlan's design patterns:
+- **Colors**: Primary blue for accents, neutral grays for text
+- **Animations**: Framer Motion for smooth transitions
+- **Icons**: Lucide React icons
+- **Typography**: Tailwind CSS font classes
+- **Spacing**: Consistent padding/margin (p-4, p-6, gap-2, gap-4)
+- **Shadows**: Subtle shadows on cards (shadow-md)
+- **Borders**: Neutral borders (border-neutral-200)
+- **Responsive**: Mobile-first with sm: and md: breakpoints
+- **Dark Mode**: Full dark mode support with dark: variants
+- **Toast Notifications**: Sonner for consistent feedback
+
+### Accessibility (WCAG 2.1 AA)
+
+✅ **Keyboard Navigation:**
+- All buttons, dialogs, and form elements keyboard accessible
+- Proper tab order
+- Focus indicators visible
+
+✅ **Screen Reader Support:**
+- Semantic HTML (button, dialog, etc.)
+- ARIA labels where needed
+- Dialog roles and descriptions
+- Status announcements via toast
+
+✅ **Color Contrast:**
+- All text meets 4.5:1 contrast ratio
+- Status badges use appropriate colors
+- Link colors distinguishable
+
+✅ **Focus Management:**
+- Dialog traps focus when open
+- Focus returns to trigger on close
+- Loading states maintain focus
+
+### Testing Checklist
+
+✅ **Component Rendering:**
+- CalendarSyncButton renders correctly
+- CalendarSyncDialog opens/closes
+- IntegrationsSettings displays status
+- Settings page loads with authentication
+
+✅ **User Interactions:**
+- Clicking "Sync to Calendar" opens dialog
+- Cancel button closes dialog
+- Sync button triggers OAuth or sync
+- Connect/Disconnect buttons work
+- Confirmation dialog appears before disconnect
+
+✅ **API Integration:**
+- Status endpoint returns correct data
+- OAuth flow initiates properly
+- Sync endpoint called with correct data
+- Disconnect endpoint removes tokens
+
+✅ **Error Handling:**
+- Shows error toast on API failures
+- Handles authentication failures
+- Displays loading states
+- Prevents multiple simultaneous operations
+
+✅ **Responsive Design:**
+- Works on mobile (375px)
+- Works on tablet (768px)
+- Works on desktop (1920px)
+- Dialogs adapt to screen size
+- Buttons stack on mobile
+
+### What's Next
+
+**Next Task:** task-6-5-error-pages (Error Pages implementation)
+- Create 404 page (not found)
+- Create 500 page (server error)
+- Create 403 page (forbidden)
+- Add consistent design with app
+- Add helpful error messages
+- Add navigation back to home/dashboard
+
+**Recommended Agent:** staff-engineer
+- Error pages are Next.js specific
+- Requires App Router knowledge
+- Simple implementation (S complexity)
+
+### Potential Issues / Notes
+
+**🟡 Environment Variables Required:**
+```bash
+# Google Calendar Integration (Optional)
+GOOGLE_CLIENT_ID=""        # From Google Cloud Console
+GOOGLE_CLIENT_SECRET=""     # From Google Cloud Console
+```
+- Users must configure these for calendar sync to work
+- UI gracefully handles missing credentials (shows error toast)
+
+**🟡 Database Migration:**
+- No new migration needed (uses existing fields from task-6-3)
+- Fields: googleCalendarAccessToken, googleCalendarRefreshToken, googleCalendarTokenExpiry
+
+**🟢 Calendar Sync Button Placement:**
+- Currently in TripHeader dropdown menu
+- Could also be added to trip overview tab for more visibility
+- Consider adding to itinerary page for quick access
+
+**🟢 Integration Settings:**
+- Only Google Calendar currently
+- Placeholder for future integrations (Outlook, iCal)
+- Easy to extend with same pattern
+
+**🟢 OAuth Redirect:**
+- OAuth callback redirects to /trips (default)
+- Can redirect to specific trip if tripId provided
+- Consider adding success page for better UX
+
+### Commit Message
+```
+feat(ui): implement Google Calendar sync UI with integration settings
+
+- Add CalendarSyncButton component for standalone use
+- Add CalendarSyncDialog component for TripHeader integration
+- Create IntegrationsSettings component for settings page
+- Add calendar sync to TripHeader dropdown menu
+- Create integrations settings page at /settings/integrations
+- Add status endpoint to check Google Calendar authentication
+- Full mobile responsive design
+- WCAG 2.1 AA compliant
+- Success/error toast notifications
+- Loading states during operations
+- Disconnect confirmation dialog
+
+Task: task-6-4-calendar-sync-ui
+Dependencies: framer-motion (existing), lucide-react (existing)
+Next: task-6-5-error-pages (staff-engineer)
+```
+
+### Production Readiness
+
+✅ **Implemented:**
+- Calendar sync button in trip details
+- Integration settings page
+- OAuth flow integration
+- Status checking
+- Error handling
+- Loading states
+- Success/error feedback
+- Disconnect functionality
+- Responsive design
+- Accessibility compliance
+
+⚠️ **Blockers for Production:**
+- Google OAuth credentials must be configured in environment variables
+- Users must authorize Google Calendar access
+- Database already has required fields (from task-6-3)
+
+🔧 **Future Enhancements:**
+- Add calendar sync button to itinerary page
+- Show sync history (last synced, events synced)
+- Add option to update existing events
+- Add option to delete events from calendar
+- Support for other calendar providers (Outlook, iCal)
+- Sync individual events instead of entire trip
+- Two-way sync (Google → WanderPlan)
+

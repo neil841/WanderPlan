@@ -30,6 +30,7 @@ import { TripDetails } from '@/hooks/useTrip';
 import { format } from 'date-fns';
 import { EditTripDialog } from './EditTripDialog';
 import { ExportPDFDialog } from './ExportPDFDialog';
+import { CalendarSyncDialog } from '@/components/integrations/CalendarSyncDialog';
 import { useInvalidateTrip } from '@/hooks/useTrip';
 
 interface TripHeaderProps {
@@ -57,6 +58,7 @@ export function TripHeader({ trip }: TripHeaderProps) {
   const [isArchiving, setIsArchiving] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+  const [isCalendarSyncOpen, setIsCalendarSyncOpen] = useState(false);
 
   const canEdit = trip.userRole === 'owner' || trip.userRole === 'ADMIN';
   const canDelete = trip.userRole === 'owner';
@@ -278,6 +280,11 @@ export function TripHeader({ trip }: TripHeaderProps) {
                 Export as PDF
               </DropdownMenuItem>
 
+              <DropdownMenuItem onClick={() => setIsCalendarSyncOpen(true)}>
+                <Calendar className="w-4 h-4 mr-2" />
+                Sync to Calendar
+              </DropdownMenuItem>
+
               <DropdownMenuItem onClick={handleDuplicate}>
                 <Copy className="w-4 h-4 mr-2" />
                 Duplicate Trip
@@ -390,6 +397,14 @@ export function TripHeader({ trip }: TripHeaderProps) {
         tripName={trip.name}
         open={isExportDialogOpen}
         onOpenChange={setIsExportDialogOpen}
+      />
+
+      {/* Calendar Sync Dialog */}
+      <CalendarSyncDialog
+        tripId={trip.id}
+        tripName={trip.name}
+        open={isCalendarSyncOpen}
+        onOpenChange={setIsCalendarSyncOpen}
       />
     </motion.div>
   );
