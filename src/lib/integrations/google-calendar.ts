@@ -344,3 +344,38 @@ export async function refreshAccessToken(refreshToken: string): Promise<{
     expiry_date: credentials.expiry_date || Date.now() + 3600 * 1000,
   };
 }
+
+/**
+ * Revoke Google OAuth token
+ *
+ * SECURITY: When a user disconnects Google Calendar integration, we must
+ * revoke the OAuth token with Google to prevent continued access if the
+ * token is stolen/compromised. Simply deleting from our database is not
+ * sufficient.
+ *
+ * This function calls Google's token revocation endpoint to invalidate
+ * the refresh token, which also invalidates all associated access tokens.
+ *
+ * @param refreshToken - The refresh token to revoke
+ * @returns Promise that resolves when token is revoked
+ * @throws Does not throw - logs errors and continues (fail-safe)
+ */
+export async function revokeGoogleToken(refreshToken: string): Promise<void> {
+  try {
+    // Revoke the refresh token (this also revokes access tokens)
+    await fetch('https://oauth2.googleapis.com/revoke', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: `token=${refreshToken}`,
+    });
+
+    console.log('[Google Calendar] Token revoked successfully');
+  } catch (error) {
+    // Log error but don't throw - we still want to delete from DB
+    // even if Google revocation fails (network error, already revoked, etc.)
+    console.error('[Google Calendar] Failed to revoke token:', error);
+    // Fail-safe: Continue with database cleanup even if revocation fails
+  }
+}
