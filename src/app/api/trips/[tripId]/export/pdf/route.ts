@@ -28,6 +28,7 @@ import { auth } from '@/lib/auth/auth-options';
 import prisma from '@/lib/db/prisma';
 import { generateTripPDF } from '@/lib/pdf/trip-pdf';
 import { sendEmail } from '@/lib/email/client';
+import { checkGenericRateLimit } from '@/lib/auth/rate-limit';
 
 /**
  * GET /api/trips/[tripId]/export/pdf
@@ -52,7 +53,34 @@ export async function GET(
     const userId = session.user.id;
     const { tripId } = params;
 
-    // 2. Validate tripId
+    // 2. Rate limiting: 5 PDF exports per user per 5 minutes
+    // PDF generation is CPU-intensive (2-10s), prevent DoS attacks
+    const { isLimited, resetInMinutes, remainingAttempts } = checkGenericRateLimit(
+      `pdf-export:${userId}`,
+      5,     // Max 5 PDF exports
+      5 * 60 * 1000  // per 5 minutes
+    );
+
+    if (isLimited) {
+      return NextResponse.json(
+        {
+          error: 'Too many PDF export requests',
+          message: `Please wait ${resetInMinutes} minutes before trying again`,
+          retryAfter: resetInMinutes * 60,
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(resetInMinutes * 60),
+            'X-RateLimit-Limit': '5',
+            'X-RateLimit-Remaining': String(remainingAttempts),
+            'X-RateLimit-Reset': String(resetInMinutes),
+          },
+        }
+      );
+    }
+
+    // 3. Validate tripId
     if (!tripId || typeof tripId !== 'string') {
       return NextResponse.json(
         { error: 'Invalid trip ID' },
@@ -60,14 +88,38 @@ export async function GET(
       );
     }
 
-    // 3. Parse query parameters for customization
+    // 4. Parse query parameters for customization
     const searchParams = req.nextUrl.searchParams;
     const includeMap = searchParams.get('includeMap') !== 'false';
     const includeBudget = searchParams.get('includeBudget') !== 'false';
     const includeCollaborators = searchParams.get('includeCollaborators') !== 'false';
     const emailTo = searchParams.get('email');
 
-    // 4. Fetch trip with all necessary data for PDF
+    // 5. Rate limiting for email sending: 10 emails per hour
+    // Prevent email spam and quota exhaustion
+    if (emailTo) {
+      const { isLimited: emailLimited, resetInMinutes: emailResetMinutes } = checkGenericRateLimit(
+        `pdf-email:${userId}`,
+        10,     // Max 10 emails
+        60 * 60 * 1000  // per hour
+      );
+
+      if (emailLimited) {
+        return NextResponse.json(
+          {
+            error: 'Too many email requests',
+            message: `Please wait ${emailResetMinutes} minutes before sending more PDFs via email`,
+            retryAfter: emailResetMinutes * 60,
+          },
+          {
+            status: 429,
+            headers: { 'Retry-After': String(emailResetMinutes * 60) },
+          }
+        );
+      }
+    }
+
+    // 6. Fetch trip with all necessary data for PDF
     const trip = await prisma.trip.findFirst({
       where: {
         id: tripId,
@@ -158,7 +210,7 @@ export async function GET(
       },
     });
 
-    // 5. Handle not found or access denied
+    // 7. Handle not found or access denied
     if (!trip) {
       const tripExists = await prisma.trip.findUnique({
         where: { id: tripId },
@@ -178,7 +230,7 @@ export async function GET(
       );
     }
 
-    // 6. Calculate expense summary for budget
+    // 8. Calculate expense summary for budget
     const expenseSummary = trip.expenses.reduce(
       (acc, expense) => {
         const key = expense.currency;
@@ -191,7 +243,7 @@ export async function GET(
       {} as Record<string, number>
     );
 
-    // 7. Format trip data for PDF generation
+    // 9. Format trip data for PDF generation
     const tripData = {
       id: trip.id,
       name: trip.name,
@@ -240,14 +292,14 @@ export async function GET(
       })),
     };
 
-    // 8. Generate PDF with customization options
+    // 10. Generate PDF with customization options
     const pdfBuffer = await generateTripPDF(tripData, {
       includeMap,
       includeBudget: includeBudget && !!tripData.budget,
       includeCollaborators: includeCollaborators && tripData.collaborators.length > 0,
     });
 
-    // 9. If email parameter provided, send PDF via email
+    // 11. If email parameter provided, send PDF via email
     if (emailTo) {
       try {
         await sendEmail({
@@ -291,7 +343,7 @@ export async function GET(
       }
     }
 
-    // 10. Return PDF as download
+    // 12. Return PDF as download
     return new NextResponse(pdfBuffer as any, {
       status: 200,
       headers: {

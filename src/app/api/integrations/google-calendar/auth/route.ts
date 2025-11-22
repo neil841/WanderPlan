@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth/auth-options';
 import { getAuthorizationUrl } from '@/lib/integrations/google-calendar';
+import { generateOAuthState } from '@/lib/integrations/oauth-state';
 
 /**
  * GET /api/integrations/google-calendar/auth
@@ -35,14 +36,11 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const tripId = searchParams.get('tripId');
 
-    // Create state parameter to pass trip ID through OAuth flow
-    const state = JSON.stringify({
-      userId: session.user.id,
-      tripId: tripId || null,
-      timestamp: Date.now(),
-    });
+    // Generate cryptographically secure state token (CSRF protection)
+    // This prevents OAuth CSRF attacks by ensuring state cannot be forged
+    const state = generateOAuthState(session.user.id, tripId || null);
 
-    // Generate authorization URL
+    // Generate authorization URL with secure state parameter
     const authUrl = getAuthorizationUrl(state);
 
     // Redirect to Google OAuth

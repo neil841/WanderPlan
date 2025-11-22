@@ -15,6 +15,7 @@ import {
   refreshAccessToken,
 } from '@/lib/integrations/google-calendar';
 import { z } from 'zod';
+import { checkGenericRateLimit } from '@/lib/auth/rate-limit';
 
 /**
  * Request body validation schema
@@ -41,6 +42,33 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
+      );
+    }
+
+    // Rate limiting: 3 calendar syncs per user per 5 minutes
+    // Prevents Google API quota exhaustion and duplicate event spam
+    const { isLimited, resetInMinutes, remainingAttempts } = checkGenericRateLimit(
+      `calendar-sync:${session.user.id}`,
+      3,     // Max 3 syncs
+      5 * 60 * 1000  // per 5 minutes
+    );
+
+    if (isLimited) {
+      return NextResponse.json(
+        {
+          error: 'Too many sync requests',
+          message: `Please wait ${resetInMinutes} minutes before syncing again`,
+          retryAfter: resetInMinutes * 60,
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(resetInMinutes * 60),
+            'X-RateLimit-Limit': '3',
+            'X-RateLimit-Remaining': String(remainingAttempts),
+            'X-RateLimit-Reset': String(resetInMinutes),
+          },
+        }
       );
     }
 

@@ -13,16 +13,62 @@ import { BaseEvent } from '@/types/event';
 
 /**
  * Google Calendar configuration
+ *
+ * IMPORTANT: This config validates environment variables at module load time.
+ * If any required variables are missing, the application will fail to start
+ * with a clear error message.
  */
 export const googleCalendarConfig = {
-  clientId: process.env.GOOGLE_CLIENT_ID || '',
-  clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
-  redirectUri: process.env.GOOGLE_REDIRECT_URI || `${process.env.NEXTAUTH_URL}/api/integrations/google-calendar/callback`,
+  clientId: process.env.GOOGLE_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  redirectUri: process.env.GOOGLE_REDIRECT_URI ||
+    `${process.env.NEXTAUTH_URL}/api/integrations/google-calendar/callback`,
   scopes: [
     'https://www.googleapis.com/auth/calendar',
     'https://www.googleapis.com/auth/calendar.events',
   ],
 };
+
+/**
+ * Validate required environment variables
+ * Fail fast with clear error messages if configuration is incomplete
+ */
+function validateEnvironmentVariables(): void {
+  const missingVars: string[] = [];
+
+  if (!googleCalendarConfig.clientId) {
+    missingVars.push('GOOGLE_CLIENT_ID');
+  }
+
+  if (!googleCalendarConfig.clientSecret) {
+    missingVars.push('GOOGLE_CLIENT_SECRET');
+  }
+
+  if (!process.env.NEXTAUTH_URL && !process.env.GOOGLE_REDIRECT_URI) {
+    missingVars.push('NEXTAUTH_URL or GOOGLE_REDIRECT_URI');
+  }
+
+  if (missingVars.length > 0) {
+    const errorMessage = [
+      '\n❌ Missing required Google Calendar environment variables:',
+      ...missingVars.map(varName => `  - ${varName}`),
+      '\nPlease set these in your .env file.',
+      '\nExample:',
+      '  GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com',
+      '  GOOGLE_CLIENT_SECRET=your-client-secret',
+      '  GOOGLE_REDIRECT_URI=http://localhost:3000/api/integrations/google-calendar/callback',
+      '\nSee .env.example for details.\n',
+    ].join('\n');
+
+    throw new Error(errorMessage);
+  }
+
+  // Log successful configuration (without exposing secrets)
+  console.log('✓ Google Calendar integration configured');
+}
+
+// Validate on module load - fail fast if configuration is incomplete
+validateEnvironmentVariables();
 
 /**
  * Create OAuth2 client for Google Calendar
