@@ -10219,3 +10219,197 @@ The implementation closely follows the comprehensive design specification create
 
 ---
 
+
+## [2025-11-22 07:30:00] staff-engineer → premium-ux-designer
+
+### What I Implemented
+Task: task-5-9-proposal-api - Proposal Management API
+
+**Backend**:
+- Complete Proposal Management API with CRUD operations
+- 5 API endpoints: POST /api/proposals, GET /api/proposals, GET /api/proposals/[id], PATCH /api/proposals/[id], DELETE /api/proposals/[id]
+- Comprehensive validation with Zod schemas
+- Row-level security (userId filtering)
+- Status transition validation (DRAFT → SENT → ACCEPTED/REJECTED)
+- Soft delete support
+- Financial calculations (subtotal, tax, discount, total)
+
+**Database Schema Updates**:
+- Updated Proposal model to store lineItems as JSON array
+- Added financial breakdown fields (subtotal, tax, discount, total)
+- Added notes and terms fields
+- Added status timestamps (sentAt, acceptedAt, rejectedAt)
+- Added soft delete (deletedAt)
+- Removed ProposalLineItem table (replaced with JSON)
+
+**Files Created**:
+- `src/types/proposal.ts` (117 lines) - TypeScript type definitions
+- `src/lib/validations/proposal.ts` (89 lines) - Zod validation schemas
+- `src/app/api/proposals/route.ts` (204 lines) - POST and GET list endpoints
+- `src/app/api/proposals/[id]/route.ts` (265 lines) - GET single, PATCH, DELETE endpoints
+- `src/lib/proposals/pdf.ts` (39 lines) - PDF generation placeholder
+- `prisma/migrations/20251122071500_update_proposal_schema/migration.sql` - Database migration
+
+**Files Modified**:
+- `prisma/schema.prisma` - Updated Proposal model, removed ProposalLineItem model
+
+### API Endpoints Implemented
+
+**POST /api/proposals**
+- Creates new proposal with line items
+- Validates clientId exists and belongs to user
+- Validates tripId (if provided) exists and belongs to user
+- Calculates subtotal from line items
+- Calculates total = subtotal + tax - discount
+- Default status: DRAFT
+- Returns: 201 with proposal + client + trip relations
+
+**GET /api/proposals**
+- Lists proposals with pagination (default 20, max 100 per page)
+- Filters: status, clientId, search (title/description)
+- Row-level security (only user's proposals)
+- Excludes soft-deleted proposals
+- Order by: createdAt DESC
+- Returns: proposals array + pagination metadata
+
+**GET /api/proposals/[id]**
+- Gets single proposal by ID
+- Row-level security check
+- Includes client and trip relations
+- Returns: 404 if not found or doesn't belong to user
+
+**PATCH /api/proposals/[id]**
+- Updates proposal fields
+- Validates status transitions:
+  - Cannot modify ACCEPTED or REJECTED proposals
+  - Sets sentAt when changing to SENT
+  - Sets acceptedAt when changing to ACCEPTED
+  - Sets rejectedAt when changing to REJECTED
+- Recalculates subtotal if lineItems updated
+- Recalculates total if subtotal/tax/discount changed
+- Returns: updated proposal + relations
+
+**DELETE /api/proposals/[id]**
+- Soft deletes proposal (sets deletedAt)
+- Cannot delete ACCEPTED proposals (409 Conflict)
+- Row-level security check
+- Returns: 200 with success message
+
+### Data Model
+
+**Proposal**:
+- clientId (required, must exist and belong to user)
+- tripId (optional, must exist and belong to user if provided)
+- title (required, 1-200 chars)
+- description (optional, max 2000 chars)
+- lineItems (JSON array, min 1 item):
+  - id (UUID)
+  - description (required, max 500 chars)
+  - quantity (positive number)
+  - unitPrice (non-negative number)
+  - total (quantity × unitPrice)
+- subtotal (auto-calculated from lineItems)
+- tax (optional, default 0)
+- discount (optional, default 0)
+- total (subtotal + tax - discount)
+- currency (3-letter code, default USD)
+- status (DRAFT | SENT | ACCEPTED | REJECTED)
+- validUntil (optional, must be future date)
+- notes (optional, max 2000 chars, internal)
+- terms (optional, max 5000 chars)
+- sentAt, acceptedAt, rejectedAt (timestamps)
+- deletedAt (soft delete)
+
+### Validation Rules Implemented
+- Title: 1-200 characters, required
+- LineItems: min 1 item, each with valid quantity/unitPrice/total
+- Line item total must equal quantity × unitPrice (±0.01 tolerance)
+- Subtotal must equal sum of all line item totals
+- Total must equal subtotal + tax - discount
+- Tax and discount must be non-negative
+- Currency must be 3-letter code
+- ValidUntil must be future date (if provided)
+- Status transitions validated (cannot change from ACCEPTED/REJECTED)
+- ClientId must exist and belong to user
+- TripId must exist and belong to user (if provided)
+- Cannot delete ACCEPTED proposals
+
+### Database Migration Required
+
+**IMPORTANT**: User must run the database migration before the API will work:
+
+```bash
+# Option 1: Apply the migration manually
+psql $DATABASE_URL < prisma/migrations/20251122071500_update_proposal_schema/migration.sql
+
+# Option 2: Use Prisma migrate (requires Prisma CLI working)
+npx prisma migrate deploy
+```
+
+The migration:
+1. Drops `total_price` column
+2. Adds `line_items` (JSONB)
+3. Adds `subtotal`, `tax`, `discount`, `total` (Decimal)
+4. Adds `notes`, `terms` (Text)
+5. Adds `accepted_at`, `rejected_at`, `deleted_at` (Timestamp)
+6. Sets `currency` default to 'USD'
+7. Drops `proposal_line_items` table
+
+### What's Next
+- **Next Task**: task-5-10-proposal-ui (Proposal UI)
+- **Next Agent**: premium-ux-designer
+
+**Proposal UI should include**:
+- Proposals list page at `/crm/proposals`
+- Proposal list with search, filters (status, client), and pagination
+- "Create Proposal" button
+- Proposal editor with:
+  - Client selector (dropdown of user's clients)
+  - Trip selector (optional, dropdown of user's trips)
+  - Title and description fields
+  - Line items table (add/edit/delete rows)
+  - Tax and discount fields
+  - Subtotal and total display (auto-calculated)
+  - Valid until date picker
+  - Notes and terms fields
+  - Save as draft or send to client
+- Proposal detail/preview page
+- Edit proposal (only DRAFT or SENT status)
+- Delete proposal (with confirmation, not ACCEPTED)
+- Status badges (DRAFT=gray, SENT=blue, ACCEPTED=green, REJECTED=red)
+- PDF download button (will show "not implemented" message)
+
+### PDF Generation Note
+- Created placeholder at `src/lib/proposals/pdf.ts`
+- Not yet implemented (will be added later)
+- Throws error with clear message when called
+- TODO: Implement with @react-pdf/renderer
+
+### Architectural Decisions
+1. **Line Items as JSON**: Stored as JSON array instead of separate table for simplicity and flexibility
+2. **Financial Breakdown**: Separate subtotal, tax, discount, total fields for transparency
+3. **Status Timestamps**: Track when proposal was sent, accepted, or rejected
+4. **Soft Delete**: Preserve data for historical records and prevent accidental deletion
+5. **Row-Level Security**: All queries filtered by userId to ensure data isolation
+6. **Validation**: Comprehensive Zod schemas with business rule validation
+7. **Status Transitions**: Strict validation to prevent invalid state changes
+
+### Quality Assurance
+- ✅ TypeScript strict mode (no `any` types except Prisma Json)
+- ✅ Comprehensive JSDoc comments
+- ✅ Proper error handling with specific error messages
+- ✅ Input validation with Zod schemas
+- ✅ Row-level security on all endpoints
+- ✅ Business rule validation (status transitions, calculations)
+- ✅ Decimal precision for financial values
+- ✅ Pagination with sensible defaults and limits
+- ✅ Soft delete for data preservation
+
+### Potential Issues
+- **Database Migration**: User must manually run migration before API will work
+- **Prisma Generate**: May need to run `npx prisma generate` after migration
+- **PDF Generation**: Placeholder only, actual implementation needed later
+- **Email Sending**: "Send to client" functionality will require email integration (task-5-10)
+
+---
+

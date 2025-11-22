@@ -621,11 +621,30 @@ model Proposal {
   tripId      String?        @map("trip_id")
   title       String
   description String?        @db.Text
-  totalPrice  Decimal        @map("total_price") @db.Decimal(10, 2)
-  currency    String         @db.Char(3)
+
+  // Line items stored as JSON array
+  lineItems   Json           @map("line_items") @default("[]")
+
+  // Financial breakdown
+  subtotal    Decimal        @db.Decimal(10, 2)
+  tax         Decimal        @default(0) @db.Decimal(10, 2)
+  discount    Decimal        @default(0) @db.Decimal(10, 2)
+  total       Decimal        @db.Decimal(10, 2)
+  currency    String         @default("USD") @db.Char(3)
+
+  // Proposal details
   status      ProposalStatus @default(DRAFT)
   validUntil  DateTime?      @map("valid_until") @db.Date
+  notes       String?        @db.Text // Internal notes
+  terms       String?        @db.Text // Terms and conditions
+
+  // Status timestamps
   sentAt      DateTime?      @map("sent_at")
+  acceptedAt  DateTime?      @map("accepted_at")
+  rejectedAt  DateTime?      @map("rejected_at")
+
+  // Soft delete
+  deletedAt   DateTime?      @map("deleted_at")
 
   createdAt   DateTime       @default(now()) @map("created_at")
   updatedAt   DateTime       @updatedAt @map("updated_at")
@@ -634,31 +653,12 @@ model Proposal {
   agent       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   client      CrmClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
   trip        Trip?     @relation(fields: [tripId], references: [id], onDelete: SetNull)
-  lineItems   ProposalLineItem[]
 
   @@index([userId])
   @@index([clientId])
   @@index([tripId])
   @@index([status])
   @@map("proposals")
-}
-
-model ProposalLineItem {
-  id          String   @id @default(uuid())
-  proposalId  String   @map("proposal_id")
-  description String
-  quantity    Decimal  @db.Decimal(10, 2)
-  unitPrice   Decimal  @map("unit_price") @db.Decimal(10, 2)
-  total       Decimal  @db.Decimal(10, 2)
-  order       Int      @default(0)
-
-  createdAt   DateTime @default(now()) @map("created_at")
-
-  // Relations
-  proposal    Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
-
-  @@index([proposalId])
-  @@map("proposal_line_items")
 }
 
 model Invoice {
