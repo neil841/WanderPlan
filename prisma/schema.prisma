@@ -150,7 +150,6 @@ model User {
   proposals             Proposal[]
   invoices              Invoice[]
   landingPages          LandingPage[]
-  leads                 Lead[]
   collaboratorInvites   TripCollaborator[]     @relation("CollaboratorInvitedBy")
   tripShareTokens       TripShareToken[]
 
@@ -248,6 +247,7 @@ model Trip {
   tags            Tag[]
   proposals       Proposal[]
   invoices        Invoice[]
+  landingPages    LandingPage[]
   shareTokens     TripShareToken[]
 
   @@index([createdBy])
@@ -715,21 +715,27 @@ model Invoice {
 model LandingPage {
   id            String   @id @default(uuid())
   userId        String   @map("user_id") // Agent who created it
+  tripId        String?  @map("trip_id") // Optional associated trip
   slug          String   @unique
   title         String
   description   String?  @db.Text
   content       Json     @default("{}") // Page builder JSON
   isPublished   Boolean  @default(false) @map("is_published")
+  publishedAt   DateTime? @map("published_at")
+  deletedAt     DateTime? @map("deleted_at")
 
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
   // Relations
   agent         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trip          Trip?    @relation(fields: [tripId], references: [id], onDelete: SetNull)
   leads         Lead[]
 
   @@index([userId])
   @@index([slug])
+  @@index([isPublished])
+  @@index([tripId])
   @@map("landing_pages")
 }
 

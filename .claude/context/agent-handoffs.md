@@ -11571,3 +11571,208 @@ None identified. All components follow established patterns from Proposal UI.
 ✅ All files linted and formatted
 ✅ TypeScript strict mode compliant
 
+
+## [2025-11-22 12:00:00] staff-engineer → shadcn-implementation-builder
+
+### What I Did
+Implemented Landing Page Builder API (task-5-14-landing-page-api) - a complete backend system for travel agents to create custom landing pages with lead capture functionality.
+
+### Database Schema Changes
+Updated Prisma schema to add missing fields to LandingPage model:
+- Added `tripId` (optional) - associate landing page with a trip
+- Added `publishedAt` (DateTime, nullable) - track when page was first published
+- Added `deletedAt` (DateTime, nullable) - soft delete support
+- Added relation to Trip model
+- Added indexes for better query performance (isPublished, tripId)
+
+**Migration Required**: User needs to run `npx prisma migrate dev --name add_landing_page_fields` to apply schema changes.
+
+### Files Created
+
+**Type Definitions** (`src/types/landing-page.ts`):
+- `LandingPageBlockType` - Supported block types (hero, text, features, gallery, lead-capture, pricing)
+- `LandingPageBlock` - Block structure with id, type, and data
+- `LandingPageContent` - Content structure with blocks array
+- `LandingPage` - Full landing page model
+- `CreateLandingPageRequest` - Request body for creating pages
+- `UpdateLandingPageRequest` - Request body for updating pages
+- `Lead` - Lead model (uses existing database structure)
+- `CreateLeadRequest` - Request body for capturing leads
+
+**Validation Schemas** (`src/lib/validations/landing-page.ts`):
+- `createLandingPageSchema` - Validates landing page creation (slug must be lowercase a-z, 0-9, hyphens only)
+- `updateLandingPageSchema` - Validates landing page updates
+- `createLeadSchema` - Validates lead capture (firstName, lastName, email, phone, message)
+- `slugParamSchema` - Validates slug URL parameters
+
+**API Endpoints**:
+
+1. **POST `/api/landing-pages`** (`src/app/api/landing-pages/route.ts`)
+   - Create new landing page
+   - Validates slug uniqueness
+   - Validates content has at least 1 block
+   - Optional trip association (verifies user has access)
+   - Sets publishedAt if isPublished=true
+   - Returns 201, 400, 401, 404, 409, 500
+
+2. **GET `/api/landing-pages`** (`src/app/api/landing-pages/route.ts`)
+   - List user's landing pages
+   - Excludes soft-deleted pages
+   - Ordered by updatedAt DESC
+   - Includes trip relation
+   - Row-level security (user's own pages only)
+   - Returns 200, 401, 500
+
+3. **GET `/api/landing-pages/[slug]`** (`src/app/api/landing-pages/[slug]/route.ts`)
+   - Get landing page by slug
+   - **Public access** if published (no auth required)
+   - **Owner-only access** if unpublished
+   - Includes trip relation
+   - Returns 200, 401, 403, 404, 500
+
+4. **PATCH `/api/landing-pages/[slug]`** (`src/app/api/landing-pages/[slug]/route.ts`)
+   - Update landing page
+   - Owner-only access
+   - Validates slug uniqueness if changed
+   - Sets publishedAt when isPublished changes from false→true
+   - Returns 200, 400, 401, 403, 404, 409, 500
+
+5. **DELETE `/api/landing-pages/[slug]`** (`src/app/api/landing-pages/[slug]/route.ts`)
+   - Soft delete landing page
+   - Owner-only access
+   - Sets deletedAt timestamp
+   - Also sets isPublished=false
+   - Returns 200, 401, 403, 404, 500
+
+6. **POST `/api/landing-pages/[slug]/leads`** (`src/app/api/landing-pages/[slug]/leads/route.ts`) **[PUBLIC ENDPOINT]**
+   - Capture lead from landing page
+   - **No authentication required** - public endpoint
+   - Only works for published pages
+   - Creates lead with source="landing-page:{slug}"
+   - Assigns lead to landing page owner
+   - Returns generic success message (no lead data exposed for privacy)
+   - Returns 201, 400, 404, 500
+
+### Key Features Implemented
+
+**Slug Validation**:
+- Only lowercase letters, numbers, hyphens allowed (a-z0-9-)
+- 3-100 characters
+- Must be unique
+
+**Public Access**:
+- Published landing pages accessible without authentication
+- Lead capture endpoint is fully public
+- Unpublished pages require owner authentication
+
+**Row-Level Security**:
+- Users only see their own landing pages in list view
+- Unpublished pages require ownership to view
+- Only owners can update/delete pages
+
+**Soft Delete**:
+- Landing pages are soft-deleted (deletedAt timestamp)
+- Preserves data for audit trail
+- Excluded from queries automatically
+
+**Content Structure**:
+- JSON-based block system
+- Flexible data structure per block type
+- Minimum 1 block required
+- Supports: hero, text, features, gallery, lead-capture, pricing blocks
+
+**Lead Management**:
+- Leads automatically assigned to landing page owner
+- Source tracked as "landing-page:{slug}"
+- Status set to "NEW"
+- Uses existing Lead model with CRM integration
+- Privacy-focused: no lead data returned in API response
+
+**Trip Association**:
+- Landing pages can optionally be associated with a trip
+- Validates user has access to trip before associating
+- Includes trip details in API responses
+
+**Publishing Flow**:
+- isPublished flag controls public access
+- publishedAt timestamp set when first published
+- Only published pages accept lead submissions
+
+### Files Modified
+- `/home/user/WanderPlan/prisma/schema.prisma` - Added fields to LandingPage model, added Trip relation
+
+### What's Next
+
+**shadcn-implementation-builder** should implement the Landing Page Builder UI (task-5-15-landing-page-ui):
+
+**Pages to Create**:
+1. **Landing Pages List** (`/app/landing-pages/page.tsx`)
+   - List all user's landing pages
+   - Show published status, lead count, last updated
+   - Create new landing page button
+   - Edit/delete/duplicate actions
+
+2. **Landing Page Builder** (`/app/landing-pages/[slug]/edit/page.tsx`)
+   - Drag-and-drop block editor
+   - Block types: hero, text, features, gallery, lead-capture, pricing
+   - Live preview
+   - Publish/unpublish toggle
+   - Trip association selector
+   - Meta settings (title, description, slug)
+
+3. **Landing Page Preview** (`/app/landing-pages/[slug]/preview/page.tsx`)
+   - Public-facing preview (same as published page)
+   - Show as visitors will see it
+
+4. **Public Landing Page** (`/app/l/[slug]/page.tsx`)
+   - Public route for published pages
+   - Render blocks from content JSON
+   - Lead capture form (uses POST /api/landing-pages/[slug]/leads)
+   - SEO meta tags from title/description
+
+5. **Leads Dashboard** (`/app/landing-pages/[slug]/leads/page.tsx`)
+   - View leads captured from this landing page
+   - Filter by status (NEW, CONTACTED, CONVERTED, LOST)
+   - Convert lead to CRM client action
+
+**Components to Create**:
+- `LandingPageCard` - Card for landing page list
+- `BlockEditor` - Block editing interface
+- `BlockRenderer` - Render blocks from JSON
+- `HeroBlock`, `TextBlock`, `FeaturesBlock`, `GalleryBlock`, `LeadCaptureBlock`, `PricingBlock` - Block components
+- `LeadCaptureForm` - Public lead capture form
+- `LeadsList` - Leads table/list view
+
+**Features**:
+- Use `@dnd-kit/core` for drag-and-drop block reordering
+- Use shadcn/ui components (Card, Button, Input, Textarea, Select, Dialog, etc.)
+- Implement real-time preview as user edits
+- Add block toolbar for editing/deleting blocks
+- Add "Duplicate Landing Page" feature
+- Add "View Public URL" button when published
+- Show lead count badge on landing page cards
+
+**API Integration**:
+- Use React Query for data fetching
+- Optimistic updates for better UX
+- Handle all error states properly
+
+**Security Notes**:
+- The public landing page route (`/app/l/[slug]/page.tsx`) should use the GET /api/landing-pages/[slug] endpoint which handles public/private access automatically
+- Lead capture form should validate client-side AND server-side
+
+**Public Endpoints Note**:
+The lead capture endpoint (`POST /api/landing-pages/[slug]/leads`) is intentionally public and does NOT require authentication. This is correct behavior for landing pages.
+
+### Potential Issues
+- Database migration must be run before API will work: `npx prisma migrate dev --name add_landing_page_fields`
+- Lead model uses firstName/lastName (not single "name" field) - this is intentional and matches existing CRM structure
+- Need to handle block data structure flexibly (each block type has different data fields)
+
+### Notes
+- All endpoints follow existing WanderPlan API patterns (error handling, response format, authentication)
+- TypeScript types are comprehensive and exported for frontend use
+- Validation is thorough with clear error messages
+- Public access is handled securely (published pages only)
+- Lead data is never exposed in API responses for privacy
+
