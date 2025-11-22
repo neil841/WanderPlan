@@ -65,9 +65,8 @@ export default function UnauthorizedPage() {
             variant="outline"
             size="lg"
             className="gap-2"
-            onClick={() => window.history.back()}
           >
-            <button type="button">
+            <button type="button" onClick={() => window.history.back()}>
               <ArrowLeft className="h-5 w-5" aria-hidden="true" />
               Go Back
             </button>
