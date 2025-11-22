@@ -8,6 +8,23 @@ import { z } from 'zod';
 import { ExpenseCategory } from '@/types/expense';
 
 /**
+ * Custom split schema
+ */
+export const customSplitSchema = z
+  .object({
+    userId: z.string().uuid('Invalid user ID'),
+    amount: z.number().positive('Amount must be positive').optional(),
+    percentage: z
+      .number()
+      .min(0, 'Percentage must be at least 0')
+      .max(100, 'Percentage must be at most 100')
+      .optional(),
+  })
+  .refine((data) => (data.amount !== undefined) !== (data.percentage !== undefined), {
+    message: 'Must provide either amount OR percentage, not both',
+  });
+
+/**
  * Create expense schema
  */
 export const createExpenseSchema = z.object({
@@ -29,6 +46,9 @@ export const createExpenseSchema = z.object({
     .regex(/^[A-Z]{3}$/, 'Currency code must be uppercase letters'),
   date: z.string().datetime('Invalid date format'),
   receiptUrl: z.string().url('Invalid receipt URL').optional(),
+  splitType: z.enum(['EQUAL', 'CUSTOM']).optional(),
+  splits: z.array(customSplitSchema).optional(),
+  splitWithUserIds: z.array(z.string().uuid('Invalid user ID')).optional(),
 });
 
 /**

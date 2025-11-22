@@ -50,6 +50,7 @@ export function ExpenseList({
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<ExpenseCategory | 'ALL'>('ALL');
+  const [splitFilter, setSplitFilter] = useState<'all' | 'split' | 'not-split'>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Filter expenses
@@ -58,7 +59,14 @@ export function ExpenseList({
     const matchesSearch = expense.description
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+
+    // Split filter
+    const matchesSplit =
+      splitFilter === 'all' ||
+      (splitFilter === 'split' && expense.splits && expense.splits.length > 0) ||
+      (splitFilter === 'not-split' && (!expense.splits || expense.splits.length === 0));
+
+    return matchesCategory && matchesSearch && matchesSplit;
   });
 
   const handleCreateExpense = async (data: any) => {
@@ -169,6 +177,16 @@ export function ExpenseList({
                 {label}
               </SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+        <Select value={splitFilter} onValueChange={(value) => setSplitFilter(value as 'all' | 'split' | 'not-split')}>
+          <SelectTrigger className="w-full sm:w-[180px]">
+            <SelectValue placeholder="Filter by split" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Expenses</SelectItem>
+            <SelectItem value="split">Split Only</SelectItem>
+            <SelectItem value="not-split">Not Split</SelectItem>
           </SelectContent>
         </Select>
       </div>

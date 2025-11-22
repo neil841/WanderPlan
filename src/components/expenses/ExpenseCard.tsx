@@ -16,6 +16,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { Separator } from '@/components/ui/separator';
+import {
   MoreHorizontal,
   Edit,
   Trash2,
@@ -23,10 +30,12 @@ import {
   Calendar,
   User,
   Tag,
+  Users,
 } from 'lucide-react';
 import type { Expense, ExpenseCategory } from '@/types/expense';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { formatCurrency } from '@/lib/expenses/split-helpers';
 
 interface ExpenseCardProps {
   expense: Expense;
@@ -106,6 +115,51 @@ export function ExpenseCard({
                 <Calendar className="h-3 w-3" aria-hidden="true" />
                 <span>{formatDate(expense.date)}</span>
               </div>
+
+              {/* Split Indicator Badge with Tooltip */}
+              {expense.splits && expense.splits.length > 0 && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge
+                        variant="secondary"
+                        className="gap-1 cursor-help bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
+                      >
+                        <Users className="h-3 w-3" aria-hidden="true" />
+                        Split ({expense.splits.length})
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <div className="space-y-1">
+                        <p className="font-medium">Split Details</p>
+                        <div className="text-sm space-y-1">
+                          {expense.splits.map((split) => (
+                            <div
+                              key={split.id}
+                              className="flex justify-between gap-3"
+                            >
+                              <span>
+                                {split.user
+                                  ? `${split.user.firstName} ${split.user.lastName}`
+                                  : 'Unknown'}
+                              </span>
+                              <span className="font-medium">
+                                {formatCurrency(split.amount, expense.currency)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                        <Separator className="my-2" />
+                        <p className="text-xs text-muted-foreground">
+                          Total: {formatCurrency(expense.amount, expense.currency)} (
+                          {expense.splits.length} {expense.splits.length === 1 ? 'person' : 'people'}
+                          )
+                        </p>
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
 
               {/* Payer */}
               {expense.payer && (

@@ -9,8 +9,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { createExpenseSchema } from '@/lib/validations/expense';
-import type { ExpensesResponse, ExpenseCategory } from '@/types/expense';
+import type { ExpensesResponse, ExpenseCategory, SplitType } from '@/types/expense';
 import { Decimal } from '@prisma/client/runtime/library';
+import {
+  calculateEqualSplit,
+  calculateCustomSplit,
+  validateSplits,
+} from '@/lib/expenses/calculations';
 
 /**
  * POST /api/trips/[tripId]/expenses
@@ -39,8 +44,18 @@ export async function POST(
       );
     }
 
-    const { eventId, category, description, amount, currency, date, receiptUrl } =
-      validation.data;
+    const {
+      eventId,
+      category,
+      description,
+      amount,
+      currency,
+      date,
+      receiptUrl,
+      splitType,
+      splits,
+      splitWithUserIds,
+    } = validation.data;
 
     // Check if user has access to this trip (must be collaborator or owner)
     const trip = await prisma.trip.findFirst({
@@ -58,6 +73,14 @@ export async function POST(
             },
           },
         ],
+      },
+      include: {
+        collaborators: {
+          where: { status: 'ACCEPTED' },
+          select: {
+            userId: true,
+          },
+        },
       },
     });
 
@@ -85,42 +108,145 @@ export async function POST(
       }
     }
 
-    // Create expense (paidBy is the current user)
-    const expense = await prisma.expense.create({
-      data: {
-        tripId,
-        eventId: eventId || null,
-        category,
-        description,
-        amount: new Decimal(amount),
-        currency,
-        date: new Date(date),
-        paidBy: session.user.id,
-        receiptUrl: receiptUrl || null,
-      },
-      include: {
-        payer: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            avatarUrl: true,
+    // Calculate splits if provided
+    let splitResults: Array<{ userId: string; amount: number }> | undefined;
+
+    if (splitType || splits || splitWithUserIds) {
+      // Get all collaborator user IDs + trip owner
+      const allUserIds = [
+        trip.createdBy,
+        ...trip.collaborators.map((c) => c.userId),
+      ];
+
+      if (splitType === 'EQUAL') {
+        // Equal split
+        const userIdsToSplit = splitWithUserIds || allUserIds;
+
+        // Validate all users are collaborators
+        for (const userId of userIdsToSplit) {
+          if (!allUserIds.includes(userId)) {
+            return NextResponse.json(
+              { error: `User ${userId} is not a collaborator on this trip` },
+              { status: 400 }
+            );
+          }
+        }
+
+        splitResults = calculateEqualSplit(amount, userIdsToSplit);
+      } else if (splitType === 'CUSTOM' && splits) {
+        // Custom split
+        try {
+          // Validate all users are collaborators
+          for (const split of splits) {
+            if (!allUserIds.includes(split.userId)) {
+              return NextResponse.json(
+                { error: `User ${split.userId} is not a collaborator on this trip` },
+                { status: 400 }
+              );
+            }
+          }
+
+          // Validate and calculate splits
+          validateSplits(amount, splits);
+          splitResults = calculateCustomSplit(amount, splits);
+        } catch (error) {
+          return NextResponse.json(
+            {
+              error: 'Invalid split configuration',
+              details: error instanceof Error ? error.message : 'Unknown error',
+            },
+            { status: 400 }
+          );
+        }
+      } else if (splitType === 'CUSTOM' && !splits) {
+        return NextResponse.json(
+          { error: 'Custom split type requires splits array' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Create expense with splits in transaction
+    const expense = await prisma.$transaction(async (tx) => {
+      // Create expense
+      const newExpense = await tx.expense.create({
+        data: {
+          tripId,
+          eventId: eventId || null,
+          category,
+          description,
+          amount: new Decimal(amount),
+          currency,
+          date: new Date(date),
+          paidBy: session.user.id,
+          receiptUrl: receiptUrl || null,
+        },
+      });
+
+      // Create splits if provided
+      if (splitResults && splitResults.length > 0) {
+        await tx.expenseSplit.createMany({
+          data: splitResults.map((split) => ({
+            expenseId: newExpense.id,
+            userId: split.userId,
+            amount: new Decimal(split.amount),
+          })),
+        });
+      }
+
+      // Fetch complete expense with relations
+      const completeExpense = await tx.expense.findUnique({
+        where: { id: newExpense.id },
+        include: {
+          payer: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              avatarUrl: true,
+            },
+          },
+          event: {
+            select: {
+              id: true,
+              title: true,
+            },
+          },
+          splits: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  email: true,
+                  avatarUrl: true,
+                },
+              },
+            },
           },
         },
-        event: {
-          select: {
-            id: true,
-            title: true,
-          },
-        },
-      },
+      });
+
+      return completeExpense;
     });
+
+    if (!expense) {
+      return NextResponse.json(
+        { error: 'Failed to create expense' },
+        { status: 500 }
+      );
+    }
 
     // Transform for response
     const expenseResponse = {
       ...expense,
       amount: Number(expense.amount),
+      splits: expense.splits?.map((split) => ({
+        ...split,
+        amount: Number(split.amount),
+      })),
     };
 
     return NextResponse.json(
@@ -253,6 +379,19 @@ export async function GET(
             title: true,
           },
         },
+        splits: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                avatarUrl: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -287,6 +426,10 @@ export async function GET(
     const expensesResponse = expenses.map((exp) => ({
       ...exp,
       amount: Number(exp.amount),
+      splits: exp.splits?.map((split) => ({
+        ...split,
+        amount: Number(split.amount),
+      })),
     }));
 
     const response: ExpensesResponse = {
