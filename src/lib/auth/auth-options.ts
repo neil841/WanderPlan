@@ -20,7 +20,9 @@ import { checkRateLimit, recordFailedAttempt, resetRateLimit } from './rate-limi
  * - Custom callbacks for session and JWT
  */
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
+  // Note: Adapter disabled for Credentials provider with JWT strategy
+  // Prisma adapter is incompatible with credentials provider in NextAuth v5
+  // adapter: PrismaAdapter(prisma),
 
   providers: [
     CredentialsProvider({
