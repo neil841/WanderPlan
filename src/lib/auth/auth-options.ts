@@ -24,6 +24,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   // Prisma adapter is incompatible with credentials provider in NextAuth v5
   // adapter: PrismaAdapter(prisma),
 
+  /**
+   * Secret for JWT encryption
+   * Required in production
+   */
+  secret: process.env.NEXTAUTH_SECRET,
+
   providers: [
     CredentialsProvider({
       name: 'credentials',
