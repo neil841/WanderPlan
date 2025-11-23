@@ -12,7 +12,7 @@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { LocationAutocomplete } from './LocationAutocomplete';
+import { AirportAutocomplete } from './AirportAutocomplete';
 import { CostInput } from './CostInput';
 import { EventLocation, EventCost } from '@/types/event';
 
@@ -113,7 +113,7 @@ export function FlightForm({ data, onChange, errors = {} }: FlightFormProps) {
         <Label>
           Departure Airport <span className="text-destructive">*</span>
         </Label>
-        <LocationAutocomplete
+        <AirportAutocomplete
           value={data.departureAirport}
           onChange={(location) => updateField('departureAirport', location)}
           placeholder="Search for departure airport..."
@@ -130,7 +130,7 @@ export function FlightForm({ data, onChange, errors = {} }: FlightFormProps) {
         <Label>
           Arrival Airport <span className="text-destructive">*</span>
         </Label>
-        <LocationAutocomplete
+        <AirportAutocomplete
           value={data.arrivalAirport}
           onChange={(location) => updateField('arrivalAirport', location)}
           placeholder="Search for arrival airport..."
