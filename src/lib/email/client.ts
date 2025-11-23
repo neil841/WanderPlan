@@ -5,8 +5,19 @@
 
 import { Resend } from 'resend';
 
-// Initialize Resend client
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy initialize Resend client to avoid module load failures
+let resendClient: Resend | null = null;
+
+function getResendClient(): Resend {
+  if (!resendClient) {
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey || apiKey.startsWith('re_placeholder')) {
+      throw new Error('RESEND_API_KEY not configured');
+    }
+    resendClient = new Resend(apiKey);
+  }
+  return resendClient;
+}
 
 /**
  * Email sender configuration
@@ -49,6 +60,7 @@ export async function sendEmail({
   attachments?: EmailAttachment[];
 }) {
   try {
+    const resend = getResendClient();
     const { data, error } = await resend.emails.send({
       from: `${FROM_NAME} <${FROM_EMAIL}>`,
       to: [to],
