@@ -76,7 +76,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https: blob:",
               "font-src 'self' data:",
-              "connect-src 'self' ws: wss:",
+              "connect-src 'self' ws: wss: https://nominatim.openstreetmap.org https://*.tile.openstreetmap.org",
               "frame-ancestors 'self'",
               "base-uri 'self'",
               "form-action 'self'",
