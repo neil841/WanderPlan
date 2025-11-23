@@ -27,8 +27,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   /**
    * Secret for JWT encryption
    * Required in production
+   * NextAuth v5 uses AUTH_SECRET, but fallback to NEXTAUTH_SECRET for compatibility
    */
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
 
   providers: [
     CredentialsProvider({
