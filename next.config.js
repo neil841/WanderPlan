@@ -9,6 +9,7 @@ const nextConfig = {
     // Disable TypeScript errors during build (type mismatches, not runtime bugs)
     ignoreBuildErrors: true,
   },
+  output: 'standalone',
   experimental: {
     serverActions: {
       bodySizeLimit: '10mb',
