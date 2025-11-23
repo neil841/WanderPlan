@@ -6,6 +6,10 @@ import { Toaster } from "sonner"
 
 const inter = Inter({ subsets: ["latin"] })
 
+// Force all pages to be dynamic (no static generation)
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export const metadata: Metadata = {
   title: "WanderPlan - Travel Planning Made Easy",
   description:
