@@ -85,6 +85,14 @@ export async function POST(
       );
     }
 
+    // Check if Stripe is configured
+    if (!stripe) {
+      return NextResponse.json(
+        { error: 'Payment processing is not configured. Please contact support.' },
+        { status: 503 }
+      );
+    }
+
     // Get app URL for redirects
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 

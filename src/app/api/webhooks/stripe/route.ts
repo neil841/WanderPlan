@@ -43,11 +43,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!process.env.STRIPE_WEBHOOK_SECRET) {
-      console.error('STRIPE_WEBHOOK_SECRET not configured');
+    if (!stripe || !process.env.STRIPE_WEBHOOK_SECRET) {
+      console.error('Stripe not configured');
       return NextResponse.json(
-        { error: 'Webhook secret not configured' },
-        { status: 500 }
+        { error: 'Webhook processing not configured' },
+        { status: 503 }
       );
     }
 
