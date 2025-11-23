@@ -1,9 +1,9 @@
 /**
  * Password hashing and verification utilities
- * Uses bcrypt for secure password handling
+ * Uses bcryptjs for secure password handling (pure JavaScript, serverless-compatible)
  */
 
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 const SALT_ROUNDS = 10;
 
