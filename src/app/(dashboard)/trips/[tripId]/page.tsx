@@ -7,6 +7,10 @@ import { useTrip } from '@/hooks/useTrip';
 import { TripHeader } from '@/components/trips/TripHeader';
 import { TripTabs, TripTab } from '@/components/trips/TripTabs';
 import { TripOverview } from '@/components/trips/TripOverview';
+import { ItineraryBuilder } from '@/components/itinerary/ItineraryBuilder';
+import { BudgetOverview } from '@/components/budget/BudgetOverview';
+import { MessageList } from '@/components/messages/MessageList';
+import { IdeaList } from '@/components/ideas/IdeaList';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -168,12 +172,68 @@ export default function TripDetailsPage() {
         );
 
       case 'itinerary':
+        return (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key="itinerary"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <ItineraryBuilder trip={trip} />
+            </motion.div>
+          </AnimatePresence>
+        );
+
+      case 'budget':
+        return (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key="budget"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <BudgetOverview trip={trip} />
+            </motion.div>
+          </AnimatePresence>
+        );
+
+      case 'messages':
+        return (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key="messages"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <MessageList tripId={trip.id} />
+            </motion.div>
+          </AnimatePresence>
+        );
+
+      case 'ideas':
+        return (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key="ideas"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <IdeaList tripId={trip.id} />
+            </motion.div>
+          </AnimatePresence>
+        );
+
       case 'calendar':
       case 'map':
-      case 'budget':
       case 'documents':
-      case 'messages':
-      case 'ideas':
       case 'collaborators':
         return (
           <AnimatePresence mode="wait">

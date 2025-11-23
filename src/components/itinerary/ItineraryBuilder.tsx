@@ -30,20 +30,24 @@ import { EventResponse } from '@/types/event';
 import { DayColumn } from './DayColumn';
 import { UnscheduledEvents } from './UnscheduledEvents';
 import { EventCard } from './EventCard';
+import { CreateEventDialog } from '@/components/events/CreateEventDialog';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { TripDetails } from '@/hooks/useTrip';
 
 interface ItineraryBuilderProps {
-  tripId: string;
+  trip: TripDetails;
 }
 
-export function ItineraryBuilder({ tripId }: ItineraryBuilderProps) {
+export function ItineraryBuilder({ trip }: ItineraryBuilderProps) {
   const { eventsByDay, unscheduledEvents, allEvents, isLoading, error, refetch } =
-    useItineraryData(tripId);
-  const { reorder, isReordering } = useEventReorder(tripId);
+    useItineraryData(trip.id);
+  const { reorder, isReordering } = useEventReorder(trip.id);
   const [activeEvent, setActiveEvent] = useState<EventResponse | null>(null);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   // Configure sensors for drag-and-drop
   const sensors = useSensors(
@@ -137,6 +141,19 @@ export function ItineraryBuilder({ tripId }: ItineraryBuilderProps) {
       onDragEnd={handleDragEnd}
     >
       <div className="space-y-6">
+        {/* Header with Add Event button */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Itinerary</h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Drag and drop events to organize your trip by day
+            </p>
+          </div>
+          <Button onClick={() => setIsCreateDialogOpen(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Add Event
+          </Button>
+        </div>
         {/* Unscheduled events section */}
         {unscheduledEvents.length > 0 && (
           <motion.div
@@ -144,7 +161,7 @@ export function ItineraryBuilder({ tripId }: ItineraryBuilderProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <UnscheduledEvents events={unscheduledEvents} tripId={tripId} />
+            <UnscheduledEvents events={unscheduledEvents} tripId={trip.id} />
           </motion.div>
         )}
 
@@ -176,7 +193,7 @@ export function ItineraryBuilder({ tripId }: ItineraryBuilderProps) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
               >
-                <DayColumn date={date} events={eventsByDay[date] || []} tripId={tripId} />
+                <DayColumn date={date} events={eventsByDay[date] || []} tripId={trip.id} />
               </motion.div>
             ))}
           </motion.div>
@@ -199,10 +216,21 @@ export function ItineraryBuilder({ tripId }: ItineraryBuilderProps) {
       <DragOverlay>
         {activeEvent ? (
           <div className="rotate-3 scale-105">
-            <EventCard event={activeEvent} tripId={tripId} isDragging={true} canEdit={false} />
+            <EventCard event={activeEvent} tripId={trip.id} isDragging={true} canEdit={false} />
           </div>
         ) : null}
       </DragOverlay>
+
+      {/* Create Event Dialog */}
+      <CreateEventDialog
+        tripId={trip.id}
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        onSuccess={() => {
+          setIsCreateDialogOpen(false);
+          refetch();
+        }}
+      />
     </DndContext>
   );
 }

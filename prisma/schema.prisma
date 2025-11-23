@@ -157,6 +157,7 @@ model User {
   landingPages          LandingPage[]
   collaboratorInvites   TripCollaborator[]     @relation("CollaboratorInvitedBy")
   tripShareTokens       TripShareToken[]
+  assignedLeads         Lead[]
 
   @@map("users")
 }

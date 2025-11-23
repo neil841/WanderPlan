@@ -79,6 +79,7 @@ export async function POST(req: NextRequest) {
     const hashedPassword = await hashPassword(validated.password);
 
     // 4. Create user in database
+    // In development mode, auto-verify email to skip email verification
     const user = await prisma.user.create({
       data: {
         email: validated.email,
@@ -86,6 +87,7 @@ export async function POST(req: NextRequest) {
         firstName: validated.firstName,
         lastName: validated.lastName,
         timezone: validated.timezone,
+        emailVerified: process.env.NODE_ENV === 'development' ? new Date() : null,
       },
       select: {
         id: true,

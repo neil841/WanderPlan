@@ -1,0 +1,9 @@
+{
+  "phases": {
+    "phase-6-export-polish-deployment": {
+      "tasks": {
+        "task-6-11-documentation-deployment": "in-progress"
+      }
+    }
+  }
+}
