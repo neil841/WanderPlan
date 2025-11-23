@@ -19,19 +19,16 @@
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+import { auth } from '@/lib/auth/auth-options';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Check if user is authenticated
-  const token = await getToken({
-    req: request,
-    secret: process.env.NEXTAUTH_SECRET,
-  });
+  // Check if user is authenticated using NextAuth v5 auth() function
+  const session = await auth();
 
   // If accessing protected route without authentication
-  if (!token) {
+  if (!session?.user) {
     // Build login URL with redirect
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('callbackUrl', request.url);
@@ -44,7 +41,7 @@ export async function middleware(request: NextRequest) {
     const allowedPaths = ['/settings/profile', '/settings', '/dashboard', '/trips'];
     const isAllowedPath = allowedPaths.some((path) => pathname.startsWith(path));
 
-    if (!token.emailVerified && !isAllowedPath) {
+    if (!session.user.emailVerified && !isAllowedPath) {
       // Redirect unverified users to settings/profile page with warning
       const profileUrl = new URL('/settings/profile', request.url);
       return NextResponse.redirect(profileUrl);
@@ -63,8 +60,6 @@ export async function middleware(request: NextRequest) {
  * - /trips (and all sub-routes)
  * - /profile (and all sub-routes)
  * - /settings (and all sub-routes)
- *
- * Runtime: nodejs (required for bcrypt compatibility)
  */
 export const config = {
   matcher: [
