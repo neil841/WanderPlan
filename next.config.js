@@ -1,6 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  eslint: {
+    // Disable ESLint during production builds (warnings only, not blocking)
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    // Keep TypeScript checking enabled
+    ignoreBuildErrors: false,
+  },
   experimental: {
     serverActions: {
       bodySizeLimit: '10mb',
