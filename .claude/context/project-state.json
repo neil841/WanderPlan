@@ -5,7 +5,7 @@
   "currentPhase": "phase-6-export-polish-deployment",
   "activeAgent": null,
   "agentLockTimestamp": null,
-  "lastUpdated": "2025-11-22T19:29:36.696Z",
+  "lastUpdated": "2025-11-25T11:15:00.000Z",
   "lastValidation": "2025-11-15T04:30:00.000Z",
   "lastValidationType": "phase-transition-checkpoint",
   "lastCheckpointResults": {
@@ -315,8 +315,8 @@
     "totalTasks": 76,
     "completedTasks": 76,
     "failedTasks": 0,
-    "totalAgentRuns": 92,
-    "lastAgentRun": "technical-documentation-agent",
+    "totalAgentRuns": 94,
+    "lastAgentRun": "code-refactorer",
     "agentRunHistory": [
       {
         "agent": "qa-testing-agent",
