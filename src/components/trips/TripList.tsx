@@ -15,7 +15,8 @@ import {
   PaginationPrevious,
   PaginationEllipsis,
 } from '@/components/ui/pagination';
-import { LayoutGrid, LayoutList, Plus, PackageOpen } from 'lucide-react';
+import { LayoutGrid, LayoutList, Plus, PackageOpen, Plane } from 'lucide-react';
+import { motion } from 'framer-motion';
 import Link from 'next/link';
 
 /**

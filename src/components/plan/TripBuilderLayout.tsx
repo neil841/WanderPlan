@@ -116,7 +116,7 @@ function TripBuilderLayoutContent({ tripId, children }: TripBuilderLayoutProps) 
         if (!isSessionLoading) {
           router.push('/');
         }
-        return;
+        return () => { };
       }
 
       setTrip(tripData);

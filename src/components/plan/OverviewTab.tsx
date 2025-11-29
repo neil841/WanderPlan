@@ -55,19 +55,19 @@ export function OverviewTab({ tripId, isAuthenticated }: OverviewTabProps) {
 
   // Load Guest Data
   useEffect(() => {
-    if (!isGuestTrip) return;
+    if (isGuestTrip) {
+      const loadGuestData = () => {
+        setGuestTrip(getGuestTrip(tripId));
+        setGuestStats(getTripStatistics(tripId));
+        setGuestExpensesByCategory(getExpensesByCategory(tripId));
+      };
 
-    const loadGuestData = () => {
-      setGuestTrip(getGuestTrip(tripId));
-      setGuestStats(getTripStatistics(tripId));
-      setGuestExpensesByCategory(getExpensesByCategory(tripId));
-    };
+      loadGuestData();
 
-    loadGuestData();
-
-    const handleStorageChange = () => loadGuestData();
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+      const handleStorageChange = () => loadGuestData();
+      window.addEventListener('storage', handleStorageChange);
+      return () => window.removeEventListener('storage', handleStorageChange);
+    }
   }, [tripId, isGuestTrip]);
 
   // Unified Data Mapping

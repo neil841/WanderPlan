@@ -107,14 +107,14 @@ export function BudgetTab({ tripId }: BudgetTabProps) {
 
   // --- Guest Data Loading ---
   useEffect(() => {
-    if (!isGuestTrip) return;
+    if (isGuestTrip) {
+      loadGuestData();
 
-    loadGuestData();
-
-    // Listen for storage changes
-    const handleStorageChange = () => loadGuestData();
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+      // Listen for storage changes
+      const handleStorageChange = () => loadGuestData();
+      window.addEventListener('storage', handleStorageChange);
+      return () => window.removeEventListener('storage', handleStorageChange);
+    }
   }, [tripId, isGuestTrip]);
 
   const loadGuestData = () => {

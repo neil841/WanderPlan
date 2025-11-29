@@ -112,14 +112,15 @@ export function ItineraryTab({ tripId, isAuthenticated }: ItineraryTabProps) {
 
   // --- Guest Data Loading ---
   useEffect(() => {
-    if (!isGuestTrip) return;
+    if (isGuestTrip) {
+      loadGuestData();
 
-    loadGuestData();
-
-    // Listen for storage changes
-    const handleStorageChange = () => loadGuestData();
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+      // Listen for storage changes
+      const handleStorageChange = () => loadGuestData();
+      window.addEventListener('storage', handleStorageChange);
+      return () => window.removeEventListener('storage', handleStorageChange);
+    }
+    return () => { };
   }, [tripId, isGuestTrip]);
 
   const loadGuestData = () => {
