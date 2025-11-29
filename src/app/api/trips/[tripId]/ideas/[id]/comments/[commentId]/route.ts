@@ -17,7 +17,7 @@ export async function DELETE(
   request: NextRequest,
   {
     params,
-  }: { params: { tripId: string; ideaId: string; commentId: string } }
+  }: { params: { tripId: string; id: string; commentId: string } }
 ) {
   try {
     const session = await auth();
@@ -25,7 +25,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { tripId, ideaId, commentId } = params;
+    const { tripId, id: ideaId, commentId } = params;
 
     // Check if user has access to this trip
     const trip = await prisma.trip.findFirst({

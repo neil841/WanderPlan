@@ -21,7 +21,7 @@ const createCommentSchema = z.object({
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { tripId: string; ideaId: string } }
+  { params }: { params: { tripId: string; id: string } }
 ) {
   try {
     const session = await auth();
@@ -29,7 +29,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { tripId, ideaId } = params;
+    const { tripId, id: ideaId } = params;
 
     // Check if user has access to this trip
     const trip = await prisma.trip.findFirst({
@@ -107,7 +107,7 @@ export async function GET(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { tripId: string; ideaId: string } }
+  { params }: { params: { tripId: string; id: string } }
 ) {
   try {
     const session = await auth();
@@ -115,7 +115,7 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { tripId, ideaId } = params;
+    const { tripId, id: ideaId } = params;
     const body = await request.json();
 
     // Validate request body
