@@ -131,7 +131,8 @@ io.engine.on('connection_error', (err) => {
 });
 
 // Start server
-httpServer.listen(PORT, () => {
+// Listen on 0.0.0.0 to accept connections from all network interfaces (required for Railway)
+httpServer.listen(PORT, '0.0.0.0', () => {
     console.log(`✓ Socket.IO server running on port ${PORT}`);
     console.log(`✓ CORS origin: ${CORS_ORIGIN}`);
     console.log(`✓ Environment: ${process.env.NODE_ENV || 'development'}`);
