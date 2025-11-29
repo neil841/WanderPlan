@@ -22,7 +22,7 @@ In your Railway project settings, add these environment variables:
 ```env
 NODE_ENV=production
 CORS_ORIGIN=https://your-vercel-app.vercel.app
-DATABASE_URL=postgresql://postgres:vcjibNQAokQVPHYeMHdFeZimUDyMnNcI@hopper.proxy.rlwy.net:19585/railway
+DATABASE_URL=postgresql://postgres:YOUR_PASSWORD_HERE@hopper.proxy.rlwy.net:19585/railway
 ```
 
 **Important**: 
