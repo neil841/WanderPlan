@@ -146,10 +146,12 @@ async function fetchTrip(tripId: string): Promise<TripDetails> {
 export function useTrip({ tripId, enabled = true }: UseTripOptions) {
   const queryClient = useQueryClient();
 
+  const isGuestTrip = tripId?.startsWith('guest-');
+
   return useQuery({
     queryKey: ['trip', tripId],
     queryFn: () => fetchTrip(tripId),
-    enabled: enabled && !!tripId,
+    enabled: enabled && !!tripId && !isGuestTrip,
     staleTime: 30000, // 30 seconds - trip details don't change frequently
     refetchOnWindowFocus: false,
   });

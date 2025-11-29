@@ -31,7 +31,14 @@ const createPollSchema = z.object({
     .min(2, 'At least 2 options required')
     .max(10, 'Maximum 10 options allowed'),
   allowMultipleVotes: z.boolean(),
-  expiresAt: z.string().optional(),
+  expiresAt: z
+    .string()
+    .optional()
+    .transform((val) => {
+      if (!val || val === '') return null;
+      // Convert datetime-local to ISO string
+      return new Date(val).toISOString();
+    }),
 });
 
 type CreatePollForm = z.infer<typeof createPollSchema>;

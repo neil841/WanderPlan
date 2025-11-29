@@ -3,6 +3,7 @@ import { Inter } from "next/font/google"
 import "@/styles/globals.css"
 import { QueryProvider } from "@/components/providers/QueryProvider"
 import { Toaster } from "sonner"
+import { SessionProvider } from "@/components/providers/SessionProvider"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -53,7 +54,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <QueryProvider>{children}</QueryProvider>
+        <SessionProvider>
+          <QueryProvider>{children}</QueryProvider>
+        </SessionProvider>
         <Toaster position="top-right" richColors closeButton />
       </body>
     </html>

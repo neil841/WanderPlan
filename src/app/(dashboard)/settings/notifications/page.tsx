@@ -7,7 +7,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Bell, Mail, Loader2, Check } from 'lucide-react';
+import { Bell, Mail, Loader2, Check, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type {
   UserNotificationSettings,
@@ -27,7 +27,6 @@ import type {
 } from '@/types/email-settings';
 
 export default function NotificationSettingsPage() {
-  const { data: session } = useSession();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -108,52 +107,59 @@ export default function NotificationSettingsPage() {
     });
   };
 
-  if (loading) {
+  if (loading || !settings) {
     return (
-      <div className="container max-w-4xl py-8">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-8 px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <Loader2 className="h-8 w-8 animate-spin text-gray-600" />
         </div>
-      </div>
-    );
-  }
-
-  if (!settings) {
-    return (
-      <div className="container max-w-4xl py-8">
-        <p className="text-center text-muted-foreground">Failed to load settings</p>
       </div>
     );
   }
 
   return (
-    <div className="container max-w-4xl py-8">
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <Bell className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold">Notification Settings</h1>
-            <p className="text-muted-foreground">
-              Manage how you receive notifications
-            </p>
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-4 mb-3">
+            <div className="p-3 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-xl shadow-lg">
+              <Bell className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold text-gray-900">
+                Notification{' '}
+                <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+                  Settings
+                </span>
+              </h1>
+              <p className="text-lg text-gray-600 mt-1">
+                Manage how you receive notifications
+              </p>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Email Notifications */}
-      <Card className="mb-6">
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Mail className="h-5 w-5 text-primary" />
-            <CardTitle>Email Notifications</CardTitle>
-          </div>
-          <CardDescription>
-            Choose what email notifications you want to receive
-          </CardDescription>
-        </CardHeader>
+        {/* Email Notifications */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <Card className="mb-6 rounded-2xl shadow-lg shadow-gray-900/5 border-gray-200/50">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-600 shadow-lg">
+                  <Mail className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <CardTitle className="text-gray-900">Email Notifications</CardTitle>
+                  <CardDescription className="text-gray-600">
+                    Choose what email notifications you want to receive
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
         <CardContent className="space-y-6">
           {/* Frequency */}
           <div className="space-y-2">
@@ -292,17 +298,30 @@ export default function NotificationSettingsPage() {
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </motion.div>
 
-      {/* Push Notifications */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Push Notifications</CardTitle>
-          <CardDescription>
-            Browser push notifications (coming soon)
-          </CardDescription>
-        </CardHeader>
+        {/* Push Notifications */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+        >
+          <Card className="mb-6 rounded-2xl shadow-lg shadow-gray-900/5 border-gray-200/50">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-600 shadow-lg">
+                  <Bell className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <CardTitle className="text-gray-900">Push Notifications</CardTitle>
+                  <CardDescription className="text-gray-600">
+                    Browser push notifications (coming soon)
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">
             <div>
@@ -326,24 +345,47 @@ export default function NotificationSettingsPage() {
           <p className="text-sm text-muted-foreground mt-4">
             Push notifications are not yet available. We'll notify you when this feature is ready!
           </p>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </motion.div>
 
-      {/* Save Button */}
-      <div className="flex justify-end">
-        <Button onClick={saveSettings} disabled={saving} size="lg">
-          {saving ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Saving...
-            </>
-          ) : (
-            <>
-              <Check className="mr-2 h-4 w-4" />
-              Save Changes
-            </>
-          )}
-        </Button>
+        {/* Save Button */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.3 }}
+          className="flex justify-end"
+        >
+          <motion.button
+            onClick={saveSettings}
+            disabled={saving}
+            whileHover={{ scale: saving ? 1 : 1.01 }}
+            whileTap={{ scale: saving ? 1 : 0.98 }}
+            className="group relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 px-8 py-3 font-semibold text-white shadow-lg shadow-blue-500/30 transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span className="relative z-10 flex items-center justify-center gap-2">
+              {saving ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4" />
+                  Save Changes
+                </>
+              )}
+            </span>
+            {/* Shine effect */}
+            {!saving && (
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                animate={{ x: ['-100%', '100%'] }}
+                transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
+              />
+            )}
+          </motion.button>
+        </motion.div>
       </div>
     </div>
   );

@@ -49,37 +49,80 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.2 }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
       className={cn(
-        'flex flex-col items-center justify-center py-12 px-4 text-center',
+        'flex flex-col items-center justify-center py-16 px-4 text-center',
         className
       )}
       role="region"
       aria-label={title}
     >
-      <div
-        className={cn(
-          'mb-4 rounded-full bg-muted p-6',
-          iconClassName
-        )}
+      {/* Premium Icon Circle with Animation */}
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.1, duration: 0.4 }}
+        className="relative mb-6"
       >
-        <Icon className="h-12 w-12 text-muted-foreground" aria-hidden="true" />
-      </div>
-
-      <h3 className="mb-2 text-xl font-semibold text-foreground">{title}</h3>
-      <p className="mb-6 max-w-sm text-sm text-muted-foreground">
-        {description}
-      </p>
-
-      {action && (
-        <Button
-          variant={action.variant || 'default'}
-          onClick={action.onClick}
+        <div
+          className={cn(
+            'relative w-24 h-24 rounded-full bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-center overflow-hidden',
+            iconClassName
+          )}
         >
-          {action.label}
-        </Button>
+          {/* Background gradient orb */}
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 blur-2xl" />
+
+          {/* Static icon - PERFORMANCE OPTIMIZED */}
+          <div className="relative z-10">
+            <Icon className="h-12 w-12 text-blue-600" aria-hidden="true" />
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Premium Typography */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.4 }}
+        className="space-y-3"
+      >
+        <h3 className="text-2xl font-bold text-gray-900">{title}</h3>
+        <p className="max-w-md text-base text-gray-600">
+          {description}
+        </p>
+      </motion.div>
+
+      {/* Premium CTA Button */}
+      {action && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.4 }}
+          className="mt-8"
+        >
+          {action.variant === 'outline' ? (
+            <Button
+              variant="outline"
+              onClick={action.onClick}
+              size="lg"
+              className="gap-2"
+            >
+              {action.label}
+            </Button>
+          ) : (
+            <motion.button
+              onClick={action.onClick}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 px-8 py-3 font-semibold text-white shadow-lg shadow-blue-500/30 transition-all duration-200 hover:shadow-xl hover:shadow-blue-500/40"
+            >
+              <span className="relative z-10">{action.label}</span>
+            </motion.button>
+          )}
+        </motion.div>
       )}
     </motion.div>
   );
@@ -104,7 +147,10 @@ export function EmptyStateSmall({
   className,
 }: EmptyStateSmallProps) {
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.3 }}
       className={cn(
         'flex flex-col items-center justify-center py-8 px-4 text-center',
         className
@@ -112,15 +158,19 @@ export function EmptyStateSmall({
       role="region"
       aria-label={title}
     >
-      <div className="mb-3 rounded-full bg-muted/50 p-3">
-        <Icon className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
+      {/* Compact premium icon */}
+      <div className="relative mb-4">
+        <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-center overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 blur-xl" />
+          <Icon className="h-7 w-7 text-blue-600 relative z-10" aria-hidden="true" />
+        </div>
       </div>
 
-      <h4 className="mb-1 text-sm font-medium text-foreground">{title}</h4>
+      <h4 className="mb-2 text-base font-semibold text-gray-900">{title}</h4>
       {description && (
-        <p className="max-w-xs text-xs text-muted-foreground">{description}</p>
+        <p className="max-w-xs text-sm text-gray-600">{description}</p>
       )}
-    </div>
+    </motion.div>
   );
 }
 

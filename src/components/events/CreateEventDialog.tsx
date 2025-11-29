@@ -296,17 +296,24 @@ export function CreateEventDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{isEditMode ? 'Edit Event' : 'Create Event'}</DialogTitle>
-          <DialogDescription>
-            {isEditMode
-              ? 'Update the event details below.'
-              : 'Add a new event to your trip itinerary. Select the event type and fill in the details.'}
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden p-0">
+        {/* Premium Gradient Header */}
+        <div className="bg-gradient-to-r from-blue-600 to-cyan-600 p-6">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-white">
+              {isEditMode ? 'Edit Event' : 'Create Event'}
+            </DialogTitle>
+            <DialogDescription className="text-blue-50">
+              {isEditMode
+                ? 'Update the event details below.'
+                : 'Add a new event to your trip itinerary. Select the event type and fill in the details.'}
+            </DialogDescription>
+          </DialogHeader>
+        </div>
 
-        <Tabs value={selectedType} onValueChange={handleTypeChange} className="mt-4">
+        {/* Scrollable Content Area */}
+        <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+          <Tabs value={selectedType} onValueChange={handleTypeChange} className="mt-4">
           <TabsList className="grid grid-cols-6 w-full">
             {Object.entries(EVENT_TYPE_CONFIG).map(([type, config]) => {
               const Icon = config.icon;
@@ -359,21 +366,44 @@ export function CreateEventDialog({
             </AnimatePresence>
           </div>
         </Tabs>
+        </div>
 
-        <DialogFooter className="mt-6">
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
+        {/* Premium Footer with Gradient Button */}
+        <DialogFooter className="border-t border-gray-200 bg-gray-50/50 p-6 flex gap-3">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isPending}
+            className="flex-1 sm:flex-none"
+          >
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={isPending}>
-            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isEditMode
-              ? isPending
-                ? 'Saving...'
-                : 'Save Changes'
-              : isPending
-              ? 'Creating...'
-              : 'Create Event'}
-          </Button>
+          <motion.button
+            onClick={handleSubmit}
+            disabled={isPending}
+            whileHover={{ scale: isPending ? 1 : 1.01 }}
+            whileTap={{ scale: isPending ? 1 : 0.98 }}
+            className="group relative flex-1 sm:flex-none overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 px-6 py-2.5 font-semibold text-white shadow-lg shadow-blue-500/30 transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span className="relative z-10 flex items-center justify-center gap-2">
+              {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              {isEditMode
+                ? isPending
+                  ? 'Saving...'
+                  : 'Save Changes'
+                : isPending
+                ? 'Creating...'
+                : 'Create Event'}
+            </span>
+            {/* Shine effect */}
+            {!isPending && (
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                animate={{ x: ['-100%', '100%'] }}
+                transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
+              />
+            )}
+          </motion.button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

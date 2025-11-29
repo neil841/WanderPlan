@@ -115,23 +115,77 @@ export function TripList() {
           availableTags={allTags}
         />
 
-        <div className="flex flex-col items-center justify-center py-16 px-4">
-          <div className="text-center space-y-4 max-w-md">
-            <div className="w-24 h-24 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
-              <PackageOpen className="w-12 h-12 text-primary" />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="flex flex-col items-center justify-center py-20 px-4"
+        >
+          <div className="text-center space-y-6 max-w-lg">
+            {/* Premium Illustration Circle */}
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+              className="relative mx-auto"
+            >
+              <div className="w-32 h-32 mx-auto rounded-full bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-center relative overflow-hidden">
+                {/* Background gradient orb */}
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 blur-xl" />
+
+                {/* Animated plane icon */}
+                <motion.div
+                  animate={{
+                    y: [0, -8, 0],
+                    rotate: [-5, 5, -5],
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                  className="relative z-10"
+                >
+                  <Plane className="w-16 h-16 text-blue-600" />
+                </motion.div>
+              </div>
+            </motion.div>
+
+            {/* Premium Text */}
+            <div className="space-y-3">
+              <h3 className="text-3xl font-bold text-gray-900">
+                Start Your Next{' '}
+                <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+                  Adventure
+                </span>
+              </h3>
+              <p className="text-lg text-gray-600 max-w-md mx-auto">
+                No trips yet! Create your first trip and start planning an unforgettable journey.
+              </p>
             </div>
-            <h3 className="text-2xl font-semibold">No trips yet</h3>
-            <p className="text-muted-foreground">
-              Start planning your next adventure by creating your first trip.
-            </p>
+
+            {/* Premium CTA Button */}
             <Link href="/trips/new">
-              <Button size="lg" className="mt-4">
-                <Plus className="w-5 h-5 mr-2" />
-                Create Your First Trip
-              </Button>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="group relative inline-flex items-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 px-8 py-4 font-semibold text-white shadow-lg shadow-blue-500/30 transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/40"
+              >
+                <span className="relative z-10 flex items-center gap-2">
+                  <Plus className="h-5 w-5" />
+                  <span>Create Your First Trip</span>
+                </span>
+
+                {/* Shine effect */}
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                  animate={{ x: ['-100%', '100%'] }}
+                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
+                />
+              </motion.button>
             </Link>
           </div>
-        </div>
+        </motion.div>
       </div>
     );
   }
@@ -146,17 +200,36 @@ export function TripList() {
           availableTags={allTags}
         />
 
-        <div className="flex flex-col items-center justify-center py-16 px-4">
-          <div className="text-center space-y-4 max-w-md">
-            <div className="w-20 h-20 mx-auto rounded-full bg-muted flex items-center justify-center">
-              <PackageOpen className="w-10 h-10 text-muted-foreground" />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="flex flex-col items-center justify-center py-16 px-4"
+        >
+          <div className="text-center space-y-5 max-w-md">
+            {/* Illustration */}
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.1, duration: 0.4 }}
+            >
+              <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center border border-gray-200">
+                <PackageOpen className="w-12 h-12 text-gray-400" />
+              </div>
+            </motion.div>
+
+            {/* Text */}
+            <div className="space-y-2">
+              <h3 className="text-2xl font-bold text-gray-900">No Trips Found</h3>
+              <p className="text-gray-600">
+                Try adjusting your filters or search terms to find what you're looking for.
+              </p>
             </div>
-            <h3 className="text-xl font-semibold">No trips found</h3>
-            <p className="text-muted-foreground">
-              Try adjusting your filters or search terms to find what you're looking for.
-            </p>
+
+            {/* Clear Filters Button */}
             <Button
               variant="outline"
+              size="lg"
               onClick={() => handleFiltersChange({
                 search: '',
                 status: 'active',
@@ -164,11 +237,12 @@ export function TripList() {
                 order: 'desc',
                 tags: [],
               })}
+              className="mt-2"
             >
               Clear Filters
             </Button>
           </div>
-        </div>
+        </motion.div>
       </div>
     );
   }

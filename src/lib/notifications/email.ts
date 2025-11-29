@@ -98,34 +98,22 @@ function shouldSendNotification(
 
 /**
  * Send instant email notification
- *
- * NOTE: This is a placeholder. In production, you would integrate with:
- * - SendGrid
- * - Resend
- * - AWS SES
- * - Postmark
- * - etc.
  */
 async function sendInstantNotification(
   user: { email: string; firstName: string },
   notification: Notification
 ): Promise<boolean> {
   try {
-    // TODO: Integrate with actual email service
-    console.log('📧 Would send email to:', user.email);
-    console.log('Notification:', formatNotificationForEmail(notification));
+    const { sendEmail } = await import('../email/resend-client');
+    const { formatInstantNotificationEmail } = await import('../email/templates/notification-email');
 
-    // Placeholder for email service integration:
-    /*
-    await sendEmail({
+    const html = formatInstantNotificationEmail(user.firstName, notification);
+
+    return await sendEmail({
       to: user.email,
-      from: 'notifications@wanderplan.com',
       subject: `New activity in ${notification.activity.trip.name}`,
-      html: renderNotificationEmail(user.firstName, notification),
+      html,
     });
-    */
-
-    return true;
   } catch (error) {
     console.error('Error sending instant notification:', error);
     return false;
@@ -252,35 +240,25 @@ export async function sendDailyDigests(): Promise<void> {
 
 /**
  * Send digest email
- *
- * NOTE: This is a placeholder. In production, integrate with email service.
  */
 async function sendDigestEmail(
   user: { email: string; firstName: string; lastName: string },
   notifications: Notification[]
 ): Promise<void> {
-  // TODO: Integrate with actual email service
-  console.log('📧 Would send digest email to:', user.email);
-  console.log('Notifications count:', notifications.length);
+  try {
+    const { sendEmail } = await import('../email/resend-client');
+    const { formatDailyDigestEmail } = await import('../email/templates/notification-email');
 
-  // Placeholder for email service integration:
-  /*
-  import { render } from '@react-email/render';
-  import { NotificationDigestEmail } from '../email/templates/notification-digest';
+    const html = formatDailyDigestEmail(user.firstName, notifications);
 
-  const html = render(
-    <NotificationDigestEmail
-      userName={user.firstName}
-      notifications={notifications}
-      unsubscribeUrl={`${process.env.NEXT_PUBLIC_APP_URL}/unsubscribe?token=...`}
-    />
-  );
+    await sendEmail({
+      to: user.email,
+      subject: `Your WanderPlan Daily Digest - ${notifications.length} new notification${notifications.length === 1 ? '' : 's'}`,
+      html,
+    });
 
-  await sendEmail({
-    to: user.email,
-    from: 'notifications@wanderplan.com',
-    subject: `Your WanderPlan Daily Digest - ${notifications.length} new notifications`,
-    html,
-  });
-  */
+    console.log(`✅ Sent daily digest to ${user.email} (${notifications.length} notifications)`);
+  } catch (error) {
+    console.error('Error sending digest email:', error);
+  }
 }
