@@ -82,7 +82,7 @@ export function Sidebar({ user, className }: SidebarProps) {
       {/* Logo */}
       <div className="flex h-16 items-center border-b border-slate-200/60 px-6">
         <Link
-          href="/dashboard"
+          href="/"
           className="flex items-center gap-2 transition-opacity hover:opacity-80"
         >
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 shadow-lg shadow-blue-500/30">

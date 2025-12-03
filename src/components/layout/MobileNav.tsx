@@ -96,7 +96,7 @@ export function MobileNav({ user, open, onOpenChange }: MobileNavProps) {
         <SheetHeader className="border-b border-slate-200/60 px-6 py-4">
           <SheetTitle className="flex items-center justify-between">
             <Link
-              href="/dashboard"
+              href="/"
               className="flex items-center gap-2 transition-opacity hover:opacity-80"
               onClick={handleNavClick}
             >
