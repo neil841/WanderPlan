@@ -1,134 +1,200 @@
+'use client';
+
 import { Metadata } from 'next';
 import { Suspense } from 'react';
+import { motion } from 'framer-motion';
+import {  Plane, Globe, Map, Calendar } from 'lucide-react';
 import { LoginForm } from '@/components/auth/LoginForm';
 
-export const metadata: Metadata = {
-  title: 'Sign In | WanderPlan',
-  description:
-    'Sign in to your WanderPlan account to access your travel itineraries and plans',
-};
-
 /**
- * Login Page
+ * Premium Login Page
  *
  * Features:
- * - Server-side rendered page with client-side LoginForm
+ * - Premium travel-themed design matching landing page
+ * - Animated gradient backgrounds
+ * - Split layout: Form on left, benefits on right
+ * - Fully responsive
  * - SEO-optimized with metadata
- * - Responsive layout with centered form
- * - Gradient background for premium feel
  *
  * Route: /login
  */
 export default function LoginPage() {
+  const benefits = [
+    {
+      icon: Map,
+      title: 'Smart Itinerary Planning',
+      description: 'Create day-by-day itineraries with intelligent suggestions',
+    },
+    {
+      icon: Globe,
+      title: 'Global Destinations',
+      description: 'Explore and plan trips to over 150+ countries worldwide',
+    },
+    {
+      icon: Calendar,
+      title: 'Trip Timeline',
+      description: 'Visualize your entire journey on an interactive calendar',
+    },
+  ];
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-neutral-50 via-primary-50/30 to-accent-50/20 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-900 p-4 md:p-6 lg:p-8">
-      <div className="w-full max-w-6xl">
-        {/* Grid Layout - Form on left, Hero on right (desktop) */}
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-          {/* Login Form */}
-          <div className="order-2 lg:order-1">
-            <Suspense fallback={<div className="flex items-center justify-center min-h-[400px]"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div></div>}>
-              <LoginForm />
-            </Suspense>
-          </div>
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-gray-50 via-white to-gray-50">
+      {/* Animated background gradients - matching landing page */}
+      <div className="absolute inset-0 overflow-hidden">
+        <motion.div
+          animate={{
+            scale: [1, 1.2, 1],
+            rotate: [0, 90, 0],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: 'linear',
+          }}
+          className="absolute -left-1/4 -top-1/4 h-96 w-96 rounded-full bg-gradient-to-br from-blue-400/20 to-cyan-400/20 blur-3xl"
+        />
+        <motion.div
+          animate={{
+            scale: [1, 1.3, 1],
+            rotate: [0, -90, 0],
+          }}
+          transition={{
+            duration: 25,
+            repeat: Infinity,
+            ease: 'linear',
+          }}
+          className="absolute -right-1/4 top-1/3 h-96 w-96 rounded-full bg-gradient-to-br from-purple-400/15 to-pink-400/15 blur-3xl"
+        />
+      </div>
 
-          {/* Hero Section - Hidden on mobile */}
-          <div className="order-1 lg:order-2 hidden lg:block">
-            <div className="space-y-6">
-              <h1 className="text-4xl xl:text-5xl font-bold text-neutral-900 dark:text-neutral-100 leading-tight">
-                Plan your next
-                <br />
-                <span className="bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent">
-                  adventure
-                </span>
-              </h1>
-
-              <p className="text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed max-w-md">
-                WanderPlan helps you create detailed itineraries, collaborate
-                with travel companions, and organize all your travel information
-                in one place.
-              </p>
-
-              <div className="space-y-4 pt-4">
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
-                    <svg
-                      className="w-5 h-5 text-primary-600 dark:text-primary-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
+      {/* Main Content */}
+      <div className="relative flex min-h-screen items-center justify-center p-4 md:p-6 lg:p-8">
+        <div className="w-full max-w-6xl">
+          <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
+            {/* Login Form - Left Side */}
+            <motion.div
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, ease: [0.21, 0.47, 0.32, 0.98] }}
+              className="flex items-center justify-center"
+            >
+              <Suspense
+                fallback={
+                  <div className="flex h-[400px] w-full max-w-md items-center justify-center">
+                    <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">
-                      Day-by-day itineraries
-                    </h3>
-                    <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                      Build detailed travel plans with drag-and-drop simplicity
-                    </p>
-                  </div>
+                }
+              >
+                <LoginForm />
+              </Suspense>
+            </motion.div>
+
+            {/* Benefits Section - Right Side */}
+            <motion.div
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2, ease: [0.21, 0.47, 0.32, 0.98] }}
+              className="hidden items-center lg:flex"
+            >
+              <div className="space-y-8">
+                {/* Header */}
+                <div>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3, duration: 0.6 }}
+                    className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-200/50 bg-blue-50/50 px-4 py-2 backdrop-blur-sm"
+                  >
+                    <Plane className="h-4 w-4 text-blue-600" />
+                    <span className="text-sm font-medium text-blue-900">Travel Made Simple</span>
+                  </motion.div>
+
+                  <motion.h1
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4, duration: 0.6 }}
+                    className="mb-4 text-4xl font-bold leading-tight text-gray-900 xl:text-5xl"
+                  >
+                    Welcome back to
+                    <br />
+                    <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+                      WanderPlan
+                    </span>
+                  </motion.h1>
+
+                  <motion.p
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5, duration: 0.6 }}
+                    className="max-w-md text-lg leading-relaxed text-gray-600"
+                  >
+                    Continue planning your dream adventures with intelligent tools,
+                    real-time collaboration, and seamless organization.
+                  </motion.p>
                 </div>
 
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
-                    <svg
-                      className="w-5 h-5 text-primary-600 dark:text-primary-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">
-                      Collaborate with others
-                    </h3>
-                    <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                      Share trips and plan together with friends and family
-                    </p>
-                  </div>
+                {/* Benefits List */}
+                <div className="space-y-6 pt-4">
+                  {benefits.map((benefit, index) => {
+                    const Icon = benefit.icon;
+                    return (
+                      <motion.div
+                        key={benefit.title}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.6 + index * 0.1, duration: 0.5 }}
+                        className="flex items-start gap-4"
+                      >
+                        <div className="flex-shrink-0 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 p-2.5 shadow-lg">
+                          <Icon className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-gray-900">{benefit.title}</h3>
+                          <p className="mt-1 text-sm text-gray-600">{benefit.description}</p>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
                 </div>
 
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
-                    <svg
-                      className="w-5 h-5 text-primary-600 dark:text-primary-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
+                {/* Social Proof */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1, duration: 0.6 }}
+                  className="rounded-2xl border border-gray-200/50 bg-white/50 p-6 backdrop-blur-sm"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="flex -space-x-2">
+                      <img
+                        src="https://i.pravatar.cc/150?img=12"
+                        alt="User avatar"
+                        className="h-10 w-10 rounded-full border-2 border-white object-cover"
                       />
-                    </svg>
+                      <img
+                        src="https://i.pravatar.cc/150?img=47"
+                        alt="User avatar"
+                        className="h-10 w-10 rounded-full border-2 border-white object-cover"
+                      />
+                      <img
+                        src="https://i.pravatar.cc/150?img=32"
+                        alt="User avatar"
+                        className="h-10 w-10 rounded-full border-2 border-white object-cover"
+                      />
+                      <img
+                        src="https://i.pravatar.cc/150?img=65"
+                        alt="User avatar"
+                        className="h-10 w-10 rounded-full border-2 border-white object-cover"
+                      />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">25,000+ Travelers</p>
+                      <p className="text-xs text-gray-600">Trust WanderPlan worldwide</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">
-                      Interactive maps
-                    </h3>
-                    <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                      Visualize your journey with routes and points of interest
-                    </p>
-                  </div>
-                </div>
+                </motion.div>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </div>

@@ -1,13 +1,11 @@
 /**
- * Sidebar Component
+ * Sidebar Component - Premium Redesign
  *
- * Desktop sidebar navigation with:
- * - Logo and brand
- * - Navigation menu items with active state
+ * Features:
+ * - Rich navigation with icons
+ * - Premium upgrade CTA
  * - User profile section
- * - Premium visual design with gradients
- * - Smooth hover transitions
- * - WCAG 2.1 AA compliant
+ * - No fake data shown to new users
  */
 
 'use client';
@@ -20,6 +18,7 @@ import {
   MapPin,
   User,
   Settings,
+  Sparkles,
   Plane,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -75,7 +74,7 @@ export function Sidebar({ user, className }: SidebarProps) {
   return (
     <aside
       className={cn(
-        'sticky top-0 h-screen w-64 flex-col border-r border-slate-200/60 bg-white/80 backdrop-blur-xl',
+        'sticky top-0 h-screen w-64 flex flex-col border-r border-slate-200/60 bg-white',
         className
       )}
     >
@@ -96,7 +95,7 @@ export function Sidebar({ user, className }: SidebarProps) {
 
       {/* Navigation */}
       <nav
-        className="flex-1 space-y-1 px-3 py-4"
+        className="flex-1 space-y-1 px-3 py-6"
         aria-label="Main navigation"
       >
         {navItems.map((item) => {
@@ -151,6 +150,27 @@ export function Sidebar({ user, className }: SidebarProps) {
           );
         })}
       </nav>
+
+      {/* Premium Upgrade CTA */}
+      <div className="px-3 pb-4">
+        <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 p-4">
+          <div className="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-white/10 blur-2xl" />
+
+          <div className="relative">
+            <div className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-white/20 px-2 py-1">
+              <Sparkles className="h-3 w-3 text-white" />
+              <span className="text-xs font-medium text-white">Premium</span>
+            </div>
+
+            <h3 className="mb-1 text-sm font-bold text-white">Unlock Pro Features</h3>
+            <p className="mb-3 text-xs text-white/80">Unlimited trips, AI suggestions & more</p>
+
+            <button className="w-full rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-purple-600 transition-transform hover:scale-105">
+              Upgrade Now
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* User Profile Section */}
       <div className="border-t border-slate-200/60 p-4">

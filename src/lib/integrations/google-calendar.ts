@@ -67,13 +67,15 @@ function validateEnvironmentVariables(): void {
   console.log('✓ Google Calendar integration configured');
 }
 
-// Validate on module load - fail fast if configuration is incomplete
-validateEnvironmentVariables();
+// Note: Validation moved to runtime (inside createOAuth2Client) to avoid build-time failures
+// when environment variables are not yet set (e.g., during Docker build)
 
 /**
  * Create OAuth2 client for Google Calendar
  */
 export function createOAuth2Client(): OAuth2Client {
+  // Validate environment variables at runtime (when actually needed)
+  validateEnvironmentVariables();
   return new google.auth.OAuth2(
     googleCalendarConfig.clientId,
     googleCalendarConfig.clientSecret,

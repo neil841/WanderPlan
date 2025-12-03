@@ -153,18 +153,18 @@ export function PasswordChangeForm({ onSuccess }: PasswordChangeFormProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: 'easeOut', delay: 0.1 }}
     >
-      <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-md border border-neutral-200 dark:border-neutral-800 p-6 md:p-8">
+      <div className="bg-white rounded-2xl shadow-lg shadow-gray-900/5 border border-gray-200/50 p-6 md:p-8">
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 rounded-lg bg-primary-100 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400">
-              <Lock className="h-5 w-5" />
+            <div className="p-2 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-600 shadow-lg">
+              <Lock className="h-5 w-5 text-white" />
             </div>
-            <h3 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
+            <h3 className="text-xl font-semibold text-gray-900">
               Change Password
             </h3>
           </div>
-          <p className="text-sm text-neutral-600 dark:text-neutral-400">
+          <p className="text-sm text-gray-600">
             Update your password to keep your account secure
           </p>
         </div>
@@ -410,23 +410,30 @@ export function PasswordChangeForm({ onSuccess }: PasswordChangeFormProps) {
             transition={{ delay: 0.25, duration: 0.3 }}
             className="pt-4"
           >
-            <Button
+            <motion.button
               type="submit"
               disabled={isLoading || !allRequirementsMet}
-              className="w-full sm:w-auto bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              whileHover={{ scale: (isLoading || !allRequirementsMet) ? 1 : 1.01 }}
+              whileTap={{ scale: (isLoading || !allRequirementsMet) ? 1 : 0.98 }}
+              className="group relative w-full sm:w-auto overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 px-8 py-3 font-semibold text-white shadow-lg shadow-blue-500/30 transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <motion.div
-                className="flex items-center justify-center gap-2"
-                whileTap={{ scale: isLoading ? 1 : 0.98 }}
-              >
+              <span className="relative z-10 flex items-center justify-center gap-2">
                 {isLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <Lock className="h-4 w-4" />
                 )}
                 <span>{isLoading ? 'Changing Password...' : 'Change Password'}</span>
-              </motion.div>
-            </Button>
+              </span>
+              {/* Shine effect */}
+              {!isLoading && allRequirementsMet && (
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                  animate={{ x: ['-100%', '100%'] }}
+                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
+                />
+              )}
+            </motion.button>
           </motion.div>
         </form>
       </div>

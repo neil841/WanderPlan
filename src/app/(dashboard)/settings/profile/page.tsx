@@ -70,14 +70,17 @@ export default async function ProfileSettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-950 dark:to-neutral-900 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         {/* Page Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 mb-2">
-            Profile Settings
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+            Profile{' '}
+            <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+              Settings
+            </span>
           </h1>
-          <p className="text-neutral-600 dark:text-neutral-400">
+          <p className="text-lg text-gray-600">
             Manage your account information and security settings
           </p>
         </div>

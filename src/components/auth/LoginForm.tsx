@@ -290,19 +290,31 @@ export function LoginForm() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.7, duration: 0.3 }}
           >
-            <Button
+            <motion.button
               type="submit"
               disabled={isLoading}
-              className="w-full h-11 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              whileHover={{ scale: isLoading ? 1 : 1.01 }}
+              whileTap={{ scale: isLoading ? 1 : 0.98 }}
+              className="group relative w-full overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 px-8 py-3.5 font-semibold text-white shadow-lg shadow-blue-500/30 transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/40 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <motion.div
-                className="flex items-center justify-center gap-2"
-                whileTap={{ scale: isLoading ? 1 : 0.98 }}
-              >
+              <span className="relative z-10 flex items-center justify-center gap-2">
                 {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
                 <span>{isLoading ? 'Signing in...' : 'Sign in'}</span>
-              </motion.div>
-            </Button>
+              </span>
+
+              {/* Hover shine effect */}
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                animate={{
+                  x: ['-100%', '100%'],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  repeatDelay: 1,
+                }}
+              />
+            </motion.button>
           </motion.div>
         </form>
 

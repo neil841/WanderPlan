@@ -43,7 +43,7 @@ const createShareTokenSchema = z.object({
     .optional()
     .describe('Expiration time in days (default 30, max 365)'),
   permissions: z
-    .enum(['view_only', 'comment'])
+    .enum(['view_only', 'comment', 'editor'])
     .default('view_only')
     .optional()
     .describe('Access permissions for the shared link'),
@@ -83,7 +83,7 @@ export async function POST(
     // 3. Parse and validate request body
     let requestData: {
       expiresIn?: number;
-      permissions?: 'view_only' | 'comment';
+      permissions?: 'view_only' | 'comment' | 'editor';
     } = {};
 
     try {
@@ -164,7 +164,7 @@ export async function POST(
 
     // 8. Build share URL
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    const shareUrl = `${baseUrl}/trips/share/${shareToken.token}`;
+    const shareUrl = `${baseUrl}/join/${shareToken.token}`;
 
     // 9. Return response
     return NextResponse.json(

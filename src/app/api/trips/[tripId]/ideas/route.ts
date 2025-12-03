@@ -232,10 +232,11 @@ export async function GET(
           },
           take: 1,
         },
-        // Use aggregation for vote counts
+        // Use aggregation for vote counts and comments
         _count: {
           select: {
             votes: true,
+            comments: true,
           },
         },
       },
@@ -273,11 +274,47 @@ export async function GET(
       ])
     );
 
+    // Get all voters for these ideas with user information
+    const allVoters = await prisma.ideaVote.findMany({
+      where: {
+        ideaId: {
+          in: ideas.map((i) => i.id),
+        },
+        vote: 1, // Only upvotes
+      },
+      select: {
+        id: true,
+        ideaId: true,
+        userId: true,
+        vote: true,
+        createdAt: true,
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            avatarUrl: true,
+          },
+        },
+      },
+    });
+
+    // Create a map of ideaId to voters
+    const votersMap = new Map<string, IdeaVote[]>();
+    allVoters.forEach((vote) => {
+      if (!votersMap.has(vote.ideaId)) {
+        votersMap.set(vote.ideaId, []);
+      }
+      votersMap.get(vote.ideaId)!.push(vote as IdeaVote);
+    });
+
     // Transform ideas to include vote counts
     const ideasWithVotes: IdeaWithVotes[] = ideas.map((idea) => {
       const stats = voteStatsMap.get(idea.id) || { upvoteCount: 0, downvoteCount: 0 };
       const voteCount = stats.upvoteCount - stats.downvoteCount;
       const currentUserVote = idea.votes[0]?.vote ?? null;
+      const voters = votersMap.get(idea.id) || [];
 
       return {
         id: idea.id,
@@ -289,7 +326,7 @@ export async function GET(
         createdAt: idea.createdAt,
         updatedAt: idea.updatedAt,
         creator: idea.creator,
-        votes: [], // Don't expose all votes
+        votes: voters, // Include voters with user info
         voteCount,
         upvoteCount: stats.upvoteCount,
         downvoteCount: stats.downvoteCount,

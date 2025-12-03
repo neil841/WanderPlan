@@ -16,6 +16,9 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Download, Mail, FileText, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { downloadICS } from '@/lib/calendar/ics-generator';
+import { useQuery } from '@tanstack/react-query';
+import { Calendar as CalendarIcon } from 'lucide-react';
 
 interface ExportPDFDialogProps {
   tripId: string;
@@ -63,6 +66,35 @@ export function ExportPDFDialog({
     includeBudget: true,
     includeCollaborators: true,
   });
+
+  // Fetch trip data for ICS generation
+  const { data: tripData } = useQuery({
+    queryKey: ['trip-events', tripId],
+    queryFn: async () => {
+      const res = await fetch(`/api/trips/${tripId}`);
+      if (!res.ok) throw new Error('Failed to fetch trip data');
+      return res.json();
+    },
+    enabled: open,
+  });
+
+  const handleCalendarSync = () => {
+    if (!tripData?.data) {
+      toast.error('Trip data not loaded yet');
+      return;
+    }
+
+    try {
+      downloadICS({
+        name: tripName,
+        events: tripData.data.events || []
+      });
+      toast.success('Calendar file downloaded');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to generate calendar file');
+    }
+  };
 
   /**
    * Validate email address format
@@ -316,26 +348,20 @@ export function ExportPDFDialog({
             )}
           </Button>
 
-          {/* Send Email Button */}
+
+
+          {/* Calendar Sync Button */}
           <Button
-            onClick={handleEmailSend}
-            disabled={isDownloading || isEmailSending || !emailAddress.trim()}
+            variant="outline"
+            onClick={handleCalendarSync}
+            disabled={!tripData}
             className="w-full sm:w-auto"
           >
-            {isEmailSending ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Sending...
-              </>
-            ) : (
-              <>
-                <Mail className="w-4 h-4 mr-2" />
-                Send Email
-              </>
-            )}
+            <CalendarIcon className="w-4 h-4 mr-2" />
+            Add to Calendar
           </Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
+    </Dialog >
   );
 }
