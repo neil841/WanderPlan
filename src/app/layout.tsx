@@ -4,6 +4,7 @@ import "@/styles/globals.css"
 import { QueryProvider } from "@/components/providers/QueryProvider"
 import { Toaster } from "sonner"
 import { SessionProvider } from "@/components/providers/SessionProvider"
+import { ChatWidget } from "@/components/ai-assistant/ChatWidget"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -57,6 +58,7 @@ export default function RootLayout({
         <SessionProvider>
           <QueryProvider>{children}</QueryProvider>
         </SessionProvider>
+        <ChatWidget />
         <Toaster position="top-right" richColors closeButton />
       </body>
     </html>
